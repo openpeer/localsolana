@@ -1,10 +1,10 @@
 /* eslint-disable no-promise-executor-return */
-import { Button, CurrencySelect, Input, Loading, TokenSelect } from '../../components';
-import debounce from 'lodash';
+import { Button, CurrencySelect, Input, Loading, TokenSelect } from 'components';
+import debounce from 'lodash/debounce';
 import { FiatCurrency, List, Token } from 'models/types';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-//import { truncate } from 'utils';
+import { truncate } from 'utils';
 
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
@@ -63,7 +63,7 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 			const { price } = list || {};
 			if (price) {
 				if (tokenValue) setFiatAmount(tokenValue * price);
-				//if (fiatValue) setTokenAmount(truncate(fiatValue / price, token.decimals));
+				if (fiatValue) setTokenAmount(truncate(fiatValue / price, token.decimals));
 			} else {
 				// @ts-ignore
 				if (fiatValue) setTokenAmount('');
@@ -138,7 +138,7 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 							/>
 						}
 						type="decimal"
-						//onChangeNumber={debounce(onChangeFiat, 1000)}
+						onChangeNumber={debounce(onChangeFiat, 1000)}
 						value={fiatAmount}
 					/>
 				</div>
@@ -148,10 +148,10 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 						id="crypto"
 						placeholder="Enter Amount"
 						extraStyle="h-16"
-						addOn={<TokenSelect onSelect={setToken} selected={token} minimal allTokens />}
+						addOn={<TokenSelect onSelect={(token)=>{setToken(token)}} selected={token} minimal allTokens />}
 						type="decimal"
 						decimalScale={token?.decimals}
-						//onChangeNumber={debounce(onChangeToken, 1000)}
+						onChangeNumber={debounce(onChangeToken, 1000)}
 						value={tokenAmount}
 					/>
 				</div>

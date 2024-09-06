@@ -5,7 +5,7 @@ import Loading from 'components/Loading/Loading';
 import CurrencySelect from 'components/Select/CurrencySelect';
 import TokenSelect from 'components/Select/TokenSelect';
 //import { useEscrowFee } from '../../hooks';
-import debounce from 'lodash';
+import debounce from 'lodash/debounce';
 import { FiatCurrency, List, Token } from 'models/types';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -13,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { formatUnits } from 'viem';
+import useEscrowFee from '@/hooks/useEscrowFee';
 
 interface SellProps {
 	lists: List[];
@@ -28,9 +29,20 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 	const [creatingAd, setCreatingAd] = useState(false);
 	const [loading, setLoading] = useState(false);
 
-	//const { fee } = useEscrowFee({ token, tokenAmount, chainId: token?.chain_id });
+	const [fee,setFee] = useState<bigint>();
 
 	const router = useRouter();
+
+	useEffect(() => {
+		 const result = useEscrowFee({ token, tokenAmount });
+    if (typeof result === 'function') {
+        result().then((res) => {
+           setFee(res.fee );
+        });
+    } else {
+        setFee(result.fee);
+    }
+	}	, [token]);
 
 	const updateLoading = (l: boolean) => {
 		setLoading(l);
@@ -112,10 +124,10 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 						id="cryptoSell"
 						placeholder="Enter Amount"
 						extraStyle="h-16"
-						addOn={<TokenSelect onSelect={setToken} selected={token} minimal allTokens />}
+						addOn={<TokenSelect onSelect={(selectedToken) =>{ console.error("Token is ",selectedToken); setToken(selectedToken)}} selected={token} minimal allTokens />}
 						type="decimal"
 						decimalScale={token?.decimals}
-						// onChangeNumber={debounce(onChangeToken, 1000)}
+						onChangeNumber={debounce(onChangeToken, 1000)}
 						value={tokenAmount}
 					/>
 				</div>
@@ -153,11 +165,11 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 				/>
 
 				<div className="text-center mt-4">
-					{/* {!!fee && !!token && (
+					{!!fee && !!token && (
 						<span className="text-xs text-gray-600 text-center">
 							Total fee: {formatUnits(fee, token.decimals)} {token.symbol}
 						</span>
-					)} */}
+					)}
 				</div>
 			</div>
 			<div className={`${!creatingAd ? 'hidden' : ''}`}>

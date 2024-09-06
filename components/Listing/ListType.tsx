@@ -77,7 +77,7 @@ const ListType = ({ updateList, list }: ListStepProps) => {
 	useEffect(() => {
 		if (!address) return;
 		// const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-		fetch(`/api/users/${address}`, {
+		fetch(`/api/user_profiles/${address}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
@@ -87,14 +87,14 @@ const ListType = ({ updateList, list }: ListStepProps) => {
 				if (data.errors) {
 					setUser(null);
 				} else {
-					setUser(data);
+					setUser(data.data);
 				}
 			});
 	}, [address]);
 
-	// if (!user?.email) {
-	// 	return <AccountInfo setUser={setUser} />;
-	// }
+	if (!user?.email) {
+		return <AccountInfo setUser={setUser} />;
+	}
 
 	return (
 		<StepLayout onProceed={onProceed}>

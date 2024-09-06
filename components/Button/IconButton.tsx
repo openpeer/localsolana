@@ -5,21 +5,19 @@ interface ButtonProps {
 	onClick?: () => void;
 	minimal?: boolean;
 	outlined?: boolean;
-	rounded?: boolean;
-	link?: boolean;
 	disabled?: boolean;
 	processing?: boolean;
+	icon: JSX.Element;
 }
 
-const Button = ({
+const IconButton = ({
 	title,
 	onClick,
 	minimal = false,
 	outlined = false,
-	rounded = false,
-	link = false,
 	disabled = false,
-	processing = false
+	processing = false,
+	icon
 }: ButtonProps) => (
 	<button
 		type="button"
@@ -27,16 +25,12 @@ const Button = ({
 			minimal
 				? 'text-xl font-bold w-8'
 				: outlined
-				? 'w-full px-2 py-3 rounded border border-purple-900 text-base text-purple-900 my-4'
+				? 'w-full md:w-auto flex flex-row items-center justify-center px-5 py-3 space-x-2 rounded-xl border border-black text-sm text-black cursor-pointer'
 				: processing
-				? 'flex flex-row items-center justify-center w-full px-5 py-2.5 rounded bg-purple-900 text-base text-white'
+				? 'w-full flex flex-row items-center justify-center px-5 py-2.5 rounded bg-gray-400 text-sm text-white'
 				: disabled
-				? 'w-full px-5 py-3 rounded bg-gray-400 text-base text-white opacity-50 cursor-not-allowed'
-				: rounded
-				? 'w-full px-4 py-2.5 rounded-full bg-purple-900 text-sm md:text-base text-white'
-				: link
-				? 'w-auto'
-				: 'w-full px-5 py-3 rounded bg-purple-900 text-base text-white'
+				? 'w-auto flex flex-row items-center justify-center px-5 py-3 space-x-2  rounded-xl bg-gray-400 text-sm text-white opacity-50 cursor-not-allowed'
+				: 'w-full md:w-auto flex flex-row items-center justify-center px-5 py-3 space-x-2  rounded-xl bg-gray-900 border border-gray-900 text-sm text-white cursor-pointer'
 		}
 		onClick={onClick}
 		disabled={disabled || processing}
@@ -56,8 +50,9 @@ const Button = ({
 				/>
 			</svg>
 		)}
-		{title}
+		<span>{title}</span>
+		<span>{icon}</span>
 	</button>
 );
 
-export default Button;
+export default IconButton;
