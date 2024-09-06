@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react';
 
 import Select from './Select';
 import { SelectProps, TokenSelectProps } from './Select.types';
-import axios from 'axios';
 import { minkeApi } from '@/pages/api/utils/utils';
 
 const TokenSelect = ({
@@ -26,17 +25,22 @@ const TokenSelect = ({
 
 	useEffect(() => {
 		//if (!chainId && !allTokens) return;
+		// console.log(getAuthToken());
 
 		setLoading(true);
 
-		minkeApi.get(`/api/tokens`, {
+		// axios.get(`/api/admin/tokens`)
+		// 	.then((res) => console.log(res));
+
+		minkeApi.get(`/api/admin/tokens`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			},
 			params: new URLSearchParams().toString()
 		})
-			.then((res) => res.data)
+			.then((res) => res.data.data)
 			.then((data) => {
+				
 				const source: Token[] = minimal ? data.map((t: Token) => ({ ...t, ...{ name: t.symbol } })) : data;
 				if (allTokens) {
 					// remove symbol duplicates from the source array
@@ -65,7 +69,7 @@ const TokenSelect = ({
 				}
 				setLoading(false);
 			});
-	});
+	},[]);
 
 	if (isLoading) {
 		return <Loading message="" big={false} />;

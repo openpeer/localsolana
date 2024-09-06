@@ -10,7 +10,7 @@ import Label from './Label/Label';
 import ListsTable from './ListsTable';
 import Loading from './Loading/Loading';
 import MarginSwitcher from './MarginSwitcher';
-//import HeaderMetrics from './MerchantAccount/HeaderMetrics';
+import HeaderMetrics from './MerchantAccount/HeaderMetrics';
 import Modal from './Modal/ModalWindow';
 //import NotificationHeader from './Notifications/NotificationHeader';
 import Pagination from './Pagination/Pagination';
@@ -42,7 +42,7 @@ export {
 	Steps,
 	Loading,
 	Avatar,
-	//HeaderMetrics,
+	HeaderMetrics,
 	HeaderH3,
 	ListsTable,
 	//WrongNetwork,

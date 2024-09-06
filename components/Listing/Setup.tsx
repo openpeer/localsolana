@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { ListStepProps } from './Listing.types';
 import StepLayout from './StepLayout';
 
+
 const Setup = ({ list, updateList }: ListStepProps) => {
 	//const { chain: connectedChain } = useNetwork();
 	const { token, currency, type, chainId } = list;
@@ -28,6 +29,20 @@ const Setup = ({ list, updateList }: ListStepProps) => {
 		clearErrors(['currency']);
 		setLastCurrency(c);
 	};
+
+	// useEffect(() => {
+	// 	axios
+	// 		.get(`/api/fiatCurrencies`)
+	// 		.then((resp) => {
+	// 			if (resp.status === 200) {
+	// 				console.log(resp);
+					
+	// 			} else {
+	// 				console.log("Empty");
+	// 			}
+	// 		})
+	// 		.catch((err:any) => console.log('Error encountered: ', err));
+	// }, []);
 
 	// useEffect(() => {
 	// 	if (!chain && !chainId && connectedChain) {

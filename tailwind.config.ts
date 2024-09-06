@@ -1,4 +1,6 @@
 import type { Config } from 'tailwindcss'
+const { fontFamily } = require('tailwindcss/defaultTheme');
+
 
 const config: Config = {
   content: [
@@ -8,13 +10,26 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
-    },
+			fontFamily: {
+				sans: ['var(--font-manrope)', ...fontFamily.sans]
+			},
+			colors: {
+				cyan: {
+					200: '#7B80FE',
+					600: '#020AD4',
+					800: '#03088D'
+				},
+        solanaPurple: '#592FAE',
+			}
+		}
+    // extend: {
+    //   backgroundImage: {
+    //     'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+    //     'gradient-conic':
+    //       'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+    //   },
+    // },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/forms')],
 }
 export default config

@@ -28,8 +28,8 @@ const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({
 }) => {
 	const { bank, values = {} } = paymentMethod || ({} as UIPaymentMethod);
 	const { account_info_schema: schema = [] } = (bank || {}) as Bank;
-	const { errors, validate } = useFormErrors();
-
+	const { errors, validate } = useFormErrors();	
+	
 	const resolver: Resolver = () => {
 		const error: Errors = {};
 

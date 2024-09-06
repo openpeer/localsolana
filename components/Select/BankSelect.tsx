@@ -37,7 +37,7 @@ const BankSelect = ({
 		})
 			.then((res) => res.json())
 			.then((data) => {
-				setBanks(data);
+				setBanks(data.data);
 				setLoading(false);
 			});
 	}, [currencyId]);

@@ -40,6 +40,7 @@ export default function Select({
 							{label}
 						</Listbox.Label>
 					)}
+
 					<div className={`relative ${minimal ? '' : 'mt-1'}`}>
 						<Listbox.Button
 							className={`bg-gray-100 relative w-full cursor-default rounded-md py-2 pl-3 text-left sm:text-sm ${
@@ -163,3 +164,146 @@ export default function Select({
 		</Listbox>
 	);
 }
+
+/*
+import React from 'react';
+import Select from 'react-select';
+import Flag from 'components/Flag/Flag';
+import Token from 'components/Token/Token';
+import { countries } from 'models/countries';
+import { Token as TokenModel } from 'models/types';
+import Image from 'next/image';
+import { SelectProps } from './Select.types';
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+
+
+// Custom single value component
+const CustomSingleValue = ({ data, token, flag, rounded }) => (	
+	<div className="flex items-center">
+	  {token ? (
+		<Token token={data as TokenModel} size={24} />
+	  ) : flag ? (
+		<Flag name={countries[data.icon!]} size={24} />
+	  ) : (
+		!!data.icon && (
+		  <Image
+			src={data.icon}
+			alt={data.label}
+			className={`${rounded ? 'rounded-full' : ''} h-6 w-6 flex-shrink-0`}
+			width={24}
+			height={24}
+			unoptimized
+		  />
+		)
+	  )}
+	  <span className="ml-3 block truncate">{data.label || 'Select'}</span>
+	</div>
+  );
+  
+  // Custom option component
+  const CustomOption = (props) => {
+	const { data, innerRef, innerProps, isFocused, isSelected } = props;
+	return (
+	  <div
+		ref={innerRef}
+		{...innerProps}
+		className={`flex items-center cursor-pointer select-none py-2 pl-3 ${
+		  isSelected ? 'bg-indigo-600 text-white' : isFocused ? 'bg-gray-200' : 'text-gray-900'
+		}`}
+	  >
+		{data.token ? (
+		  <Token token={data as TokenModel} size={24} />
+		) : data.flag ? (
+		  <Flag name={countries[data.icon!]} size={24} />
+		) : (
+		  !!data.icon && (
+			<Image
+			  src={data.icon}
+			  alt={data.label}
+			  className={`h-6 w-6 flex-shrink-0 ${data.rounded ? 'rounded-full' : ''}`}
+			  width={24}
+			  height={24}
+			  unoptimized
+			/>
+		  )
+		)}
+		<span className={`ml-3 block truncate ${isSelected ? 'font-semibold' : 'font-normal'}`}>
+		  {data.label}
+		</span>
+		{isSelected && !props.selectProps.isMulti && (
+		  <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-600">
+			<CheckIcon className="h-5 w-5" aria-hidden="true" />
+		  </span>
+		)}
+	  </div>
+	);
+  };
+  
+  export default function SelectComponent({
+	label,
+	options,
+	selected,
+	onSelect,
+	error,
+	onSearch,
+	minimal = false,
+	height = '',
+	rounded = false,
+	flag = false,
+	token = false,
+	network = false,
+	labelStyle = '',
+	extraStyle = ''
+  }: SelectProps) {
+	const formattedOptions = options.map(option => ({
+	  value: option,
+	  label: option.name,
+	  icon: option.icon,
+	  token: token,
+	  flag: flag,
+	  rounded: rounded
+	}));
+  
+	return (
+	  <div className={`my-8 ${minimal ? 'pr-1.5' : ''} ${extraStyle}`}>
+		{!minimal && (
+		  <label className={`block text-base font-medium text-gray-700 ${labelStyle}`}>
+			{label}
+		  </label>
+		)}
+		<div className={`relative ${minimal ? '' : 'mt-1'}`}>
+		  <Select
+			value={selected ? { value: selected.id, label: selected.name, icon: selected.icon } : null}
+			onChange={(option) => onSelect(option)}
+			options={formattedOptions}
+			// components={{ SingleValue: CustomSingleValue, Option: CustomOption }}
+			placeholder="Select"
+			isClearable
+			isSearchable={!!onSearch}
+			styles={{
+			  control: (provided) => ({
+				...provided,
+				height: minimal ? '3rem' : height,
+				border: '1px solid #e5e7eb',
+				boxShadow: 'none',
+				'&:hover': {
+				  border: '1px solid #6366f1'
+				}
+			  }),
+			  menu: (provided) => ({
+				...provided,
+				zIndex: 10
+			  }),
+			  option: (provided, state) => ({
+				...provided,
+				backgroundColor: state.isSelected ? '#4f46e5' : state.isFocused ? '#e5e7eb' : null,
+				color: state.isSelected ? 'white' : 'black'
+			  })
+			}}
+		  />
+		  {!!error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+		</div>
+	  </div>
+	);
+  }
+  */

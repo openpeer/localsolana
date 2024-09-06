@@ -92,9 +92,9 @@ const ListType = ({ updateList, list }: ListStepProps) => {
 			});
 	}, [address]);
 
-	if (!user?.email) {
-		return <AccountInfo setUser={setUser} />;
-	}
+	// if (!user?.email) {
+	// 	return <AccountInfo setUser={setUser} />;
+	// }
 
 	return (
 		<StepLayout onProceed={onProceed}>

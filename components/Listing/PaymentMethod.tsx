@@ -10,20 +10,24 @@ import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { ListStepProps, UIPaymentMethod } from './Listing.types';
 import StepLayout from './StepLayout';
 import PaymentMethodForm from './PaymentMethodForm';
+import { minkeApi } from '@/pages/api/utils/utils';
 
 const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	const { address } = useAccount();
 
 	const { currency, paymentMethods = [], type, banks = [] } = list;
-	const [paymentMethodCreation, setPaymentMethodCreation] = useState<UIPaymentMethod>();
+	
+	const [paymentMethodCreation, setPaymentMethodCreation] = useState<UIPaymentMethod>();	
 
 	const onProceed = () => {
 		if (paymentMethods.length > 0) {
 			const filteredPaymentMethods = paymentMethods.map((pm) => {
-				if (pm.id && newPaymentMethods.find((npm) => npm.id === pm.id)) {
-					return { ...pm, ...{ id: undefined, bank_id: pm.bank!.id } };
-				}
-				return { ...pm, ...{ bank_id: pm.bank!.id } };
+				// Check if pm.bank and pm.bank.id are defined
+	const bankId = pm.bank?.id;
+	if (pm.id && newPaymentMethods.find((npm) => npm.id === pm.id)) {
+		return { ...pm, id: undefined, bank_id: bankId };
+	}
+	return { ...pm, bank_id: bankId };
 			});
 			if (type === 'SellList') {
 				updateList({ ...list, ...{ step: list.step + 1, paymentMethods: filteredPaymentMethods } });
@@ -114,13 +118,29 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			return;
 		}
 
-		fetch(`/api/payment-methods?currency_id=${currency!.id}`, {
+		// fetch(`/api/payment-methods?currency_id=${currency!.id}`, {
+		// 	headers: {
+		// 		Authorization: `Bearer ${getAuthToken()}`
+		// 	}
+		// })
+		// 	.then((res) => res.json())
+		// 	.then((data) => {
+		// 		setApiPaymentMethods(data);
+		// 		if (paymentMethods.length === 0) {
+		// 			updatePaymentMethods(data);
+		// 		}
+
+		// 		// add as a new payment method if the paymentMethod is not inside data
+		// 		setNewPaymentMethods(paymentMethods.filter((pm) => !data.find((d: UIPaymentMethod) => d.id === pm.id)));
+		// 		setLoading(false);
+		// 	});
+		minkeApi.get(`/api/banks?currency_id=${currency!.id}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
-			.then((res) => res.json())
-			.then((data) => {
+			.then((res) => {return res.data.data;})
+			.then((data) => {				
 				setApiPaymentMethods(data);
 				if (paymentMethods.length === 0) {
 					updatePaymentMethods(data);
@@ -148,11 +168,12 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 
 		return apiPaymentMethod;
 	});
+	
 	const listPaymentMethods = [...existing, ...newPaymentMethods];
 
 	return (
 		<StepLayout
-			onProceed={paymentMethodCreation === undefined && paymentMethods.length > 0 ? onProceed : undefined}
+			onProceed={paymentMethodCreation === undefined && paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id).length > 0 ? onProceed : undefined}
 		>
 			<h2 className="text-xl mt-8 mb-2">Payment Methods</h2>
 			<p>{type === 'SellList' ? 'Choose how you want to pay' : 'Choose how you want to receive your money'}</p>
@@ -217,8 +238,8 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					onFinish={savePaymentMethodCreation}
 					type={type}
 					bankIds={[
-						...paymentMethods.map((pm) => pm.bank!.id),
-						...newPaymentMethods.map((pm) => pm.bank!.id)
+						...paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id),
+						...newPaymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id)
 					]}
 				/>
 			) : (

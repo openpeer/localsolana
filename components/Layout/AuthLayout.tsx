@@ -191,7 +191,7 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 			return;
 		}
 
-		minkeApi.get(`/api/users/${address}`)
+		minkeApi.get(`/api/user_profiles/${address}`)
 			.then((res) => res.data)
 			.then((data) => {
 				if (data.errors) {

@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import Select from './Select';
 import { FiatCurrencySelect, SelectProps } from './Select.types';
+import { minkeApi } from '@/pages/api/utils/utils';
 
 const CurrencySelect = ({
 	onSelect,
@@ -24,39 +25,40 @@ const CurrencySelect = ({
 	const [isLoading, setLoading] = useState(false);
 	const [search, setSearch] = useState('');
 
-	useEffect(() => {
-		const fetchCurrencyByLocation = async () => {
-			if (selectByLocation && currencies) {
-				try {
-					const response = await fetch('https://ipapi.co/currency/');
-					const currency = await response.text();
+	// useEffect(() => {
+	// 	const fetchCurrencyByLocation = async () => {
+	// 		if (selectByLocation && currencies) {
+	// 			try {
+	// 				const response = await fetch('https://ipapi.co/currency/');
+	// 				const currency = await response.text();
 
-					if (currency) {
-						const toSelect = currencies.find((c) => c.code === currency);
-						if (toSelect) {
-							onSelect(toSelect);
-						}
-					}
+	// 				if (currency) {
+	// 					const toSelect = currencies.find((c) => c.code === currency);
+	// 					if (toSelect) {
+	// 						onSelect(toSelect);
+	// 					}
+	// 				}
 
-					if (selectTheFirst && !selected && currencies[0]) {
-						onSelect(currencies[0]);
-					}
-				} catch (e) {
-					console.error('Currency API', e);
-				}
-			}
-		};
-		fetchCurrencyByLocation();
-	}, [currencies]);
+	// 				if (selectTheFirst && !selected && currencies[0]) {
+	// 					onSelect(currencies[0]);
+	// 				}
+	// 			} catch (e) {
+	// 				console.error('Currency API', e);
+	// 			}
+	// 		}
+	// 	};
+	// 	fetchCurrencyByLocation();
+	// }, [currencies]);
 
 	useEffect(() => {
 		setLoading(true);
-		fetch('/api/currencies', {
+		// minkeApi.get('/api/currencies', {
+		minkeApi.get('/api/fiatCurrencies', {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
-			.then((res) => res.json())
+			.then((res) => res.data.data)
 			.then((data) => {
 				setRawCurrencies(data);
 				const filtered: FiatCurrency[] = data.map((c: FiatCurrency) => ({ ...c, ...{ name: c.code } }));

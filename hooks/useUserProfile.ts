@@ -32,10 +32,11 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		})
 			.then((res) => res.json())
 			.then((data) => {
+				
 				if (data.errors) {
 					setUser(null);
 				} else {
-					setUser(data);
+					setUser(data.data);
 				}
 			});
 	};
@@ -57,7 +58,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 	const updateUserProfile = async (profile: User, showNotification = true) => {
 		const result = await fetch(`/api/user_profiles/${address}`, {
-			method: 'PUT',
+			method: 'POST',
 			body: JSON.stringify({ user_profile: profile }),
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
@@ -65,8 +66,10 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		});
 
 		const newUser = await result.json();
+		// console.log(profile,newUser);
 
-		if (newUser.id) {
+
+		if (newUser.data.id) {
 			setUser(newUser);
 			if (!showNotification) return;
 			onUpdateProfile?.(newUser);

@@ -6,6 +6,8 @@ import React, { useEffect, useState } from 'react';
 
 import { ListStepProps } from './Listing.types';
 import StepLayout from './StepLayout';
+import axios from 'axios';
+import { minkeApi } from '@/pages/api/utils/utils';
 
 const Amount = ({ list, updateList }: ListStepProps) => {
 	const {
@@ -93,15 +95,27 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 	useEffect(() => {
 		if (!token || !currency) return;
 		const { coingecko_id: coingeckoId } = token as Token;
+		let tokenName = token.name;
+		if(tokenName==='USDC')tokenName='usd-coin';
+		else if(tokenName==='USDT')tokenName='tether';
 
-		fetch(
-			`/api/prices?token=${coingeckoId}&fiat=${currency.name.toLowerCase()}&tokenSymbol=${
-				token.name
-			}&priceSource=${priceSource}&type=${type === 'BuyList' ? 'SELL' : 'BUY'}`
-		)
-			.then((res) => res.json())
+		// fetch(
+		// 	`/api/prices?token=${coingeckoId}&fiat=${currency.name.toLowerCase()}&tokenSymbol=${
+		// 		token.name
+		// 	}&priceSource=${priceSource}&type=${type === 'BuyList' ? 'SELL' : 'BUY'}`
+		// )
+		// console.log(,);
+		// minkeApi.get(`/binance`)
+		minkeApi.get(`/api/prices?ids=${tokenName}&vs_currencies=${currency.name.toLowerCase()}`)
+			.then((res) => res.data.data)
 			.then((data) => {
-				setPrice(data[coingeckoId || token.name][currency.name.toLowerCase()]);
+				if(Object.keys(data).length>0) setPrice(data[coingeckoId || token.name][currency.name.toLowerCase()]);
+				// console.log(data,data.tether);
+
+				// need to change this
+				// const firstKey = Object.keys(data[token.name])[0]; // Get the first key
+				// const value = data.tether[firstKey];				
+				// setPrice(value);
 			});
 	}, [token, currency, priceSource, type]);
 
