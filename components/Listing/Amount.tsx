@@ -21,6 +21,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 		type,
 		priceSource
 	} = list;
+	
 	const percentage = marginType === 'percentage';
 	const [percentageMargin, setPercentageMargin] = useState<number>(percentage ? savedMargin || 1 : 1);
 	const [fixedMargin, setFixedMargin] = useState<number | undefined>(percentage ? undefined : savedMargin);

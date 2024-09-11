@@ -23,11 +23,11 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 		if (paymentMethods.length > 0) {
 			const filteredPaymentMethods = paymentMethods.map((pm) => {
 				// Check if pm.bank and pm.bank.id are defined
-	const bankId = pm.bank?.id;
-	if (pm.id && newPaymentMethods.find((npm) => npm.id === pm.id)) {
-		return { ...pm, id: undefined, bank_id: bankId };
-	}
-	return { ...pm, bank_id: bankId };
+				const bankId = pm.bank?.id;
+				if (pm.id && newPaymentMethods.find((npm) => npm.id === pm.id)) {
+					return { ...pm, id: undefined, bank_id: bankId };
+				}
+				return { ...pm, bank_id: bankId };
 			});
 			if (type === 'SellList') {
 				updateList({ ...list, ...{ step: list.step + 1, paymentMethods: filteredPaymentMethods } });
@@ -92,6 +92,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 				updatePaymentMethods([...paymentMethods, newPaymentMethod]);
 			}
 		}
+		
 	};
 
 	useEffect(() => {
@@ -110,7 +111,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					values: {}
 				}));
 				updatePaymentMethods(savedPaymentMethods);
-				setNewPaymentMethods(savedPaymentMethods);
+				setNewPaymentMethods(savedPaymentMethods);		
 			}
 
 			setApiPaymentMethods([]);
@@ -134,17 +135,18 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 		// 		setNewPaymentMethods(paymentMethods.filter((pm) => !data.find((d: UIPaymentMethod) => d.id === pm.id)));
 		// 		setLoading(false);
 		// 	});
+		console.log(paymentMethods);
 		minkeApi.get(`/api/banks?currency_id=${currency!.id}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
 			.then((res) => {return res.data.data;})
-			.then((data) => {				
+			.then((data) => {	
 				setApiPaymentMethods(data);
-				if (paymentMethods.length === 0) {
-					updatePaymentMethods(data);
-				}
+				// if (paymentMethods.length === 0) {
+				// 	updatePaymentMethods(data);
+				// }
 
 				// add as a new payment method if the paymentMethod is not inside data
 				setNewPaymentMethods(paymentMethods.filter((pm) => !data.find((d: UIPaymentMethod) => d.id === pm.id)));
@@ -159,6 +161,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	if (isLoading) {
 		return <Loading />;
 	}
+
 
 	const existing = (apiPaymentMethods || []).map((apiPaymentMethod) => {
 		const updated = paymentMethods.find((m) => m.id === apiPaymentMethod.id);

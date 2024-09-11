@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { useContext, useState } from 'react';
+import { useConfirmationSignMessage, useAccount } from 'hooks';
 
 import { getAuthToken, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { List } from 'models/types';
@@ -15,49 +16,49 @@ const EditListButtons = ({ list }: { list: List }) => {
 	const toggleMessage = JSON.stringify(snakecaseKeys(updateList, { deep: true }), undefined, 4);
 	const [option, setOption] = useState<Option>();
 
-	// const { signMessage } = useConfirmationSignMessage({
-	// 	onSuccess: async () => {
-	// 		await fetch(
-	// 			`/api/lists/${id}`,
+	const { signMessage } = useConfirmationSignMessage({
+		onSuccess: async () => {
+			await fetch(
+				`/api/lists/${id}`,
 
-	// 			{
-	// 				method: 'DELETE',
-	// 				headers: {
-	// 					Authorization: `Bearer ${getAuthToken()}`
-	// 				}
-	// 			}
-	// 		);
-	// 		router.reload();
-	// 	}
-	// });
+				{
+					method: 'DELETE',
+					headers: {
+						Authorization: `Bearer ${getAuthToken()}`
+					}
+				}
+			);
+			router.reload();
+		}
+	});
 
-	// const { signMessage: signListStatusChange } = useConfirmationSignMessage({
-	// 	onSuccess: async (data, variables) => {
-	// 		await fetch(
-	// 			`/api/lists/${id}`,
+	const { signMessage: signListStatusChange } = useConfirmationSignMessage({
+		onSuccess: async (data, variables) => {
+			await fetch(
+				`/api/lists/${id}`,
 
-	// 			{
-	// 				method: 'PUT',
-	// 				body: JSON.stringify(
-	// 					snakecaseKeys(
-	// 						{
-	// 							chainId: list.chain_id,
-	// 							list: updateList,
-	// 							data,
-	// 							address,
-	// 							message: variables.message
-	// 						},
-	// 						{ deep: true }
-	// 					)
-	// 				),
-	// 				headers: {
-	// 					Authorization: `Bearer ${getAuthToken()}`
-	// 				}
-	// 			}
-	// 		);
-	// 		router.reload();
-	// 	}
-	// });
+				{
+					method: 'PUT',
+					body: JSON.stringify(
+						snakecaseKeys(
+							{
+								chainId: list.chain_id,
+								list: updateList,
+								data,
+								// address,
+								message: variables.message
+							},
+							{ deep: true }
+						)
+					),
+					headers: {
+						Authorization: `Bearer ${getAuthToken()}`
+					}
+				}
+			);
+			router.reload();
+		}
+	});
 
 	const options = [
 		{ id: 1, name: 'Edit Ad' },
@@ -76,9 +77,9 @@ const EditListButtons = ({ list }: { list: List }) => {
 		} else if (o.id === 2) {
 			router.push('/escrows');
 		} else if (o.id === 3) {
-			//signListStatusChange({ message: toggleMessage });
+			// signListStatusChange({ message: toggleMessage });
 		} else {
-			//signMessage({ message: `I want to delete the list ${id}` });
+			// signMessage({ message: `I want to delete the list ${id}` });
 		}
 	};
 

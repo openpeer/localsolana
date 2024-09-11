@@ -52,7 +52,8 @@ const HomePage = () => {
 			}, {} as { [key: string]: string });
 
 		const searchParams = new URLSearchParams(search);
-		fetch(`/api/lists?${searchParams.toString()}`, {
+		fetch(`/api/getLists?${searchParams.toString()}`, {
+		// fetch(`/api/getLists`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}

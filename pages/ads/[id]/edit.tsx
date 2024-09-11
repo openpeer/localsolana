@@ -21,13 +21,15 @@ const EditTrade = ({ id }: { id: number }) => {
 	const { address } = useAccount();
 
 	useEffect(() => {
+		
 		fetch(`/api/lists/${id}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
 			.then((res) => res.json())
-			.then((data: List) => {
+			.then((data1) => {
+				const data=data1.data;
 				const {
 					fiat_currency: fiatCurrency,
 					token,
@@ -57,11 +59,11 @@ const EditTrade = ({ id }: { id: number }) => {
 					currency,
 					tokenId: token.id,
 					fiatCurrencyId: currency.id,
-					marginType,
+					marginType:data.margin_type==0?'fixed':'percentage',
 					totalAvailableAmount: Number(totalAvailableAmount),
 					limitMin: limitMin ? Number(limitMin) : undefined,
 					limitMax: limitMax ? Number(limitMax) : undefined,
-					paymentMethods,
+					paymentMethods: Array.isArray(data.payment_methods)?data.payment_methods:[data.payment_methods],
 					terms: terms || '',
 					margin: margin ? Number(margin) : undefined,
 					depositTimeLimit: depositTimeLimit ? Number(depositTimeLimit) : 0,
