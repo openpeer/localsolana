@@ -76,7 +76,6 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 				}
 			});
 			const searchLists: List[] = await response.json();
-			console.log(searchLists);
 			updateLists(searchLists);
 		} catch (error) {
 			console.error(error);

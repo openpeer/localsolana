@@ -3,7 +3,7 @@ import BankSelect from 'components/Select/BankSelect';
 import CurrencySelect from 'components/Select/CurrencySelect';
 import { Option } from 'components/Select/Select.types';
 import TokenSelect from 'components/Select/TokenSelect';
-import debounce from 'lodash';
+import debounce from 'lodash/debounce';
 import { SearchFilters } from 'models/search';
 import { FiatCurrency, Token } from 'models/types';
 import React, { useEffect, useState } from 'react';
@@ -84,7 +84,7 @@ const Filters = ({ onFilterUpdate, needToReset, setNeedToReset }: FilterProps) =
 				placeholder="1000"
 				type="decimal"
 				value={amount}
-				//onChangeNumber={debounce(setAmount, 800)}
+				onChangeNumber={debounce(setAmount, 800)}
 				labelStyle="text-sm"
 				containerExtraStyle="w-full lg:w-32 my-0"
 				extraStyle="pr-2"
@@ -104,7 +104,7 @@ const Filters = ({ onFilterUpdate, needToReset, setNeedToReset }: FilterProps) =
 				placeholder="500"
 				type="decimal"
 				value={fiatAmount}
-				//onChangeNumber={debounce(setFiatAmount, 800)}
+				onChangeNumber={debounce(setFiatAmount, 800)}
 				labelStyle="text-sm"
 				containerExtraStyle="w-full lg:w-32 my-0"
 				extraStyle="pr-2"

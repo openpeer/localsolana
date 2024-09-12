@@ -135,7 +135,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 		// 		setNewPaymentMethods(paymentMethods.filter((pm) => !data.find((d: UIPaymentMethod) => d.id === pm.id)));
 		// 		setLoading(false);
 		// 	});
-		console.log(paymentMethods);
 		minkeApi.get(`/api/banks?currency_id=${currency!.id}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
