@@ -1,7 +1,7 @@
 import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 import { useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-//import { Shyft } from '@shyft-to/js';
+import useShyft from '../useShyft';
 
 interface UseGaslessDeployProps {
     contract: string;
@@ -17,9 +17,7 @@ const useGaslessDeploy = ({ contract }: UseGaslessDeployProps) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { primaryWallet } = useDynamicContext();
-    const connection = new Connection('https://api.mainnet-beta.solana.com'); // Adjust the cluster as needed
-
-    //const shyft = new Shyft({ apiKey: 'YOUR_SHYFT_API_KEY' }); // Replace with your Shyft API key
+    const {shyft,sendTransactionWithShyft} = useShyft(); 
 
     const deploy = async () => {
         if (!primaryWallet?.address) return;

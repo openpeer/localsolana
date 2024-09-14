@@ -1,4 +1,5 @@
 
+import { Network } from '@shyft-to/js';
 import { UIList } from 'components/Listing/Listing.types';
 import { List, Token } from 'models/types';
 import snakecaseKeys from 'snakecase-keys';
@@ -41,23 +42,5 @@ export const listToMessage = (list: UIList): string => {
 	);
 };
 
-// export const getChainToken = (chain: Chain | undefined) => {
-// 	if (chain) {
-// 		return chain.id === arbitrum.id
-// 			? { symbol: 'ARB', icon: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png?v=026' }
-// 			: chain.id === optimism.id
-// 			? {
-// 					symbol: 'OPTMISM',
-// 					icon: 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png?v=026'
-// 			  }
-// 			: chain.id === gnosis.id
-// 			? {
-// 					symbol: 'xDAI',
-// 					icon: 'https://cryptologos.cc/logos/gnosis-gno-gno-logo.png?v=026'
-// 			  }
-// 			: chain.id === blast.id
-// 			? { symbol: 'ETH', icon: blast.iconUrls[0] }
-// 			: chain.nativeCurrency;
-// 	}
-// 	return undefined;
-// };
+
+  export const CURRENT_NETWORK = Network.Devnet; // Change this to MAINNET or LOCALNET as needed

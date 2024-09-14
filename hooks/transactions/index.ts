@@ -4,7 +4,7 @@
 //import useMarkAsPaid from './markAsPaid/useMarkAsPaid';
 //import useReleaseFunds from './release/useReleaseFunds';
 import useDepositFunds from './deposit/useDepositFunds';
-//import useWithdrawFunds from './withdraw/useWithdrawFunds';
+import useShyft from './useShyft';
 
 export {
 	//useApproval,
@@ -13,5 +13,5 @@ export {
 	//useEscrowCancel,
 	//useReleaseFunds,
 	useDepositFunds,
-	//useWithdrawFunds
+	useShyft
 };
