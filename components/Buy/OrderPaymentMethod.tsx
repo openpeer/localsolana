@@ -119,15 +119,17 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 	useEffect(() => {
 		setLoading(true);
 
-		fetch(`/api/payment-methods?currency_id=${currency!.id}`, {
+		// fetch(`/api/payment-methods?currency_id=${currency!.id}`, {
+		fetch(`/api/banks?currency_id=${currency!.id}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
 			.then((res) => res.json())
+			.then((res) => res.data)
 			.then((data: PaymentMethodType[]) => {
-				const listBankIds = banks.map((b) => b.id);
-				const filtered = data.filter((pm) => listBankIds.includes(pm.bank.id));
+				const listBankIds = banks?banks.map((b) => b?.id):[];
+				const filtered = data.filter((pm) => listBankIds.includes(pm?.bank?.id));
 				setPaymentMethods(filtered);
 				if (!paymentMethod.values) {
 					setPaymentMethod(filtered[0]);

@@ -29,6 +29,7 @@ const Profile = ({ id }: { id: number }) => {
 	useEffect(() => {
 		if (!user) return;
 		fetch(`/api/lists?&seller=${user.address}`)
+		// fetch(`/api/lists?&seller=0xFE6b7A4494B308f8c0025DCc635ac22630ec73301`)
 			.then((res) => res.json())
 			.then((data) => {
 				setLists(data.data);

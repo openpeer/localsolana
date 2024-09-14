@@ -54,8 +54,6 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 
 	const { errors, clearErrors, validate } = useFormErrors();
 
-	console.log(list.payment_methods);
-
 	const banks = Array.isArray(list.payment_methods)?list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id })):[list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
 	const instantEscrow = list?.escrow_type === 'instant';
 
@@ -103,8 +101,10 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 		if (!tokenAmount) {
 			error.tokenAmount = 'Should be bigger than 0';
 		} else {
-			const escrowFee = fee || BigInt(0);
-			const escrowedBalance = ((balance as bigint) || BigInt(0)) - escrowFee;
+			// const escrowFee = fee || BigInt(0);
+			const escrowFee = 20;
+			// const escrowedBalance = ((balance as bigint) || BigInt(0)) - escrowFee;
+			const escrowedBalance = BigInt(100);
 
 			if (instantEscrow && escrowedBalance < parseUnits(String(tokenAmount), token.decimals)) {
 				error.tokenAmount = `Only ${formatUnits(escrowedBalance, token.decimals)} ${
@@ -124,18 +124,29 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 	};
 
 	const createOrder = async (newOrder: Order) => {
-		const result = await fetch('/api/orders/', {
+		// const result = await fetch('/api/orders/', {
+		const result = await fetch('/api/createOrder/', {
 			method: 'POST',
 			body: JSON.stringify(
+				// snakecaseKeys(
+				// 	{
+				// 		order: {
+				// 			listId: newOrder.list.id,
+				// 			fiatAmount: newOrder.fiat_amount,
+				// 			tokenAmount: truncate(newOrder.token_amount, token.decimals),
+				// 			price: newOrder.price,
+				// 			paymentMethod: { id: bank?.id }
+				// 		}
+				// 	},
+				// 	{ deep: true }
+				// )
 				snakecaseKeys(
 					{
-						order: {
-							listId: newOrder.list.id,
-							fiatAmount: newOrder.fiat_amount,
-							tokenAmount: truncate(newOrder.token_amount, token.decimals),
-							price: newOrder.price,
-							paymentMethod: { id: bank?.id }
-						}
+						listId: newOrder.list.id,
+						fiatAmount: newOrder.fiat_amount,
+						tokenAmount: truncate(newOrder.token_amount, token.decimals),
+						price: newOrder.price,
+						paymentMethod: { id: bank?.id }
 					},
 					{ deep: true }
 				)
@@ -206,12 +217,13 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 	useEffect(() => {
 		if (!address) return;
 
-		fetch(`/api/users/${address}`, {
+		fetch(`/api/user_profiles/${address}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
 			.then((res) => res.json())
+			.then((res) => res.data)
 			.then((data) => {
 				if (data.errors) {
 					setUser(null);
