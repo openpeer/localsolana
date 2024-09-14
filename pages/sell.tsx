@@ -31,6 +31,7 @@ const SellPage = () => {
 	const [showFilters, setShowFilters] = useState(false);
 
 	const { address } = useAccount();
+	
 	const [list, setList] = useState<UIList>({
 		...{
 			step: LIST_TYPE_STEP,
@@ -62,7 +63,7 @@ const SellPage = () => {
 
 	const handleToggleFilters = () => {
 		setShowFilters(!showFilters);
-	};
+	}
 
 	return (
 		<div className="pt-4 md:pt-6">

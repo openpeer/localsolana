@@ -51,7 +51,7 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 			const filteredParams = Object.fromEntries(
 				Object.entries(params).filter(([, value]) => value !== undefined)
 			);
-			const response = await fetch(`/api/quickbuy?${new URLSearchParams(filteredParams).toString()}`, {
+			const response = await fetch(`/api/quickBuy?${new URLSearchParams(filteredParams).toString()}`, {
 				headers: {
 					Authorization: `Bearer ${getAuthToken()}`
 				}

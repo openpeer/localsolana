@@ -1,4 +1,3 @@
-"use client";
 import type { AppProps } from 'next/app';
 
 import 'react-toastify/dist/ReactToastify.css';
@@ -44,13 +43,13 @@ const manrope = Manrope({
 	variable: '--font-manrope'
 });
 
-const AirdropIcon = () => (
-	<Image
-		src={logo}
-		alt="localsolana logo"
-		className="text-gray-400 group-hover:text-gray-300 flex-shrink-0 h-6 w-6 mr-2"
-	/>
-);
+// const AirdropIcon = () => (
+// 	<Image
+// 		src={logo}
+// 		alt="localsolana logo"
+// 		className="text-gray-400 group-hover:text-gray-300 flex-shrink-0 h-6 w-6 mr-2"
+// 	/>
+// );
 
 const navigation = [
 	{ name: 'Trade P2P', href: '/trade', icon: ChartBarSquareIcon },
@@ -160,6 +159,7 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 const Unauthenticated = () => {
 	const { address } = useAccount();
 	const { authenticateUser, isAuthenticating } = useAuthenticateConnectedUser();
+
 	return (
 		<div className="flex h-screen">
 			<div className="px-6 m-auto flex flex-col justify-items-center content-center text-center">
@@ -184,6 +184,7 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 	const { address } = useAccount();
 	const { isAuthenticated } = useDynamicContext();
 	const authenticated = disableAuthentication || isAuthenticated;
+
 
 	useEffect(() => {
 		if (!address) {

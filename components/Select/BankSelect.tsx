@@ -30,7 +30,7 @@ const BankSelect = ({
 		}
 
 		setLoading(true);
-		fetch(`/api/banks?currency_id=${currencyId}`, {
+		fetch(currencyId===-1?`/api/getbanks`:`/api/banks?currency_id=${currencyId}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}

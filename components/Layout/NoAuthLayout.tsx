@@ -1,4 +1,3 @@
-"use client";
 import type { AppProps } from 'next/app';
 
 import 'react-toastify/dist/ReactToastify.css';

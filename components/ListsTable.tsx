@@ -94,6 +94,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 	//const { data, isLoading } = useContractReads({ contracts: signatures });
 	const showVerification = user && !user.verified;
 
+
 	return (
 		<table className="w-full md:rounded-lg">
 			<thead className="bg-gray-100">
@@ -161,10 +162,12 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 						type,
 						accept_only_verified: acceptOnlyVerified
 					} = list;
-					const banks = type === 'BuyList' ? list.banks : paymentMethods.map((pm) => pm.bank);
+					// const banks = type === 'BuyList' ? list.banks : paymentMethods.map((pm) => pm.bank);
 					const { address: sellerAddress, name } = seller;
 					const isSeller = primaryWallet && sellerAddress === address;
-					console.log(isSeller, sellerAddress, address);
+					// const isSeller=true;
+					// change here
+					// console.log(isSeller, sellerAddress, address);
 					
 					const { symbol, minimum_amount: minimumAmount = 0 } = token;
 					//const chain = chains.find((c) => c.id === chainId);
@@ -294,7 +297,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 												</div>
 											)}
 											<div className="mb-2">
-												{banks.map((bank) => (
+												{/* {banks.map((bank) => (
 													<div
 														className="flex flex-row items-center"
 														key={`bank-${list.id}-${bank.id}`}
@@ -309,7 +312,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 															{bank.name}
 														</span>
 													</div>
-												))}
+												))} */}
 											</div>
 										</div>
 									</div>
@@ -376,7 +379,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 								)}
 							</td>
 							<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-								{banks.map((bank) => (
+								{/* {banks.map((bank) => (
 									<div
 										className="flex flex-row items-center mb-1"
 										key={`bank-mobile-${list.id}-${bank.id}`}
@@ -389,7 +392,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 										</span>
 										<span className="pl-1">{bank.name}</span>
 									</div>
-								))}
+								))} */}
 							</td>
 							<td className="hidden text-right py-4 pr-4 lg:table-cell">
 								{isSeller ? (

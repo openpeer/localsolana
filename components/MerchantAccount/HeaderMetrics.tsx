@@ -106,7 +106,7 @@ const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 		};
 
 		if (address) {
-			fetchWalletAge();
+			// fetchWalletAge();
 			// fetchVerificationStatus();
 		}
 	}, [address]);
@@ -167,10 +167,10 @@ const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 										>
 											Edit profile
 										</Link>
-								{user!.data.address === connectedAddress ? (
+								{user!.address === connectedAddress ? (
 									<>
 										<Link
-											href={`/${user.data.address}/edit`}
+											href={`/${user.address}/edit`}
 											className="flex items-center py-2 px-6 border rounded"
 										>
 											Edit profile

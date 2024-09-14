@@ -17,13 +17,54 @@ import { ListStepProps } from './Listing.types';
 import StepLayout from './StepLayout';
 import FundEscrow from './FundEscrow';
 import 'react-quill/dist/quill.snow.css';
+import Button from '../Button/Button';
 
 const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
 
 const Details = ({ list, updateList }: ListStepProps) => {
 	const { terms, depositTimeLimit, paymentTimeLimit, type, chainId, token, acceptOnlyVerified, escrowType } = list;
-	const { address } = useAccount();
+	const { address, isAuthenticated } = useAccount();
 	const router = useRouter();
+
+	const createList = async(data)=>{
+		const escrowVal=escrowType==="manual"?0:1;
+		// console.log(address,snakecaseKeys( { ...list, ...{ bankIds: (list.banks || []).map((b) => b.id) }, margin_type:0,seller_id:3,escrowType:escrowVal }));
+		// return;
+		if(isAuthenticated){
+			// need to add data inside the body
+			const result = await fetch(
+				// list.id ? `/api/lists/${list.id}` : '/api/createList',
+				list.id ? `/api/list_management/${list.id}` : '/api/createList',
+				{
+					method: list.id ? 'PUT' : 'POST',
+					body: JSON.stringify(
+						// snakecaseKeys(
+						// 	{
+						// 		list: { ...list, ...{ bankIds: (list.banks || []).map((b) => b.id) }, margin_type:0,seller_id:3,escrowType:escrowVal,automatic_approval:false },
+						// 		data
+						// 	},
+						// 	{ deep: true }
+						// )
+						snakecaseKeys( 
+							{ ...list,
+							 ...{ bankIds: (list.banks || []).map((b) => b.id) }, 
+							 marginType:list.marginType==="fixed"?0:1,
+							 seller_id:10951,
+							 escrowType:escrowVal 
+							})
+					),
+					headers: {
+						Authorization: `Bearer ${getAuthToken()}`,
+						'Content-Type': 'application/json',
+					}
+				}
+			);
+			const apiResult = await result.json();
+			if (apiResult!.data!.id) {
+				router.push(`/${address}`);
+			}
+		}
+	};
 
 	const { signMessage } = useConfirmationSignMessage({
 		onSuccess: async (data) => {
@@ -95,13 +136,16 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
 	if (needToDeployOrFund) {
 		return (
-			<FundEscrow
-				token={token as Token}
-				sellerContract="0xsadhsjhdjsahdjkaskdhkas"
-				chainId={chainId}
-				balance={(balance || BigInt(0)) as bigint}
-				totalAvailableAmount={list.totalAvailableAmount!}
-			/>
+			<>
+				<Button title="Click Me" onClick={()=>createList('0x2ad3022365874e29e4220612c546499dedae4f9e826d6cb78aa0a7ed19f562903d87f0758a147c2aa43fac12c88ce07c2afa993ad68792c4026c5b64de50d3381c')}/>
+				<FundEscrow
+					token={token as Token}
+					sellerContract="0xsadhsjhdjsahdjkaskdhkas"
+					chainId={chainId}
+					balance={(balance || BigInt(0)) as bigint}
+					totalAvailableAmount={list.totalAvailableAmount!}
+				/>
+			</>
 		);
 	}
 

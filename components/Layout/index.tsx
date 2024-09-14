@@ -4,6 +4,7 @@ import { DynamicContextProvider } from '@dynamic-labs/sdk-react-core';
 import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
 import { SolanaWalletConnectors } from "@dynamic-labs/solana";
+import Head from 'app/head';
 
 
 const AuthLayout = dynamic(() => import('./AuthLayout'), { ssr: false });
@@ -11,7 +12,6 @@ const NoAuthLayout = dynamic(() => import('./NoAuthLayout'), { ssr: false });
 
 const App = ({ Component, pageProps,router}: AppProps) => {
 	const { simpleLayout } = pageProps;
-
 	return (
 
 		<DynamicContextProvider
@@ -21,10 +21,11 @@ const App = ({ Component, pageProps,router}: AppProps) => {
           siweStatement: "Welcome to Local Solana. ",
         }}
       >
+        <Head />
         {simpleLayout ? (
-          <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
+          <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
         ) : (
-          <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass pageProps
+          <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass pageProps
         )}
       </DynamicContextProvider>
 
