@@ -26,15 +26,15 @@ const Details = ({ list, updateList }: ListStepProps) => {
 	const { address, isAuthenticated } = useAccount();
 	const router = useRouter();
 
+	// @ts-ignore
 	const createList = async(data)=>{
 		const escrowVal=escrowType==="manual"?0:1;
-		// console.log(address,snakecaseKeys( { ...list, ...{ bankIds: (list.banks || []).map((b) => b.id) }, margin_type:0,seller_id:3,escrowType:escrowVal }));
-		// return;
+		
 		if(isAuthenticated){
 			// need to add data inside the body
 			const result = await fetch(
 				// list.id ? `/api/lists/${list.id}` : '/api/createList',
-				list.id ? `/api/list_management/${list.id}` : '/api/createList',
+				list.id ? `/api/lists/${list.id}` : '/api/createList',
 				{
 					method: list.id ? 'PUT' : 'POST',
 					body: JSON.stringify(
@@ -49,9 +49,11 @@ const Details = ({ list, updateList }: ListStepProps) => {
 							{ ...list,
 							 ...{ bankIds: (list.banks || []).map((b) => b.id) }, 
 							 marginType:list.marginType==="fixed"?0:1,
-							 seller_id:10951,
+							 seller_address:address,
 							 escrowType:escrowVal 
-							})
+							},
+							{ deep: true }
+						)
 					),
 					headers: {
 						Authorization: `Bearer ${getAuthToken()}`,

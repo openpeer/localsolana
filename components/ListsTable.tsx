@@ -162,7 +162,8 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 						type,
 						accept_only_verified: acceptOnlyVerified
 					} = list;
-					// const banks = type === 'BuyList' ? list.banks : paymentMethods.map((pm) => pm.bank);
+					// @ts-ignore
+					const banks = type === 'BuyList' ? list.banks : paymentMethods.map((pm) => pm.banks);
 					const { address: sellerAddress, name } = seller;
 					const isSeller = primaryWallet && sellerAddress === address;
 					// const isSeller=true;
@@ -297,22 +298,22 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 												</div>
 											)}
 											<div className="mb-2">
-												{/* {banks.map((bank) => (
+												{banks?.map((bank) => (
 													<div
 														className="flex flex-row items-center"
-														key={`bank-${list.id}-${bank.id}`}
+														key={`bank-${list.id}-${bank?.id}`}
 													>
 														<span
 															className="bg-gray-500 w-1 h-3 rounded-full"
-															style={{ backgroundColor: bank.color || 'gray' }}
+															style={{ backgroundColor: bank?.color || 'gray' }}
 														>
 															&nbsp;
 														</span>
 														<span className="pl-1 text-gray-700 text-[11px]">
-															{bank.name}
+															{bank?.name}
 														</span>
 													</div>
-												))} */}
+												))}
 											</div>
 										</div>
 									</div>
@@ -379,20 +380,20 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 								)}
 							</td>
 							<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-								{/* {banks.map((bank) => (
+								{banks.map((bank) => (
 									<div
 										className="flex flex-row items-center mb-1"
-										key={`bank-mobile-${list.id}-${bank.id}`}
+										key={`bank-mobile-${list.id}-${bank?.id}`}
 									>
 										<span
 											className="w-1 h-3 rounded-full"
-											style={{ backgroundColor: bank.color || 'gray' }}
+											style={{ backgroundColor: bank?.color || 'gray' }}
 										>
 											&nbsp;
 										</span>
-										<span className="pl-1">{bank.name}</span>
+										<span className="pl-1">{bank?.name}</span>
 									</div>
-								))} */}
+								))}
 							</td>
 							<td className="hidden text-right py-4 pr-4 lg:table-cell">
 								{isSeller ? (

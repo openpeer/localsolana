@@ -73,8 +73,9 @@ const BuyPage = ({ id }: { id: number }) => {
 						<span className="text-gray-600 hover:cursor-pointer ml-2">Details</span>
 					</div>
 					{showFilters && <div className="mt-4">{!!order.list && <Summary order={order} />}</div>}
-					{step === AMOUNT_STEP && <Amount order={order} updateOrder={setOrder} price={price} />}
-					{step === PAYMENT_METHOD_STEP && <OrderPaymentMethod order={order} updateOrder={setOrder} />}
+					{/* {step === AMOUNT_STEP && <Amount order={order} updateOrder={setOrder} price={price} />}
+					{step === PAYMENT_METHOD_STEP && <OrderPaymentMethod order={order} updateOrder={setOrder} />} */}
+					{step === AMOUNT_STEP && <OrderPaymentMethod order={order} updateOrder={setOrder} />}
 				</div>
 				{!!order.list && <Summary order={order} />}
 			</div>
