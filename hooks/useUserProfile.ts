@@ -18,9 +18,10 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	const [availableTo, setAvailableTo] = useState<number>();
 	const [weekendOffline, setWeekendOffline] = useState<boolean>();
 	const [errors, setErrors] = useState<Errors>({});
+	const [contract_address, setContractAddress] = useState<string | null>();
 
-	const { primaryWallet,isAuthenticated } = useDynamicContext();
-	const address  = primaryWallet?.address??"";
+	const { primaryWallet } = useDynamicContext();
+	const address  = primaryWallet?.address;
 
 	const fetchUserProfile = async () => {
 		if (!address) return;
@@ -52,10 +53,12 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 			setAvailableFrom(user.available_from || undefined);
 			setAvailableTo(user.available_to || undefined);
 			setWeekendOffline(user.weekend_offline);
+			setContractAddress(user.contract_address);
 		}
 	}, [user]);
 
 	const updateUserProfile = async (profile: User, showNotification = true) => {
+		console.log(JSON.stringify(profile));
 		
 		const result = await fetch(`/api/user_profiles/${address}`, {
 			method: 'POST',
@@ -69,9 +72,9 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		const newUser = await result.json();
 
 		if (newUser.data.id) {
-			setUser(newUser);
+			setUser(newUser.data);
 			if (!showNotification) return;
-			onUpdateProfile?.(newUser);
+			onUpdateProfile?.(newUser.data);
 		} else {
 			const foundErrors: ErrorObject = newUser.errors;
 			Object.entries(foundErrors).map(([fieldName, messages]) => {
@@ -91,7 +94,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 	const updateProfile = () => {
 		//setErrors({});
-		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null } };
+		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contract_address || null} };
 		updateUserProfile(newUser as User);
 	};
 
@@ -115,7 +118,9 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		weekendOffline,
 		setWeekendOffline,
 		updateUserProfile,
-		fetchUserProfile
+		fetchUserProfile,
+		contract_address,
+		setContractAddress
 	};
 };
 

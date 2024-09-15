@@ -3,15 +3,29 @@ import Label from 'components/Label/Label';
 import Loading from 'components/Loading/Loading';
 import { useUserProfile } from 'hooks';
 import { User } from 'models/types';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import StepLayout from './StepLayout';
 
 const AccountInfo = ({ setUser }: { setUser: (user: User) => void }) => {
-	const { user, updateProfile, errors, username, setUsername, email, setEmail } = useUserProfile({
+	const { user, updateProfile, errors,setUsername,setEmail } = useUserProfile({
 		onUpdateProfile: setUser
 	});
+	//const [username, setUsername] = useState('');
+	//const [email, setEmail] = useState('');
+	const [telegramUserId, setTelegramUserId] = useState('');
+	const [telegramUsername, setTelegramUsername] = useState('');
+	var username,email;
 
+	useEffect(() => {
+		if (user) {
+			setUsername(user.name || '');
+			setEmail(user.email || '');
+			//setTelegramUserId(user.telegram_user_id || '');
+			//setTelegramUsername(user.telegram_username || '');
+		}
+	}, [user]);
+	
 	if (user === undefined) {
 		return <Loading />;
 	}

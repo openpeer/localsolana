@@ -22,7 +22,7 @@ export interface User {
 	completion_rate: number | null;
 	created_at: string;
 	verified: boolean;
-	contracts: Contract[];
+	contract_address: string | null;
 	timezone: string | null;
 	available_from: number | null;
 	available_to: number | null;

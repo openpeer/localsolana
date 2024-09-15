@@ -206,7 +206,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 				<div className="mt-6">
 					<span className="text-gray-800 text-sm font-bold">Seller&apos;s Note</span>
 					<p className="mt-2 text-sm text-gray-500">
-						Please do not include any crypto related keywords like {token.symbol} or OpenPeer. Ensure
+						Please do not include any crypto related keywords like {token.symbol} or LocalSolana. Ensure
 						you&apos;re including the reference number {id ? `(${String(Number(id) * 10000)})` : ''} on your
 						transfer. Thanks for trading with me.
 					</p>
@@ -215,8 +215,8 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 				<div className="bg-[#FEFAF5] text-[#E37A00] p-4 rounded">
 					<p className="text-sm font-bold mb-2">Disclaimer</p>
 					<p className="text-sm">
-						Trades settled outside of OpenPeer cannot have funds escrowed and can&apos;t be disputed. You
-						should only trade with sellers through OpenPeer.
+						Trades settled outside of LocalSolana cannot have funds escrowed and can&apos;t be disputed. You
+						should only trade with sellers through LocalSolana.
 					</p>
 				</div>
 			</div>

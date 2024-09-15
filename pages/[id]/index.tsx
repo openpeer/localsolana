@@ -221,7 +221,7 @@ const Profile = ({ id }: { id: number }) => {
 };
 
 export const getServerSideProps: GetServerSideProps<{ id: string }> = async (context) => ({
-	props: { title: 'Profile', id: String(context.params?.id), disableAuthentication: true } // will be passed to the page component as props
+	props: { title: 'Profile', id: String(context.params?.id), disableAuthentication: false } // will be passed to the page component as props
 });
 
 export default Profile;

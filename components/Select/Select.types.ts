@@ -4,6 +4,7 @@ export interface Option {
 	id: number;
 	name: string;
 	icon?: string;
+	address?:string;
 }
 
 export interface SelectProps {

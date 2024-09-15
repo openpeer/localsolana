@@ -1,7 +1,7 @@
 import { Button, Modal } from 'components';
 import TransactionLink from 'components/TransactionLink';
-import { useTransactionFeedback, useAccount } from 'hooks';
-import { useEscrowFunds } from 'hooks/transactions';
+import {  useAccount } from 'hooks';
+//import { useEscrowFunds } from 'hooks/transactions';
 import React, { useEffect, useState } from 'react';
 import { truncate } from 'utils';
 import { parseUnits } from 'viem';

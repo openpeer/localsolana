@@ -1,54 +1,65 @@
 import { LocalSolanaMigrate } from './../../idl/local_solana_migrate';
 import { useState, useEffect } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { Program, AnchorProvider, web3, Wallet } from '@coral-xyz/anchor';
-import idl from '../../idl/local_solana_migrate.json'; // Adjust the path to your IDL file
-import { CURRENT_NETWORK } from 'utils';
+import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor';
+import idl from '../../idl/local_solana_migrate.json'; 
+import { CURRENT_NETWORK, CURRENT_NETWORK_URL } from 'utils';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Keypair } from '@solana/web3.js';
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes';
-import { IDL } from '@coral-xyz/anchor/dist/cjs/native/system';
 import * as anchor from "@coral-xyz/anchor";
-import { LocalSolanaMigrate } from '../../idl/local_solana_migrate';
 import { Transaction } from '@solana/web3.js';
+import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { isSolanaWallet, SolanaWallet } from '@dynamic-labs/solana-core';
 
-const useCustomProgram = () => {
+const useLocalSolana = () => {
   const [program, setProgram] = useState<Program<LocalSolanaMigrate> | null>(null);
   const [provider, setProvider] = useState<AnchorProvider | null>(null);
   const { primaryWallet } = useDynamicContext();
+ 
+  const [myWallet, setMyWallet] = useState<SolanaWallet | null>(null);
+  const [keypair, setKeyPair] = useState<Keypair | null>(null);
 
   useEffect(() => {
     const initializeProgram = async () => {
-      const connection = new Connection(CURRENT_NETWORK, 'confirmed');
-      if (!(primaryWallet?.connected)) {
+      const connection = new Connection(CURRENT_NETWORK_URL, 'confirmed');
+      if (!(primaryWallet?.isConnected )) {
+        console.error('Wallet is not there');
+        return;
+      }
+      if(!isSolanaWallet(primaryWallet)) {
         return;
       }
       const key = Uint8Array.from(bs58.decode(primaryWallet?.key));
-      const providerInstance = new AnchorProvider(connection, new Wallet(Keypair.fromSecretKey(key)), {
-        preflightCommitment: 'confirmed',
-      });
-      const programId = new PublicKey(idl.address);
-      const programInstance = anchor.workspace.LocalSolanaMigrate as  Program<LocalSolanaMigrate>;
+      const provider = new AnchorProvider(connection, primaryWallet, { commitment: 'processed' });
+       const program = new Program<LocalSolanaMigrate>(idl as LocalSolanaMigrate,provider);
 
-      setProvider(providerInstance);
-      setProgram(programInstance);
+      setProvider(provider);
+      setProgram(program);
+      setMyWallet(primaryWallet);
     };
 
     initializeProgram();
   }, [primaryWallet]);
 
-  const executeCustomInstruction = async (params: any) => {
+  const initialiseSolanaAccount = async (address: string) => {
     if (!program || !provider) {
       throw new Error('Program or provider is not initialized');
+    }
+    const arbitrator = 'FAsF12aNXnsJ8rcg2BzAWxG1KZxboDttbzjqz5qPsAV1';//process.env.NEXT_ARBITRATOR_ADDRESS;
+    const feeRecepient = 'DrkhNqVahiYsC8f6vfRj7cabECXr9mo9Siyet4JTCmow';//process.env.NEXT_FEE_RECEPIENT;
+    console.log(`arbitrator ${arbitrator} fee: ${feeRecepient}`);
+    if(!arbitrator || !feeRecepient){
+      throw new Error('Please set arbitrator and fee recepient in env');
     }
 
     const tx = new Transaction().add(
                   await program.methods
-                    .initialize(new anchor.BN(50), new anchor.BN(1000000), process.env.FEE_RECEPIENT)
+                    .initialize(new anchor.BN(50), new anchor.BN(1000000), new PublicKey(feeRecepient))
                     .accounts({
-                      seller: seller.publicKey,
-                      arbitrator: feeRecipientandArbitrator,
-                      feeRecipient: feeRecipientandArbitrator,
+                      seller: primaryWallet?.address,
+                      arbitrator: arbitrator,
+                      feeRecipient: feeRecepient,
                     })
                     //.signers([seller])
                     .instruction()
@@ -57,7 +68,7 @@ const useCustomProgram = () => {
     return tx;
   };
 
-  return { program, provider, executeCustomInstruction };
+  return { program, provider,myWallet, initialiseSolanaAccount };
 };
 
-export default useCustomProgram;
+export default useLocalSolana;

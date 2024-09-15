@@ -3,11 +3,13 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 const useAccount = () => {
 	//const { primaryWallet, isConnected, isConnecting, connector } = useDynamicContext();
-	const { primaryWallet,isAuthenticated } = useDynamicContext();
+	const { primaryWallet} = useDynamicContext();
 
 	return {
 		address: (primaryWallet?.address as string | undefined),
-		isAuthenticated: isAuthenticated
+		isAuthenticated: primaryWallet?.isAuthenticated,
+		isConnected: primaryWallet?.isConnected,
+		connetor: primaryWallet?.connector
 	};
 };
 

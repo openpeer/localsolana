@@ -11,9 +11,7 @@ const useDeploy = () => {
 		contract
 	});
 
-	const { gaslessEnabled, isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy({
-		contract
-	});
+	const { gaslessEnabled, isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy();
 
 	if (isFetching) {
 		return { isLoading: false, isSuccess: false, isFetching };

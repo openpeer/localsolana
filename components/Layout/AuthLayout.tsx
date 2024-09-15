@@ -63,11 +63,11 @@ const navigation = [
 ];
 
 const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick?: () => void }) => {
-	const { isAuthenticated, primaryWallet } = useDynamicContext();
+	const {primaryWallet } = useDynamicContext();
 	const { authenticateUser, isAuthenticating } = useAuthenticateConnectedUser();
 
 	const authenticate = () => {
-		if (!isAuthenticated) {
+		if (primaryWallet?.address) {
 			authenticateUser();
 		}
 	};
@@ -159,14 +159,25 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 const Unauthenticated = () => {
 	const { address } = useAccount();
 	const { authenticateUser, isAuthenticating } = useAuthenticateConnectedUser();
-
+	const [isWalletConnected, setIsConnected] = useState<boolean >(false);
+	const {primaryWallet} = useDynamicContext();
+	useEffect(() => {
+        const checkConnection = async () => {
+            if (primaryWallet?.isAuthenticated) {
+                const connected = await primaryWallet?.isConnected();
+                setIsConnected(connected);
+				console.log(`Wallet Connection is ${connected}`);
+            }
+        };
+        checkConnection();
+    }, [primaryWallet]);
 	return (
 		<div className="flex h-screen">
 			<div className="px-6 m-auto flex flex-col justify-items-center content-center text-center">
 				<span className="mb-6 text-xl">You are not signed in to LocalSolana.</span>
 				<span className="mb-6 text-gray-500 text-xl">Sign In With your wallet to continue.</span>
 				<span className="mb-4 m-auto">
-					{address ? (
+					{isWalletConnected ? (
 						<Button title="Sign in" onClick={authenticateUser} disabled={isAuthenticating} />
 					) : (
 						<DynamicWidget />
@@ -182,10 +193,10 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 	const [user, setUser] = useState<User | null>(null);
 	const { title, disableAuthentication } = pageProps;
 	const { address } = useAccount();
-	const { isAuthenticated } = useDynamicContext();
-	const authenticated = disableAuthentication || isAuthenticated;
+	const { primaryWallet } = useDynamicContext();
+	const authenticated = disableAuthentication || primaryWallet?.isAuthenticated;
 
-
+	
 	useEffect(() => {
 		if (!address) {
 			setUser(null);

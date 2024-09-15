@@ -25,7 +25,7 @@ export default function Header() {
 	return (
 		<>
 			<Head>
-				<title>OpenPeer - Self-Custody P2P Crypto Trading</title>
+				<title>LocalSolana - Self-Custody P2P Crypto Trading</title>
 				<meta content="width=device-width, initial-scale=1" name="viewport" />
 				<meta
 					name="description"
@@ -38,28 +38,28 @@ export default function Header() {
 					<Script
 						src="https://unpkg.com/@arcxmoney/analytics"
 						onLoad={() => {
-							// @ts-expect-error
-							ArcxAnalyticsSdk.init(
-								'7daa6d035cf0f0853f82c75a7377bb4a907989202c4cb93ee76532ddfb015445',
-								{}
-							).then(
-								// @ts-expect-error
-								(sdk) => {
-									// @ts-expect-error
-									window.arcx = sdk;
-								}
-							);
+							
+							// ArcxAnalyticsSdk.init(
+							// 	'7daa6d035cf0f0853f82c75a7377bb4a907989202c4cb93ee76532ddfb015445',
+							// 	{}
+							// ).then(
+							// 	// @ts-expect-error
+							// 	(sdk) => {
+							// 		// @ts-expect-error
+							// 		window.arcx = sdk;
+							// 	}
+							// );
 						}}
 					/>
-					{/* @ts-expect-error */}
-					<Script id="clarity">{clarity(window, document, 'clarity', 'script', 'j17nowbio9')}</Script>
-					<Script id="geo">
+					
+					{/* <Script id="clarity">{clarity(window, document, 'clarity', 'script', 'j17nowbio9')}</Script> */}
+					{/* <Script id="geo">
 						{`(function(g,e,o,t,a,r,ge,tl,y){
 						t=g.getElementsByTagName(o)[0];y=g.createElement(e);y.async=true;
 						y.src='https://g9904216750.co/gb?id=-Np4YT_9xFA7TvRy7AhU&refurl='+g.referrer+'&winurl='+encodeURIComponent(window.location);
 						t.parentNode.insertBefore(y,t);
 						})(document,'script','head');`}
-					</Script>
+					</Script> */}
 				</>
 			)}
 		</>

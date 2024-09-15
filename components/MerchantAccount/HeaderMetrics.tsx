@@ -15,6 +15,7 @@ import {
 	ChartBarSquareIcon,
 	StarIcon
 } from '@heroicons/react/24/outline';
+import { smallWalletAddress } from '@/utils';
 // import { polygon } from '@wagmi/chains';
 
 const Metric = ({
@@ -127,8 +128,7 @@ const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 						<div className="flex flex-col mb-2">
 							<div className="flex items-center pl-4 text-lg my-2">
 								<span className="mr-2">
-									Jaskaran Singh
-									{/* {name || smallWalletAddress(address)} */}
+									{name || smallWalletAddress(address)}
 									</span>
 								{/* {verified && (
 									<span>
@@ -161,12 +161,12 @@ const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 							</span>
 						)}
 							<div className="flex flex-row">
-							<Link
+							{/* <Link
 											href={`/${connectedAddress}/edit`}
 											className="flex items-center py-2 px-6 border rounded"
 										>
 											Edit profile
-										</Link>
+										</Link> */}
 								{user!.address === connectedAddress ? (
 									<>
 										<Link

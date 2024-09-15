@@ -21,7 +21,7 @@ import Loading from './Loading/Loading';
 
 interface EscrowDepositWithdrawProps {
 	token: Token;
-	contract: `0x${string}`;
+	contract: string;
 	action: 'Deposit' | 'Withdraw';
 	onBack: () => void;
 	canDeposit: boolean;

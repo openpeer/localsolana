@@ -1,51 +1,65 @@
 // useShyft.ts
-import { useState, useEffect } from 'react';
-import { Network, ShyftSdk } from '@shyft-to/js';
-import { Connection, PublicKey, Transaction, SystemProgram, Keypair } from '@solana/web3.js';
-import { CURRENT_NETWORK } from 'utils';
+import { useState, useEffect } from "react";
+import { Network, ShyftSdk } from "@shyft-to/js";
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  SystemProgram,
+} from "@solana/web3.js";
+import { CURRENT_NETWORK } from "utils";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { ISolana, isSolanaWallet } from '@dynamic-labs/solana-core';
+import useLocalSolana from "./useLocalSolana";
+import { TransactionSignature } from "@solana/web3.js";
 
 const useShyft = () => {
   const [shyft, setShyft] = useState<ShyftSdk | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
+  const { primaryWallet } = useDynamicContext();
+  const {provider} = useLocalSolana();
+
+
 
   useEffect(() => {
     const initializeShyft = async () => {
-        const shyftInstance = new ShyftSdk({
-            apiKey: "JwpOxgz2GUG8VMpA",
-            network: CURRENT_NETWORK,
-          });
-      const connectionInstance = new Connection(CURRENT_NETWORK, 'confirmed');
+      const shyftInstance = new ShyftSdk({
+        apiKey: "JwpOxgz2GUG8VMpA",
+        network: CURRENT_NETWORK,
+      });
+      //const connectionInstance = new Connection(CURRENT_NETWORK, "confirmed");
       setShyft(shyftInstance);
-      setConnection(connectionInstance);
+      // setConnection(connectionInstance);
     };
 
     initializeShyft();
   }, []);
 
-  const sendTransactionWithShyft = async (
-    transaction: Transaction,
-    signers: Keypair[]
-  ) => {
+  const sendTransactionWithShyft = async (transaction: Transaction) => {
     const connection = new Connection("https://api.devnet.solana.com");
-    const recentBlockhash = await connection.getRecentBlockhash();
+    const recentBlockhash = await connection.getLatestBlockhash();
+    const walletPublicKey = new PublicKey(primaryWallet?.address ?? "");
+
     console.log("Recent blockhash: " + recentBlockhash.blockhash);
     transaction.recentBlockhash = recentBlockhash.blockhash;
     transaction.feePayer = new PublicKey(
       "2Hu9fgnKUWyxqGwLVLhoUPsG9PJ15YbNxB8boWmCdSqC"
     );
-    //shyft.wallet.transaction({})
-    transaction.partialSign(...signers);
-    // for (let index = 0; index < signers.length; index++) {
-    //   const element = signers[index];
+    if(primaryWallet==null || !isSolanaWallet(primaryWallet)) {
+      return;
+    }
+   let signedTransaction = await  (await primaryWallet.getSigner()).signTransaction(transaction);
+    if(!signedTransaction){
+      throw new Error(`Cannot sign transaction1: ${transaction}`);
+    }
+    transaction.partialSign();
 
-    // }
-
+    console.log(`Seller Signed Transaction:: ${transaction}`);
     // Serialize the transaction
-    let serializedTransaction = transaction.serialize({
-      requireAllSignatures: false, // or true, based on your use case
-      verifySignatures: true, // or true, based on your use case
+    let serializedTransaction = signedTransaction.serialize({
+      requireAllSignatures: false, //because we will sign it by Shyft as well
+      verifySignatures: true, // will verify whether signatures are valid or not
     });
-
     // Convert serialized transaction to base64 string
     let base64Transaction = Buffer.from(serializedTransaction).toString(
       "base64"
@@ -54,24 +68,58 @@ const useShyft = () => {
 
     const signature = await shyft?.txnRelayer.sign({
       encodedTransaction: base64Transaction,
-      network: Network.Devnet,
+      network: CURRENT_NETWORK,
     });
     console.log("Signed Tansaction is " + signature);
     try {
-      // const signature = await connection.sendEncodedTransaction(
-      //   signedTransaction
-      // );
-      //await connection.confirmTransaction(signature, "confirmed");
-      console.log(signature);
-      return signature;
+      const txSignature: TransactionSignature = signature as TransactionSignature;
+      await connection.confirmTransaction(txSignature, "confirmed");
+      console.log(txSignature);
+      return txSignature;
     } catch (error) {
       console.error("Error sending transaction:", error);
       throw error;
     }
-    
   };
 
-  return { shyft, connection, sendTransactionWithShyft };
+  const getWalletBalance = async (address: string) => {
+    if (shyft == null) {
+      return null;
+    }
+    const balance = await shyft.wallet.getBalance({ wallet: address });
+    console.log(balance);
+    return balance;
+  };
+
+  const getTokenBalance = async (address: string, tokenAddress: string) => {
+    if (shyft == null) {
+      return null;
+    }
+    const balance = await shyft.wallet.getTokenBalance({
+      token: tokenAddress,
+      wallet: address,
+    });
+    console.log(balance);
+    return balance;
+  };
+
+  const getAllTokenBalance = async (address: string) => {
+    if (shyft == null) {
+      return null;
+    }
+    const balance = await shyft.wallet.getAllTokenBalance({ wallet: address });
+    console.log(balance);
+    return balance;
+  };
+
+  return {
+    shyft,
+    connection,
+    sendTransactionWithShyft,
+    getWalletBalance,
+    getTokenBalance,
+    getAllTokenBalance,
+  };
 };
 
 export default useShyft;

@@ -18,24 +18,21 @@ import { PublicKey } from '@solana/web3.js';
 
 interface FundsEscrowProps {
 	token: Token;
-	sellerContract: `0x${string}` | undefined;
+	sellerContract: string | null | undefined;
 	chainId: number;
-	balance: bigint;
+	balance: number;
 	totalAvailableAmount: number;
 }
 
 const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmount }: FundsEscrowProps) => {
-	const listTotal = parseUnits(totalAvailableAmount.toString(), token.decimals);
-	const listTotalNumber = Number(formatUnits(listTotal - balance, token.decimals));
+	const listTotal = totalAvailableAmount;
+	const listTotalNumber = listTotal - balance;
 	const toDeposit = listTotalNumber / 4;
 	const [depositAmount, setDepositAmount] = useState<number | undefined>(listTotalNumber);
 	const { SVG } = useQRCode();
 	//const chain = allChains.find((c) => c.id === chainId);
 	const sellerContractDeployed = !!sellerContract && sellerContract !== PublicKey.default.toString();
-	//const { switchNetwork } = useSwitchNetwork();
-
-	//const { chain: connectedChain } = useNetwork();
-	//const wrongChain = chainId !== connectedChain?.id;
+	
 
 	return (
 		<StepLayout buttonText={`Deposit ${token.name}`}>
@@ -43,7 +40,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 				<div className="text-sm bg-gray-200 rounded-lg p-4 py-3 mb-4 flex flex-row justify-between">
 					<span>Balance Summary</span>
 					<span>
-						{formatUnits(balance, token.decimals)} {token.symbol}
+						{balance} {token.symbol}
 					</span>
 				</div>
 				<h2 className="block text-xl font-medium mb-1 font-bold">

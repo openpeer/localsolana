@@ -9,13 +9,15 @@ import React, { useEffect, useState } from 'react';
 import { formatUnits } from 'viem';
 // import { Chain, useContractRead, useNetwork, useSwitchNetwork } from 'wagmi';
 import { Contract, Token } from 'models/types';
-import { smallWalletAddress } from 'utils';
+import { CURRENT_NETWORK, smallWalletAddress } from 'utils';
+import { useShyft } from '@/hooks/transactions';
+import { token } from '@coral-xyz/anchor/dist/cjs/utils';
 
 const ContractTable = ({
 	contract,
 	tokens,
 	beingUsed,
-	chain,
+	//chain,
 	needToDeploy,
 	onSelectToken
 }: {
@@ -23,14 +25,14 @@ const ContractTable = ({
 	tokens: Token[];
 	beingUsed: boolean;
 	needToDeploy: boolean;
-	chain: Chain | undefined;
+	//chain: Chain | undefined;
 	onSelectToken: (token: Token, contract: Contract, action: 'Withdraw' | 'Deposit') => void;
 }) => (
 	<div className="mt-4" key={contract.id}>
 		{beingUsed && (
 			<div className="flex flex-col md:flex-row md:items-center md:space-x-1 break-all">
 				<a
-					href={`${chain?.blockExplorers?.etherscan?.url}/address/${contract.address}`}
+					href={`https://explorer.solana.com/address/${contract.address}?cluster=${CURRENT_NETWORK}`}
 					className="text-cyan-600"
 					target="_blank"
 					rel="noreferrer"
@@ -65,7 +67,7 @@ const ContractTable = ({
 			</thead>
 			<tbody className="divide-y divide-gray-200">
 				{tokens
-					.filter((t) => t.chain_id === chain?.id)
+					//.filter((t) => t.chain_id === chain?.id)
 					.map((t) => (
 						<TokenRow
 							key={t.id}
@@ -93,14 +95,17 @@ const TokenRow = ({
 }) => {
 	const { address } = useAccount();
 
-	const { data } = useContractRead({
-		address: contract.address,
-		abi: OpenPeerEscrow,
-		functionName: 'balances',
-		args: [token.address],
-		enabled: !!address,
-		chainId: token.chain_id
-	});
+	// const { data } = useContractRead({
+	// 	address: contract.address,
+	// 	abi: OpenPeerEscrow,
+	// 	functionName: 'balances',
+	// 	args: [token.address],
+	// 	enabled: !!address,
+	// 	chainId: token.chain_id
+	// });
+
+ 
+	const {data} = useShyft().getTokenBalance(address??'',token.address);
 
 	return (
 		<tr className="hover:bg-gray-50">
@@ -110,9 +115,9 @@ const TokenRow = ({
 						<TokenImage size={24} token={token} />
 
 						<span className="text-sm">
-							{data === undefined
-								? token.symbol
-								: `${formatUnits(data as bigint, token.decimals)} ${token.symbol}`}
+							{
+								token.symbol
+								}
 						</span>
 					</div>
 					<span className="w-full flex flex-row space-x-4 pb-4">
@@ -161,7 +166,7 @@ const MyEscrows = () => {
 	// const { chain: connectedChain } = useNetwork();
 	// const { switchNetwork } = useSwitchNetwork();
 
-	const [chain, setChain] = useState<Chain>();
+	//const [chain, setChain] = useState<Chain>();
 	const [loading, setLoading] = useState(false);
 	const { user, fetchUserProfile } = useUserProfile({});
 	const [lastVersion, setLastVersion] = useState(0);
@@ -223,7 +228,7 @@ const MyEscrows = () => {
 
 	const lastDeployedVersion = contracts.reduce((acc, c) => Math.max(acc, Number(c.version)), 0);
 	const needToDeploy = contracts.length === 0 || lastDeployedVersion < lastVersion;
-	// const lastDeployedContract = sellerContract as `0x${string}` | undefined;
+	//const lastDeployedContract = sellerContract as `0x${string}` | undefined;
 	// const contractInUse = contracts.find((c) => c.address.toLowerCase() === (lastDeployedContract || '').toLowerCase());
 	// const otherContracts = contracts.filter(
 	// 	(c) => c.address.toLowerCase() !== (lastDeployedContract || '').toLowerCase()
@@ -259,7 +264,7 @@ const MyEscrows = () => {
 				token={token}
 				contract={contract.address}
 				onBack={onBack}
-				canDeposit={contract === contractInUse && !needToDeploy}
+				canDeposit={!needToDeploy} //ontract === contractInUse && 
 				canWithdraw
 			/>
 		);
@@ -270,26 +275,16 @@ const MyEscrows = () => {
 			<div className="w-full lg:w-1/2 flex flex-col mb-16">
 				<HeaderH3 title="Deposit or Withdraw funds" />
 				<div className="border border-slate-300 mt-4 rounded">
-					<div className="p-4">
-						<span>Begin by selecting the chain</span>
-						<div className="w-full lg:w-fit">
-							{/* <NetworkSelect extraStyle="my-0 mt-4" onSelect={setChain} selected={chain} /> */}
-						</div>
-					</div>
 					<div>
 						{contracts.length > 0 && lastDeployedVersion < lastVersion && (
 							<p className="px-4">
-								A new version of OpenPeer is available. Please withdraw your assets and deploy a new
+								A new version of LocalSolana is available. Please withdraw your assets and deploy a new
 								escrow contract
 							</p>
 						)}
 						{needToDeploy && (
 							<div className="mt-4 mb-4 px-4">
-								{/* {chain?.id === connectedChain?.id ? (
-									<DeploySellerContract label="Deploy a new contract" />
-								) : (
-									<Button title="Deploy a new contract" onClick={() => switchNetwork?.(chain!.id)} />
-								)} */}
+								<DeploySellerContract label="Deploy a new contract" />
 							</div>
 						)}
 					</div>

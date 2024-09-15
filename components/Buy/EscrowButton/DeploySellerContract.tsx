@@ -1,3 +1,4 @@
+import useGaslessDeploy from '@/hooks/transactions/deploy/useGaslessDeploy';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Button } from 'components';
 import TransactionLink from 'components/TransactionLink';
@@ -6,9 +7,10 @@ import useDeploy from 'hooks/transactions/deploy/useDeploy';
 import React from 'react';
 
 const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: string }) => {
-	const { isAuthenticated } = useDynamicContext();
+	const { primaryWallet } = useDynamicContext();
+	
 
-	const { isFetching, isLoading, isSuccess, data, deploy } = useDeploy();
+	const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy();
 
 	// useTransactionFeedback({
 	// 	hash: data?.hash,
@@ -18,9 +20,10 @@ const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: st
 	// });
 
 	const deploySellerContract = async () => {
-		if (!isAuthenticated) return;
-
-		deploy?.();
+		console.log('hereDeploy');
+		if (!primaryWallet?.isConnected) return;
+		console.log('Deploy');
+		deploy();
 	};
 
 	return (
