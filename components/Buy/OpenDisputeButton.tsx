@@ -23,72 +23,74 @@ const OpenDisputeButton = ({ order, outlined = true, title = 'Open a dispute' }:
 	const isBuyer = buyer.address === connectedAddress;
 	const isSeller = seller.address === connectedAddress;
 	const router = useRouter();
-	const escrowAddress = escrow!.address;
-	const escrowContract = { address: escrowAddress, abi: OpenPeerEscrow as Abi };
+	// const escrowAddress = escrow!.address;
+	// const escrowContract = { address: escrowAddress, abi: OpenPeerEscrow as Abi };
 	const [modalOpen, setModalOpen] = useState(false);
 	const [disputeConfirmed, setDisputeConfirmed] = useState(false);
-	const { chain } = useNetwork();
+	// const { chain } = useNetwork();
 
-	const { data: readData = [], isFetching } = useContractReads({
-		contracts: [
-			{ ...escrowContract, ...{ functionName: 'escrows', args: [tradeId] } },
-			{ ...escrowContract, ...{ functionName: 'disputeFee' } },
-			// @ts-ignore
-			{ ...escrowContract, ...{ functionName: 'disputePayments', args: [tradeId, connectedAddress] } }
-		]
-	});
+	// const { data: readData = [], isFetching } = useContractReads({
+	// 	contracts: [
+	// 		{ ...escrowContract, ...{ functionName: 'escrows', args: [tradeId] } },
+	// 		{ ...escrowContract, ...{ functionName: 'disputeFee' } },
+	// 		// @ts-ignore
+	// 		{ ...escrowContract, ...{ functionName: 'disputePayments', args: [tradeId, connectedAddress] } }
+	// 	]
+	// });
 
-	const { data: balance } = useBalance({
-		address: connectedAddress,
-		enabled: !!connectedAddress
-	});
-	const [escrowDataResult, disputeFeeResult, paidForDisputeResult] = readData as { result: unknown }[];
+	// const { data: balance } = useBalance({
+	// 	address: connectedAddress,
+	// 	enabled: !!connectedAddress
+	// });
 
-	const { isLoading, isSuccess, openDispute, data } = useOpenDispute({
-		contract: escrowAddress,
-		orderID: uuid,
-		buyer: buyer.address,
-		token,
-		amount: parseUnits(String(tokenAmount), token.decimals),
-		disputeFee: disputeFeeResult?.result as bigint
-	});
+	// const [escrowDataResult, disputeFeeResult, paidForDisputeResult] = readData as { result: unknown }[];
 
-	useTransactionFeedback({
-		hash: data?.hash,
-		isSuccess,
-		Link: <TransactionLink hash={data?.hash} />,
-		description: 'Opened a dispute'
-	});
+	// const { isLoading, isSuccess, openDispute, data } = useOpenDispute({
+	// 	contract: escrowAddress,
+	// 	orderID: uuid,
+	// 	buyer: buyer.address,
+	// 	token,
+	// 	amount: parseUnits(String(tokenAmount), token.decimals),
+	// 	disputeFee: disputeFeeResult?.result as bigint
+	// });
 
-	useEffect(() => {
-		if (isSuccess) {
-			router.push(`/orders/${uuid}`);
-		}
-	}, [isSuccess, uuid]);
+	// useTransactionFeedback({
+	// 	hash: data?.hash,
+	// 	isSuccess,
+	// 	Link: <TransactionLink hash={data?.hash} />,
+	// 	description: 'Opened a dispute'
+	// });
 
-	useEffect(() => {
-		if (disputeConfirmed) {
-			onOpenDispute();
-		}
-	}, [disputeConfirmed]);
+	// useEffect(() => {
+	// 	if (isSuccess) {
+	// 		router.push(`/orders/${uuid}`);
+	// 	}
+	// }, [isSuccess, uuid]);
 
-	if (
-		isFetching ||
-		disputeFeeResult === undefined ||
-		paidForDisputeResult === undefined ||
-		balance?.value === undefined ||
-		chain === undefined
-	) {
-		return <p>Loading...</p>;
-	}
+	// useEffect(() => {
+	// 	if (disputeConfirmed) {
+	// 		onOpenDispute();
+	// 	}
+	// }, [disputeConfirmed]);
 
-	const {
-		nativeCurrency: { decimals, symbol }
-	} = chain;
+	// if (
+	// 	isFetching ||
+	// 	disputeFeeResult === undefined ||
+	// 	paidForDisputeResult === undefined ||
+	// 	balance?.value === undefined ||
+	// 	chain === undefined
+	// ) {
+	// 	return <p>Loading...</p>;
+	// }
 
-	const [, sellerCanCancelAfter] = escrowDataResult.result as [boolean, bigint];
-	const disputeFee = disputeFeeResult.result as bigint;
-	const canOpenDispute = (isBuyer || isSeller) && parseInt(sellerCanCancelAfter.toString(), 10) === 1;
+	// const {
+	// 	nativeCurrency: { decimals, symbol }
+	// } = chain;
+
+	// const [, sellerCanCancelAfter] = escrowDataResult.result as [boolean, bigint];
+	// const disputeFee = disputeFeeResult.result as bigint;
+	// const canOpenDispute = (isBuyer || isSeller) && parseInt(sellerCanCancelAfter.toString(), 10) === 1;
+	const canOpenDispute = (isBuyer || isSeller) && parseInt('60', 10) === 1;
 
 	const onOpenDispute = () => {
 		if (!isConnected || !canOpenDispute) return;
@@ -116,9 +118,10 @@ const OpenDisputeButton = ({ order, outlined = true, title = 'Open a dispute' }:
 
 	return (
 		<>
-			<Button
+			{/* <Button
 				title={
-					(paidForDisputeResult.result as boolean)
+					// (paidForDisputeResult.result as boolean)
+					true
 						? 'Already opened'
 						: !canOpenDispute
 						? 'You cannot dispute'
@@ -132,14 +135,18 @@ const OpenDisputeButton = ({ order, outlined = true, title = 'Open a dispute' }:
 				disabled={isSuccess || !canOpenDispute || (paidForDisputeResult.result as boolean)}
 				onClick={onOpenDispute}
 				outlined={outlined}
-			/>
+			/> */}
 			<Modal
 				actionButtonTitle="Yes, confirm"
 				title="Dispute Trade"
+				// content={`Once you dispute the trade the other party will have 24 hours to counter the dispute and send it to arbitration. A small fee of ${formatUnits(
+				// 	disputeFee,
+				// 	decimals
+				// )} ${symbol} is required to open a dispute. If you win the dispute the fee will be returned`}
 				content={`Once you dispute the trade the other party will have 24 hours to counter the dispute and send it to arbitration. A small fee of ${formatUnits(
-					disputeFee,
-					decimals
-				)} ${symbol} is required to open a dispute. If you win the dispute the fee will be returned`}
+					BigInt(200),
+					2
+				)} ${"symbol"} is required to open a dispute. If you win the dispute the fee will be returned`}
 				type="confirmation"
 				open={modalOpen}
 				onClose={() => setModalOpen(false)}

@@ -298,7 +298,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 												</div>
 											)}
 											<div className="mb-2">
-												{banks?.map((bank) => (
+												{banks?.map((bank:any) => (
 													<div
 														className="flex flex-row items-center"
 														key={`bank-${list.id}-${bank?.id}`}
@@ -380,7 +380,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 								)}
 							</td>
 							<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-								{banks.map((bank) => (
+								{banks.map((bank:any) => (
 									<div
 										className="flex flex-row items-center mb-1"
 										key={`bank-mobile-${list.id}-${bank?.id}`}

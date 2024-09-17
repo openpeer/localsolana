@@ -66,10 +66,10 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 				'Content-Type':'application/json',
 			}
 		});
-		const { id } = await result.json();
-		console.log(result.json());
-		if (id) {
-			router.push(`/orders/${id}`);
+		const { data } = await result.json();
+		
+		if (data.id) {
+			router.push(`/orders/${data.id}`);
 		}
 	};
 

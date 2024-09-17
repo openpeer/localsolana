@@ -42,14 +42,16 @@ const Payment = ({ order }: BuyStepProps) => {
 	const { address } = useAccount();
 	const selling = seller.address === address;
 
-	const { data: escrowData } = useContractRead({
-		address: escrow?.address,
-		abi: OpenPeerEscrow,
-		functionName: 'escrows',
-		args: [tradeId]
-	});
+	// const { data: escrowData } = useContractRead({
+	// 	address: escrow?.address,
+	// 	abi: OpenPeerEscrow,
+	// 	functionName: 'escrows',
+	// 	args: [tradeId]
+	// });
 
-	const { data: balanceData } = useBalance({ address }); // Fetch wallet balance
+	// change here
+	// const { data: balanceData } = useBalance({ address }); // Fetch wallet balance
+	const { data: balanceData } = 100; // Fetch wallet balance
 
 	const timeLimit =
 		status === 'created' && depositTimeLimit && Number(depositTimeLimit) > 0
@@ -59,9 +61,9 @@ const Payment = ({ order }: BuyStepProps) => {
 	const timeLeft = timeLimit - (new Date().getTime() - new Date(order.created_at).getTime());
 	const instantEscrow = escrowType === 'instant';
 
-	const [, sellerCanCancelAfter] = escrowData ? (escrowData as [boolean, bigint]) : [false, BigInt(0)];
+	// const [, sellerCanCancelAfter] = escrowData ? (escrowData as [boolean, bigint]) : [false, BigInt(0)];
 
-	const sellerCanCancelAfterSeconds = parseInt(sellerCanCancelAfter.toString(), 10);
+	const sellerCanCancelAfterSeconds = parseInt('60', 10);
 	const timeLimitForPayment =
 		status === 'escrowed' && order.escrow && sellerCanCancelAfter && sellerCanCancelAfterSeconds > 0
 			? sellerCanCancelAfterSeconds * 1000
