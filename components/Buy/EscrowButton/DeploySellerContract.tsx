@@ -2,13 +2,20 @@ import useGaslessDeploy from '@/hooks/transactions/deploy/useGaslessDeploy';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Button } from 'components';
 import TransactionLink from 'components/TransactionLink';
-import {  useAccount } from 'hooks';
+import {  useAccount, useUserProfile } from 'hooks';
 import useDeploy from 'hooks/transactions/deploy/useDeploy';
 import React, { useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: string }) => {
 	const { primaryWallet } = useDynamicContext();
+	const {
+		user,
+		updateProfile,
+		contract_address,
+		setContractAddress,
+		errors,
+	  } = useUserProfile({ onUpdateProfile: (updatedUser) => console.log('Profile updated:', updatedUser) });
 	
 
 	const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy();
@@ -33,8 +40,10 @@ const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: st
 	useEffect(()	=>{
 		if(data){
 			toast.success(`Deployed Contract successfully ${data}`);
+			setContractAddress(data);
+			updateProfile();
 		}
-	},[isSuccess,data])
+	},[ data, updateProfile])
 
 	return (
 		<Button

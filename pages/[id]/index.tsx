@@ -35,7 +35,7 @@ const Profile = ({ id }: { id: number }) => {
 				setLists(data.data);
 			});
 
-		// setLists({
+
 		// 	"data": [
 		// 		{
 		// 			"id": 3600,
