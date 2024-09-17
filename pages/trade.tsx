@@ -40,7 +40,7 @@ const HomePage = () => {
 			payment_method: filters.paymentMethod ? filters.paymentMethod.id.toString() : undefined,
 			token: filters.token ? filters.token.id.toString() : undefined,
 			fiat_amount: filters.fiatAmount ? filters.fiatAmount.toString() : undefined,
-			chain_id: filters.chain ? filters.chain : undefined
+			//chain_id: filters.chain ? filters.chain : undefined
 		};
 
 		const search = Object.keys(params)
@@ -68,6 +68,8 @@ const HomePage = () => {
 				setBuySideLists(toBuyers);
 				setLists(toBuyers);
 				setLoading(false);
+				console.log(`SellList: ${toBuyers.toString()}`);
+				console.log(`BuyList: ${toSellers.toString()}`);
 			});
 	};
 

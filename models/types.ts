@@ -20,7 +20,7 @@ export interface User {
 	name: string | null;
 	twitter: string | null;
 	completion_rate: number | null;
-	created_at: string;
+	createdAt: string;
 	verified: boolean;
 	contract_address: string | null;
 	timezone: string | null;
@@ -102,8 +102,8 @@ export interface PaymentMethod {
 export interface Escrow {
 	id: number;
 	order_id: number;
-	tx: `0x${string}`;
-	address: `0x${string}`;
+	tx: string;
+	address: string;
 	created_at: string;
 }
 

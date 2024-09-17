@@ -78,8 +78,9 @@ const VerifiedIcon = () => (
 );
 
 const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
-	const { trades, created_at: createdAt, name, twitter, address, completion_rate: completionRate } = user;
+	const { trades, createdAt: createdAt, name, twitter, address, completion_rate: completionRate } = user;
 	const date = new Date(createdAt);
+	console.log(`Date: ${JSON.stringify(user)}`);
 	const [walletAge, setWalletAge] = useState<string>();
 	const [verificationModal, setVerificationModal] = useState(verificationOpen);
 	// const { chain } = useNetwork();
@@ -188,7 +189,6 @@ const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 									// </Link>
 								)}
 							</div>
-					 
 					</div>
 				</div>
 				<div>
