@@ -1,9 +1,9 @@
 import { Token } from 'models/types';
 
 export interface EscrowFundsParams {
-	uuid: `0x${string}`;
-	buyer: `0x${string}`;
-	seller: `0x${string}`;
+	uuid: string;
+	buyer: string;
+	seller: string;
 	token: Token;
 	tokenAmount: number;
 	instantEscrow: boolean;
@@ -12,5 +12,5 @@ export interface EscrowFundsParams {
 
 export interface EscrowFundsButtonProps extends EscrowFundsParams {
 	fee: bigint;
-	contract: `0x${string}`;
+	contract: string;
 }

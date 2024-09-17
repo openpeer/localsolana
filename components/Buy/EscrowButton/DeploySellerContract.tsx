@@ -4,7 +4,8 @@ import { Button } from 'components';
 import TransactionLink from 'components/TransactionLink';
 import {  useAccount } from 'hooks';
 import useDeploy from 'hooks/transactions/deploy/useDeploy';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: string }) => {
 	const { primaryWallet } = useDynamicContext();
@@ -19,12 +20,21 @@ const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: st
 	// 	description: 'Deployed the seller contract'
 	// });
 
+
 	const deploySellerContract = async () => {
-		console.log('hereDeploy');
+		
 		if (!primaryWallet?.isConnected) return;
 		console.log('Deploy');
-		deploy();
+		await deploy?.();
+		
+		
+		
 	};
+	useEffect(()	=>{
+		if(data){
+			toast.success(`Deployed Contract successfully ${data}`);
+		}
+	},[isSuccess,data])
 
 	return (
 		<Button

@@ -15,8 +15,8 @@ interface Upload {
 }
 
 interface FilesUploaderParams {
-	address: `0x${string}`;
-	uuid: `0x${string}`;
+	address: string;
+	uuid: string;
 	onUploadFinished?: (data: Upload[]) => void;
 }
 

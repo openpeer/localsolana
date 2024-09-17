@@ -1,4 +1,4 @@
-// import { OpenPeerEscrow } from 'abis';
+//import { OpenPeerEscrow } from 'abis';
 import { DisputeForm, DisputeNotes, DisputeStatus } from 'components/DisputeTrade/';
 import Loading from 'components/Loading/Loading';
 import Token from 'components/Token/Token';
@@ -6,7 +6,7 @@ import { Order } from 'models/types';
 import React from 'react';
 import { formatUnits } from 'viem';
 import { useAccount } from 'hooks';
-import { useContractRead, useNetwork } from 'wagmi';
+//import { useContractRead, useNetwork } from 'wagmi';
 
 interface DisputeParams {
 	order: Order;
@@ -14,7 +14,7 @@ interface DisputeParams {
 
 const Dispute = ({ order }: DisputeParams) => {
 	const { address } = useAccount();
-	const { chain } = useNetwork();
+	//const { chain } = useNetwork();
 	const escrowAddress = order?.escrow?.address;
 	const { data: paidForDispute }: { data: boolean | undefined } = useContractRead({
 		address: escrowAddress,

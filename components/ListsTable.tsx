@@ -72,27 +72,27 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 		.filter(({ contract }) => !!contract)
 		.map((list) => ({ id: list.id, contract: list.contract, token: list.token.address, chainId: list.chain_id }));
 
-	// let signatures = contracts.map((item) => {
-	// 	const { contract, token, chainId } = item;
-	// 	return {
-	// 		address: contract,
-	// 		abi: OpenPeerEscrow as Abi,
-	// 		functionName: 'balances',
-	// 		args: [token],
-	// 		chainId
-	// 	};
-	// });
+	let signatures = contracts.map((item) => {
+		const { contract, token, chainId } = item;
+		return {
+			address: contract,
+			// abi: OpenPeerEscrow as Abi,
+			// functionName: 'balances',
+			args: [token],
+			//chainId
+		};
+	});
 
-	// remove duplicates with the same address, args and chainId
-	// signatures = signatures.filter(
-	// 	(item, index, self) =>
-	// 		index ===
-	// 		self.findIndex(
-	// 			(t) => t.address === item.address && t.args[0] === item.args[0] && t.chainId === item.chainId
-	// 		)
-	// );
+//	remove duplicates with the same address, args and chainId
+	signatures = signatures.filter(
+		(item, index, self) =>
+			index ===
+			self.findIndex(
+				(t) => t.address === item.address && t.args[0] === item.args[0]
+			)
+	);
 	//const { data, isLoading } = useContractReads({ contracts: signatures });
-	const showVerification = user && !user.verified;
+	//const showVerification = user && !user.verified;
 
 
 	return (
@@ -155,8 +155,8 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 						limit_max: max,
 						price,
 						payment_methods: paymentMethods,
-						chain_id: chainId,
-						// token_spot_price: tokenSpotPrice,
+						//chain_id: chainId,
+						//token_spot_price: tokenSpotPrice,
 						payment_time_limit: paymentTimeLimit,
 						escrow_type: escrowType,
 						type,

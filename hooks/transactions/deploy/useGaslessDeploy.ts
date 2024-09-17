@@ -15,13 +15,13 @@ interface Data {
 }
 
 const useGaslessDeploy = () => {
-    const [data, updateData] = useState<Data>({});
+    const [data, updateData] = useState<string>();
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     const { primaryWallet } = useDynamicContext();
-    const {sendTransactionWithShyft} = useShyft(); 
-    const {initialiseSolanaAccount} = useLocalSolana();
+    const {sendTransactionWithShyft,getAccountInfo} = useShyft(); 
+    const {initialiseSolanaAccount,getEscrowStatePDA,getEscrowPDA} = useLocalSolana();
 
     const deploy = async () => {
         if (!primaryWallet?.isConnected) return;
@@ -30,9 +30,18 @@ const useGaslessDeploy = () => {
         console.log("starting deploy");
 
         try {
+            const  escrowStatePDA =  await getEscrowStatePDA(primaryWallet?.address);
+            console.log(escrowStatePDA?.toBase58());
+            const status = await getAccountInfo(escrowStatePDA?.toBase58()??'');
+            if(status == null || status == undefined){
             const transaction = await initialiseSolanaAccount(primaryWallet?.address);
             const result = await sendTransactionWithShyft(transaction)
             console.log(`Shyft Transaction result: ${result}`);
+            }
+
+            console.log(`Status ${status}`);
+            updateData(escrowStatePDA?.toBase58());
+            setIsLoading(false);
 			setIsSuccess(true);
         } catch (error) {
             console.error('Deployment failed', error);

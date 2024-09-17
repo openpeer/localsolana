@@ -1,9 +1,9 @@
-import { OpenPeerEscrow } from 'abis';
+//import { OpenPeerEscrow } from 'abis';
 import Label from 'components/Label/Label';
 import { Dispute } from 'models/types';
 import React from 'react';
 import { formatUnits } from 'viem';
-import { useContractRead, useNetwork } from 'wagmi';
+//import { useContractRead, useNetwork } from 'wagmi';
 
 import { CheckIcon } from '@heroicons/react/24/outline';
 
@@ -20,7 +20,7 @@ interface StatusTimeLineParams {
 const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
 	const { counterpart_replied: replied, resolved } = dispute;
 	const counterpart = isBuyer ? 'Seller' : 'Buyer';
-	const { chain } = useNetwork();
+	//const { chain } = useNetwork();
 
 	const { data: disputeFee } = useContractRead({
 		address: escrow,
@@ -30,9 +30,9 @@ const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
 
 	if (!disputeFee || !chain) return <></>;
 
-	const {
-		nativeCurrency: { decimals, symbol }
-	} = chain;
+	// const {
+	// 	nativeCurrency: { decimals, symbol }
+	// } = chain;
 
 	const steps = [
 		{

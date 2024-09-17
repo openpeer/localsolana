@@ -36,7 +36,7 @@ const App = ({ Component, pageProps,router}: AppProps) => {
           },
         }} 
       >
-        <SolanaWalletProvider>
+       
         <Head />
         <MessageContextProvider messageToSign={messageToSign} signedMessage={signedMessage}>
         {simpleLayout ? (
@@ -45,7 +45,7 @@ const App = ({ Component, pageProps,router}: AppProps) => {
           <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass pageProps
         )}
         </MessageContextProvider>
-        </SolanaWalletProvider>
+       
       </DynamicContextProvider>
 
 	);

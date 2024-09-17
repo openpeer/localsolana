@@ -12,7 +12,7 @@ import StatusTimeLine from './StatusTimeLine';
 
 interface DisputeStatusParams {
 	order: Order;
-	address: `0x${string}`;
+	address: string;
 }
 
 const DisputeStatus = ({ order, address }: DisputeStatusParams) => {

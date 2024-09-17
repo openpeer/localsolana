@@ -1,12 +1,12 @@
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
-import { Loading, Steps, WrongNetwork } from 'components';
+import { Loading, Steps } from 'components';
 import { Cancelled, Chat, Completed, Payment, Release, Summary } from 'components/Buy';
 import { UIOrder } from 'components/Buy/Buy.types';
 import Dispute from 'components/Dispute/Dispute';
 import { GetServerSideProps } from 'next';
 import { useAccount } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { useNetwork } from 'wagmi';
+//import { useNetwork } from 'wagmi';
 
 const ERROR_STEP = 0;
 const PAYMENT_METHOD_STEP = 2;
@@ -26,7 +26,7 @@ const steps: { [key: string]: number } = {
 
 const OrderPage = ({ id }: { id: `0x${string}` }) => {
 	const [order, setOrder] = useState<UIOrder>();
-	const { chain } = useNetwork();
+	//const { chain } = useNetwork();
 	const token = getAuthToken();
 	const { address } = useAccount();
 
@@ -66,9 +66,9 @@ const OrderPage = ({ id }: { id: `0x${string}` }) => {
 		setupChannel();
 	}, [token]);
 
-	if (order?.chain_id && chain && order.chain_id !== chain.id) {
-		return <WrongNetwork desiredChainId={order?.chain_id} />;
-	}
+	// if (order?.chain_id && chain && order.chain_id !== chain.id) {
+	// 	return <WrongNetwork desiredChainId={order?.chain_id} />;
+	// }
 
 	if (!order?.id) return <Loading />;
 

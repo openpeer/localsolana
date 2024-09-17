@@ -25,7 +25,7 @@ interface Upload {
 
 interface DisputeFormParams {
 	order: Order;
-	address: `0x${string}`;
+	address: string;
 	paidForDispute: boolean;
 	fee: string;
 }

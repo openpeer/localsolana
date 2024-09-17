@@ -1,14 +1,15 @@
-import { OpenPeerDeployer } from 'abis';
-import { constants } from 'ethers';
-import { useEscrowFee, useAccount } from 'hooks';
-import { DEPLOYER_CONTRACTS } from 'models/networks';
+//import { OpenPeerDeployer } from 'abis';
+//import { constants } from 'ethers';
+import { useAccount } from 'hooks';
+//import { DEPLOYER_CONTRACTS } from 'models/networks';
 import React, { useState } from 'react';
-import { useContractRead, useNetwork } from 'wagmi';
+//import { useContractRead, useNetwork } from 'wagmi';
 
 import ApproveTokenButton from './ApproveTokenButton';
 import DeploySellerContract from './DeploySellerContract';
 import { EscrowFundsParams } from './EscrowButton.types';
 import EscrowFundsButton from './EscrowFundsButton';
+import { PublicKey } from '@solana/web3.js';
 
 const EscrowButton = ({
 	token,
@@ -19,10 +20,10 @@ const EscrowButton = ({
 	instantEscrow,
 	sellerWaitingTime
 }: EscrowFundsParams) => {
-	const nativeToken = token.address === constants.AddressZero;
+	const nativeToken = token.address === PublicKey.default.toBase58();
 	const [approved, setApproved] = useState(nativeToken || instantEscrow);
-	const { chain } = useNetwork();
-	const deployer = chain ? DEPLOYER_CONTRACTS[chain.id] : undefined;
+	//const { chain } = useNetwork();
+	//const deployer = chain ? DEPLOYER_CONTRACTS[chain.id] : undefined;
 	const { address } = useAccount();
 
 	const { data: sellerContract } = useContractRead({
