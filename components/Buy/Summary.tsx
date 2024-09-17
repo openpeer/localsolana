@@ -42,7 +42,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 	const banks = paymentMethod
 		? [paymentMethod.bank]
 		: type === 'BuyList'
-		? list.banks
+		? list.bank
 		: Array.isArray(paymentMethods)
 		? paymentMethods.map((pm) => pm.bank)
 		: [paymentMethods].map((pm) => pm?.bank);

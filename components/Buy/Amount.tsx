@@ -37,6 +37,7 @@ const Prefix = ({ label, image }: { label: string; image: React.ReactNode }) => 
 
 const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 	const router = useRouter();
+	
 	const { fiatAmount: quickBuyFiat, tokenAmount: quickBuyToken } = router.query;
 
 	const { list = {} as List, token_amount: orderTokenAmount, fiat_amount: orderFiatAmount } = order;
@@ -146,18 +147,20 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 						fiatAmount: newOrder.fiat_amount,
 						tokenAmount: truncate(newOrder.token_amount, token.decimals),
 						price: newOrder.price,
-						paymentMethod: { id: bank?.id }
+						paymentMethod: { id: bank?.id },
+						buyer_id:address
 					},
 					{ deep: true }
 				)
 			),
 			headers: {
-				Authorization: `Bearer ${getAuthToken()}`
+				Authorization: `Bearer ${getAuthToken()}`,
+				'Content-Type':'application/json',
 			}
 		});
-		const { uuid } = await result.json();
-		if (uuid) {
-			router.push(`/orders/${uuid}`);
+		const { data } = await result.json();
+		if (data.id) {
+			router.push(`/orders/${data.id}`);
 		}
 	};
 
@@ -168,12 +171,21 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 		}
 
 		if (list && price) {
-			if (!validate(resolver)) return;
+			// if (!validate(resolver)) return;
+			// change here
+
+			// const newOrder: UIOrder = {
+			// 	...order,
+			// 	...{ fiat_amount: fiatAmount!, token_amount: tokenAmount!, price }
+			// };
 
 			const newOrder: UIOrder = {
 				...order,
-				...{ fiat_amount: fiatAmount!, token_amount: tokenAmount!, price }
+				...{ fiat_amount: fiatAmount!, token_amount: 1, price }
 			};
+
+			// console.log(newOrder);
+			// return;
 
 			if (list.type === 'SellList') {
 				await createOrder(newOrder);
@@ -239,9 +251,9 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 		}
 	}, [banks]);
 
-	// if (!user?.email) {
-	// 	return <AccountInfo setUser={setUser} />;
-	// }
+	if (!user?.email) {
+		return <AccountInfo setUser={setUser} />;
+	}
 
 	const buyCrypto = list.type === 'BuyList';
 	const verificationRequired = acceptOnlyVerified && !user?.verified;

@@ -41,6 +41,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
   // @ts-ignore
   const createList = async (data) => {
     const escrowVal = escrowType === "manual" ? 0 : 1;
+    
     if (isAuthenticated) {
       // need to add data inside the body
       const result = await fetch(
@@ -55,6 +56,8 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 marginType: list.marginType === "fixed" ? 0 : 1,
                 seller_address: address,
                 escrowType: escrowVal,
+                price:list.margin,
+                // bank_id:'6'
               },
               { deep: true }
             )
@@ -148,6 +151,8 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
   const onProceed = () => {
     if (!needToDeployOrFund) {
+      createList('0x2ad3022365874e29e4220612c546499dedae4f9e826d6cb78aa0a7ed19f562903d87f0758a147c2aa43fac12c88ce07c2afa993ad68792c4026c5b64de50d3381c');
+      return;
       const message = listToMessage(list);
       signMessage({ message });
     }

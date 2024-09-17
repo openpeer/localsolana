@@ -36,7 +36,7 @@ const BankSelect = ({
 			}
 		})
 			.then((res) => res.json())
-			.then((data) => {
+			.then((data) => { 
 				setBanks(data.data);
 				setLoading(false);
 			});

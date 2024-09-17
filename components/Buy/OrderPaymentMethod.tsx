@@ -19,7 +19,9 @@ import { BuyStepProps } from './Buy.types';
 const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 	const { address } = useAccount();
 	const { list, paymentMethod = {} as PaymentMethodType } = order;
-	const { fiat_currency: currency, type, banks, token } = list;
+	const { fiat_currency: currency, type, bank: banks, token } = list;
+	console.log(list);
+	
 	const { id, bank, values = {} } = paymentMethod;
 	const { account_info_schema: schema = [] } = (bank || {}) as Bank;
 	const { errors, clearErrors, validate } = useFormErrors();
@@ -42,29 +44,32 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 	};
 
 	const createOrder = async () => {
-		const result = await fetch('/api/orders/', {
+		const result = await fetch('/api/createOrder/', {
 			method: 'POST',
 			body: JSON.stringify(
 				snakecaseKeys(
 					{
-						order: {
+						// order: {
 							listId: order.list.id,
 							fiatAmount: order.fiat_amount,
 							tokenAmount: truncate(order.token_amount, token.decimals),
 							price: order.price,
-							paymentMethod
-						}
+							paymentMethod,
+							buyer_id:address,
+						// }
 					},
 					{ deep: true }
 				)
 			),
 			headers: {
-				Authorization: `Bearer ${getAuthToken()}`
+				Authorization: `Bearer ${getAuthToken()}`,
+				'Content-Type':'application/json',
 			}
 		});
-		const { uuid } = await result.json();
-		if (uuid) {
-			router.push(`/orders/${uuid}`);
+		const { id } = await result.json();
+		console.log(result.json());
+		if (id) {
+			router.push(`/orders/${id}`);
 		}
 	};
 
@@ -128,7 +133,7 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 			.then((res) => res.json())
 			.then((res) => res.data)
 			.then((data: PaymentMethodType[]) => {
-				const listBankIds = banks?banks.map((b) => b?.id):[];
+				const listBankIds = banks?banks.map((b) => b?.id):[];				
 				const filtered = data.filter((pm) => listBankIds.includes(pm?.bank?.id));
 				setPaymentMethods(filtered);
 				if (!paymentMethod.values) {
