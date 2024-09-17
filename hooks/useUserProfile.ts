@@ -82,7 +82,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 					(message) => `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} ${message}`
 				);
 
-				//setErrors({ ...errors, ...{ [fieldName]: formattedMessages.join(', ') } });
+				setErrors({ ...errors, ...{ [fieldName]: formattedMessages.join(', ') } });
 				return formattedMessages;
 			});
 		}
@@ -93,7 +93,8 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	// };
 
 	const updateProfile = () => {
-		//setErrors({});
+		setErrors({});
+		console.log(`Nve user da data: ${contract_address}`)
 		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contract_address || null} };
 		updateUserProfile(newUser as User);
 	};

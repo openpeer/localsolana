@@ -57,7 +57,11 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 seller_address: address,
                 escrowType: escrowVal,
                 price:list.margin,
+<<<<<<< HEAD
                 // bank_id:'6'
+=======
+                bank_id:16
+>>>>>>> f6422cb2b9338f8ed949c4c31ae0a2182b0fa6d1
               },
               { deep: true }
             )
@@ -77,33 +81,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
   const { signMessage } = useConfirmationSignMessage({
     onSuccess: async (data) => {
-      const result = await fetch(
-        list.id ? `/api/lists/${list.id}` : "/api/lists",
-
-        {
-          method: list.id ? "PUT" : "POST",
-          body: JSON.stringify(
-            snakecaseKeys(
-              {
-                list: {
-                  ...list,
-                  ...{ bankIds: (list.banks || []).map((b) => b.id) },
-                },
-                data,
-              },
-              { deep: true }
-            )
-          ),
-          headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
-          },
-        }
-      );
-      const { id } = await result.json();
-
-      if (id) {
-        router.push(`/${address}`);
-      }
+      createList(data);
     },
   });
 
