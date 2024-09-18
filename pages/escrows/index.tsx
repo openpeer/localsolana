@@ -10,7 +10,7 @@ import { formatUnits } from 'viem';
 // import { Chain, useContractRead, useNetwork, useSwitchNetwork } from 'wagmi';
 import { Contract, Token } from 'models/types';
 import { CURRENT_NETWORK, smallWalletAddress } from 'utils';
-import { useShyft } from '@/hooks/transactions';
+import { useBalance, useShyft } from '@/hooks/transactions';
 import { token } from '@coral-xyz/anchor/dist/cjs/utils';
 
 const ContractTable = ({
@@ -105,7 +105,7 @@ const TokenRow = ({
 	// });
 
  
-	const {data} = useShyft().getTokenBalance(address??'',token.address);
+	const data = useBalance(token.address);
 
 	return (
 		<tr className="hover:bg-gray-50">
@@ -128,7 +128,7 @@ const TokenRow = ({
 						/>
 						<Button
 							title="Withdraw"
-							disabled={!data || (data as bigint) <= BigInt(0)}
+							disabled={!data.balance || (data.balance <= 0)}
 							onClick={() => onSelectToken(token, contract, 'Withdraw')}
 						/>
 					</span>
@@ -141,7 +141,7 @@ const TokenRow = ({
 				</div>
 			</td>
 			<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-				{data === undefined ? '' : `${formatUnits(data as bigint, token.decimals)} ${token.symbol}`}
+				{data === undefined ? '' : `${data.balance}  ${token.symbol}`}
 			</td>
 			<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
 				<div className="w-full flex flex-row space-x-4">
@@ -152,7 +152,7 @@ const TokenRow = ({
 					/>
 					<Button
 						title="Withdraw"
-						disabled={!data || (data as bigint) <= BigInt(0)}
+						disabled={!data.balance || (data.balance) <= 0}
 						onClick={() => onSelectToken(token, contract, 'Withdraw')}
 					/>
 				</div>

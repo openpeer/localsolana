@@ -45,3 +45,4 @@ export const listToMessage = (list: UIList): string => {
 
   export const CURRENT_NETWORK = Network.Devnet; // Change this to MAINNET or LOCALNET as needed
   export const CURRENT_NETWORK_URL = 'https://api.devnet.solana.com';
+  export const BLOCK_EXPLORER = ['https://solscan.io/']

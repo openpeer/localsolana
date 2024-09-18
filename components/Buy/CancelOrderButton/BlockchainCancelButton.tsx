@@ -2,8 +2,8 @@ import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 //import { OpenPeerEscrow } from 'abis';
 import { Button, Modal } from 'components';
 import TransactionLink from 'components/TransactionLink';
-import { useCancelReasons, useTransactionFeedback, useAccount } from 'hooks';
-import { useEscrowCancel } from 'hooks/transactions';
+import { useCancelReasons, useAccount } from 'hooks';
+//import { useEscrowCancel } from 'hooks/transactions';
 import { Order } from 'models/types';
 import React, { useEffect, useState } from 'react';
 import { parseUnits } from 'viem';
@@ -26,12 +26,12 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 	const [modalOpen, setModalOpen] = useState(false);
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);
 
-	const { data: escrowData, isFetching: isFetchingEscrowData } = useContractRead({
-		address: escrow?.address,
-		abi: OpenPeerEscrow,
-		functionName: 'escrows',
-		args: [tradeId]
-	});
+	// const { data: escrowData, isFetching: isFetchingEscrowData } = useContractRead({
+	// 	address: escrow?.address,
+	// 	abi: OpenPeerEscrow,
+	// 	functionName: 'escrows',
+	// 	args: [tradeId]
+	// });
 
 	const { isLoading, isSuccess, cancelOrder, data, isFetching } = useEscrowCancel({
 		contract: escrow!.address,
@@ -42,12 +42,12 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 		isBuyer
 	});
 
-	useTransactionFeedback({
-		hash: data?.hash,
-		isSuccess,
-		Link: <TransactionLink hash={data?.hash} />,
-		description: 'Cancelled the order'
-	});
+	// useTransactionFeedback({
+	// 	hash: data?.hash,
+	// 	isSuccess,
+	// 	Link: <TransactionLink hash={data?.hash} />,
+	// 	description: 'Cancelled the order'
+	// });
 
 	useEffect(() => {
 		if (cancelConfirmed) {
@@ -75,14 +75,14 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 		}
 	}, [isSuccess]);
 
-	if (isFetchingEscrowData) {
-		return <p>Loading...</p>;
-	}
+	// if (isFetchingEscrowData) {
+	// 	return <p>Loading...</p>;
+	// }
 
-	const [, sellerCanCancelAfter] = escrowData as [boolean, bigint];
+	//const [, sellerCanCancelAfter] = escrowData as [boolean, bigint];
 
 	const now = Date.now() / 1000;
-	const sellerCanCancelAfterSeconds = parseInt(sellerCanCancelAfter.toString(), 10);
+	const sellerCanCancelAfterSeconds = 10;//parseInt(sellerCanCancelAfter.toString(), 10);
 	const sellerCantCancel = isSeller && (sellerCanCancelAfterSeconds <= 1 || sellerCanCancelAfterSeconds > now);
 
 	const onBlockchainCancel = () => {

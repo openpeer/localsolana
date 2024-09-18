@@ -1,4 +1,4 @@
-import { useEscrowFee } from 'hooks';
+//import { useEscrowFee } from 'hooks';
 import { Token } from 'models/types';
 import React from 'react';
 import { formatUnits, parseUnits } from 'viem';
@@ -10,7 +10,9 @@ interface FeeDisplayParams {
 }
 
 const FeeDisplay = ({ escrow, tokenAmount, token }: FeeDisplayParams) => {
-	const { fee, isFetching } = useEscrowFee({ address: escrow, token, tokenAmount, chainId: token.chain_id });
+	//const { fee, isFetching } = useEscrowFee({ address: escrow, token, tokenAmount, chainId: token.chain_id });
+	const fee = BigInt(10);
+	const isFetching = false;
 
 	if (isFetching || !fee) return <></>;
 

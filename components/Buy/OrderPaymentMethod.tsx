@@ -133,7 +133,7 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 			.then((res) => res.json())
 			.then((res) => res.data)
 			.then((data: PaymentMethodType[]) => {
-				const listBankIds = banks?banks.map((b) => b?.id):[];				
+				const listBankIds = banks?banks.map((b) => b?.id):[]
 				const filtered = data.filter((pm) => listBankIds.includes(pm?.bank?.id));
 				setPaymentMethods(filtered);
 				if (!paymentMethod.values) {

@@ -57,11 +57,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 seller_address: address,
                 escrowType: escrowVal,
                 price:list.margin,
-<<<<<<< HEAD
-                // bank_id:'6'
-=======
                 bank_id:16
->>>>>>> f6422cb2b9338f8ed949c4c31ae0a2182b0fa6d1
               },
               { deep: true }
             )

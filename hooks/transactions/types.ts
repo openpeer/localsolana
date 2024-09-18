@@ -4,8 +4,9 @@ export interface UseEscrowTransactionProps {
 	contract: string;
 	orderID: string;
 	buyer: string;
-	amount: bigint;
+	amount: number;
 	token: Token;
+	seller: string;
 }
 
 export interface UseGaslessEscrowFundsProps extends UseEscrowTransactionProps {

@@ -15,7 +15,7 @@ const useLocalSolana = () => {
   const [program, setProgram] = useState<Program<LocalSolanaMigrate> | null>(null);
   const [provider, setProvider] = useState<AnchorProvider | null>(null);
   const { primaryWallet } = useDynamicContext();
- 
+  const [connection, setConnection] = useState<Connection | null>(null);
   const [myWallet, setMyWallet] = useState<SolanaWallet | null>(null);
 
   useEffect(() => {
@@ -36,6 +36,7 @@ const useLocalSolana = () => {
       setProvider(provider);
       setProgram(program);
       setMyWallet(primaryWallet);
+      setConnection(connection);
     };
 
     initializeProgram();
@@ -88,7 +89,20 @@ const useLocalSolana = () => {
     );
     return escrowPda_;
   }
-  return { program, provider,myWallet,idl, initialiseSolanaAccount, getEscrowStatePDA,getEscrowPDA };
+
+  const markAsPaid = async (orderId: string,buyer: PublicKey,seller:PublicKey) => {
+    if (!program || !provider) {
+      throw new Error('Program or provider is not initialized');
+    }
+ const tx = await program.methods.markAsPaid(orderId).
+        accounts( {
+          buyer: buyer,
+          seller: seller,
+        }).transaction();
+    return tx;
+  };
+
+  return { program, provider,myWallet,idl,connection, initialiseSolanaAccount, getEscrowStatePDA,getEscrowPDA,markAsPaid };
 };
 
 export default useLocalSolana;

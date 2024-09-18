@@ -1,12 +1,14 @@
 import { Button, Modal } from 'components';
 import TransactionLink from 'components/TransactionLink';
 import {  useAccount } from 'hooks';
-//import { useEscrowFunds } from 'hooks/transactions';
+import { useEscrowFunds } from 'hooks/transactions';
 import React, { useEffect, useState } from 'react';
 import { truncate } from 'utils';
 import { parseUnits } from 'viem';
 
 import { EscrowFundsButtonProps } from './EscrowButton.types';
+import useTransactionFeedback from '@/hooks/useTransactionFeedback';
+import useGaslessEscrow from '@/hooks/transactions/escrow/useGaslessEscrow';
 
 const EscrowFundsButton = ({
 	uuid,
@@ -16,22 +18,21 @@ const EscrowFundsButton = ({
 	fee,
 	contract,
 	instantEscrow,
-	sellerWaitingTime
+	sellerWaitingTime,seller
 }: EscrowFundsButtonProps) => {
 	const { isConnected } = useAccount();
-	const amount = parseUnits(String(truncate(tokenAmount, token.decimals)), token.decimals);
+	const amount = tokenAmount;
 	const [modalOpen, setModalOpen] = useState(false);
 	const [escrowConfirmed, setEscrowConfirmed] = useState(false);
 
-	const { isLoading, isSuccess, data, escrowFunds, isFetching } = useEscrowFunds({
+	const { isLoading, isSuccess, data, escrowFunds, isFetching } = useGaslessEscrow({
 		orderID: uuid!,
 		amount,
 		buyer,
-		fee,
 		token,
 		contract,
 		instantEscrow,
-		sellerWaitingTime
+		sellerWaitingTime,seller
 	});
 
 	const escrow = () => {

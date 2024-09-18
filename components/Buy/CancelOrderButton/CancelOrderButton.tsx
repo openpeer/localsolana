@@ -15,7 +15,7 @@ interface CancelOrderButtonParams {
 }
 
 const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: CancelOrderButtonParams) => {
-	const { seller, buyer, uuid, status } = order;
+	const { seller, buyer, uuid, status,id } = order;
 
 	const { address } = useAccount();
 	const { cancellation, otherReason, setOtherReason, toggleCancellation } = useCancelReasons();
@@ -27,9 +27,43 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 	const [modalOpen, setModalOpen] = useState(false);
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);
 
+	const cancelOrder = async () => {
+		//console.log(order);
+			const result = await fetch(`/api/orders/${id}/cancel`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${getAuthToken()}`
+				},
+				body: JSON.stringify({
+					cancellation,
+					other_reason: otherReason && otherReason !== '' ? otherReason : undefined
+				})
+			});
+			const savedOrder = await result.json();
+			console.log((`Ho gya cancel ${savedOrder}`));
+			if (savedOrder.uuid) {
+				if (status !== 'cancelled') {
+					window.location.reload();
+				}
+			} else {
+				toast.error('Error cancelling the order', {
+					theme: 'dark',
+					position: 'top-right',
+					autoClose: 5000,
+					hideProgressBar: false,
+					closeOnClick: true,
+					pauseOnHover: true,
+					draggable: false,
+					progress: undefined
+				});
+			}
+	}
+
 	const { signMessage } = useConfirmationSignMessage({
 		onSuccess: async () => {
-			const result = await fetch(`/api/orders/${uuid}/cancel`, {
+			console.log(order);
+			const result = await fetch(`/api/orders/${id}/cancel`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -57,11 +91,11 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 					progress: undefined
 				});
 			}
-		}
+		},
 	});
 
 	const cancelIsNotAvailable = ['cancelled', 'closed'].includes(order.status);
-	const simpleCancel: boolean = !order.escrow && order.status === 'created'; // no need to talk to the blockchain
+	const simpleCancel: boolean = true;//!order.escrow && order.status === 'created'; // no need to talk to the blockchain
 
 	const onCancelOrder = () => {
 		if (cancelIsNotAvailable) return;
@@ -72,7 +106,9 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 		}
 
 		if (simpleCancel) {
-			signMessage({ message });
+			//signMessage({ message });
+			console.log(`Aa gya cancel krn order`);
+			cancelOrder();
 		}
 	};
 

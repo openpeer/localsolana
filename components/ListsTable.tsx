@@ -163,11 +163,8 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 						accept_only_verified: acceptOnlyVerified
 					} = list;
 					// @ts-ignore
-<<<<<<< HEAD
-					const banks = type === 'BuyList' ? list.bank : paymentMethods.map((pm) => pm.bank);
-=======
+
 					const banks = type === 'BuyList' ? list.bank : paymentMethods?.map((pm) => pm.bank);
->>>>>>> f6422cb2b9338f8ed949c4c31ae0a2182b0fa6d1
 					const { address: sellerAddress, name } = seller;
 					const isSeller = primaryWallet && sellerAddress === address;
 					// const isSeller=true;

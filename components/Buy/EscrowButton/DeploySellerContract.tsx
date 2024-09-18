@@ -1,4 +1,5 @@
 import useGaslessDeploy from '@/hooks/transactions/deploy/useGaslessDeploy';
+import useTransactionFeedback from '@/hooks/useTransactionFeedback';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Button } from 'components';
 import TransactionLink from 'components/TransactionLink';
@@ -20,12 +21,12 @@ const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: st
 
 	const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy();
 
-	// useTransactionFeedback({
-	// 	hash: data?.hash,
-	// 	isSuccess,
-	// 	Link: <TransactionLink hash={data?.hash} />,
-	// 	description: 'Deployed the seller contract'
-	// });
+	useTransactionFeedback({
+		hash: data??'',
+		isSuccess,
+		Link: <TransactionLink hash={data} />,
+		description: 'Deployed the seller contract'
+	});
 
 
 	const deploySellerContract = async () => {
