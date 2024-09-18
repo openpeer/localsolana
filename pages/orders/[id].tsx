@@ -7,6 +7,7 @@ import { GetServerSideProps } from 'next';
 import { useAccount } from 'hooks';
 import React, { useEffect, useState } from 'react';
 //import { useNetwork } from 'wagmi';
+import { getStatusString } from '@/utils';
 
 const ERROR_STEP = 0;
 const PAYMENT_METHOD_STEP = 2;
@@ -37,8 +38,9 @@ const OrderPage = ({ id }: { id: `0x${string}` }) => {
 			}
 		})
 			.then((res) => res.json())
+			.then((res) => res.data)
 			.then((data) => {
-				setOrder({ ...data.data, ...{ step: steps[data.status || 'error'] } });
+				setOrder({ ...data,status:getStatusString(data.status), ...{ step: steps[data.status || 'error'] } });
 			});
 
 		// changehere

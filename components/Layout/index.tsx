@@ -7,6 +7,7 @@ import { SolanaWalletConnectors } from "@dynamic-labs/solana";
 import Head from 'app/head';
 import { MessageContextProvider } from '@/contexts/MessageContext';
 import SolanaWalletProvider from '@/providers/SolanaWalletProvider';
+import { TransactionFeedbackProvider } from '@/contexts/TransactionFeedContext';
 
 
 const AuthLayout = dynamic(() => import('./AuthLayout'), { ssr: false });
@@ -36,7 +37,7 @@ const App = ({ Component, pageProps,router}: AppProps) => {
           },
         }} 
       >
-       
+       <TransactionFeedbackProvider>
         <Head />
         <MessageContextProvider messageToSign={messageToSign} signedMessage={signedMessage}>
         {simpleLayout ? (
@@ -45,7 +46,7 @@ const App = ({ Component, pageProps,router}: AppProps) => {
           <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass pageProps
         )}
         </MessageContextProvider>
-       
+        </TransactionFeedbackProvider>
       </DynamicContextProvider>
 
 	);

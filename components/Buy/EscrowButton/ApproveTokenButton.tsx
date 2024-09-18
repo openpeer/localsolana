@@ -12,7 +12,7 @@ const ApproveTokenButton = ({
 }: {
     token: { address: string; symbol: string };
     spender: string;
-    amount: bigint;
+    amount: number;
     onApprovalChange: (approved: boolean) => void;
 }) => {
     const { primaryWallet } = useDynamicContext();

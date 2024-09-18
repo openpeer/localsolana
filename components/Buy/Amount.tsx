@@ -21,6 +21,7 @@ import { Abi, formatUnits, parseUnits } from 'viem';
 import ModalWindow from 'components/Modal/ModalWindow';
 import BankSelect from 'components/Select/BankSelect';
 import { BuyStepProps, UIOrder } from './Buy.types';
+import useGaslessEscrow from '@/hooks/transactions/escrow/useGaslessEscrow';
 
 interface BuyAmountStepProps extends BuyStepProps {
 	price: number | undefined;
@@ -125,22 +126,9 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 	};
 
 	const createOrder = async (newOrder: Order) => {
-		// const result = await fetch('/api/orders/', {
 		const result = await fetch('/api/createOrder/', {
 			method: 'POST',
 			body: JSON.stringify(
-				// snakecaseKeys(
-				// 	{
-				// 		order: {
-				// 			listId: newOrder.list.id,
-				// 			fiatAmount: newOrder.fiat_amount,
-				// 			tokenAmount: truncate(newOrder.token_amount, token.decimals),
-				// 			price: newOrder.price,
-				// 			paymentMethod: { id: bank?.id }
-				// 		}
-				// 	},
-				// 	{ deep: true }
-				// )
 				snakecaseKeys(
 					{
 						listId: newOrder.list.id,
@@ -161,6 +149,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 		const { data } = await result.json();
 		if (data.id) {
 			router.push(`/orders/${data.id}`);
+			//useGaslessEscrow({})
 		}
 	};
 
@@ -171,22 +160,10 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 		}
 
 		if (list && price) {
-			// if (!validate(resolver)) return;
-			// change here
-
-			// const newOrder: UIOrder = {
-			// 	...order,
-			// 	...{ fiat_amount: fiatAmount!, token_amount: tokenAmount!, price }
-			// };
-
 			const newOrder: UIOrder = {
 				...order,
 				...{ fiat_amount: fiatAmount!, token_amount: 1, price }
 			};
-
-			// console.log(newOrder);
-			// return;
-
 			if (list.type === 'SellList') {
 				await createOrder(newOrder);
 			} else {

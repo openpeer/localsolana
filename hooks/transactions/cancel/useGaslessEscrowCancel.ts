@@ -1,13 +1,12 @@
-import { OpenPeerEscrow } from 'abis';
 import { Contract } from 'ethers';
-import useBiconomy from 'hooks/useBiconomy';
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount } from 'hooks';
 
 import { UseEscrowCancelProps } from '../types';
+import useShyft from '../useShyft';
 
 interface Data {
-	hash?: `0x${string}`;
+	hash?: string;
 }
 
 const useGaslessEscrowCancel = ({ contract, isBuyer, orderID, buyer, token, amount }: UseEscrowCancelProps) => {
@@ -17,47 +16,23 @@ const useGaslessEscrowCancel = ({ contract, isBuyer, orderID, buyer, token, amou
 
 	const { address } = useAccount();
 
-	const { biconomy, gaslessEnabled } = useBiconomy({ contract });
+	const { shyft,sendTransactionWithShyft} = useShyft();
 
-	if (biconomy === undefined || gaslessEnabled === undefined) {
-		return { isFetching: true, gaslessEnabled, isSuccess, isLoading, data };
+	if (shyft === undefined ) {
+		return { isFetching: true, isSuccess, isLoading, data };
 	}
 
-	if (biconomy === null || !gaslessEnabled) {
+	if (shyft === null ) {
 		return { isFetching: false, gaslessEnabled: false, isSuccess, isLoading, data };
 	}
 
 	const cancelOrder = async () => {
 		try {
-			const provider = await biconomy.provider;
-			const contractInstance = new Contract(contract, OpenPeerEscrow, biconomy.ethersProvider);
-			const { data: transactionData } = await contractInstance.populateTransaction[
-				isBuyer ? 'buyerCancel' : 'sellerCancel'
-			](orderID, buyer, token.address, amount);
-			const txParams = {
-				data: transactionData,
-				to: contract,
-				from: address,
-				signatureType: 'EIP712_SIGN'
-			};
-			// @ts-ignore
-			await provider.send('eth_sendTransaction', [txParams]);
-			setIsLoading(true);
-			biconomy.on('txHashGenerated', (txData) => {
-				setIsSuccess(false);
-				updateData(txData);
-			});
-			biconomy.on('txMined', (minedData) => {
-				setIsLoading(false);
-				setIsSuccess(true);
-				updateData(minedData);
-			});
+			if(isBuyer){
 
-			biconomy.on('onError', (minedData) => {
-				console.error('error', minedData);
-				setIsLoading(false);
-				setIsSuccess(false);
-			});
+			}else{
+				
+			}
 		} catch (error) {
 			console.error('error', error);
 			setIsLoading(false);

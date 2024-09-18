@@ -20,6 +20,7 @@ import FeeDisplay from './Payment/FeeDisplay';
 import PreShowDetails from './PreShowDetails';
 import ReleaseFundsButton from './ReleaseFundsButton';
 import { useContractRead } from '@/hooks/transactions/useContractRead';
+import { getStatusString } from '@/utils';
 
 const Payment = ({ order }: BuyStepProps) => {
 	const {
@@ -82,7 +83,7 @@ const Payment = ({ order }: BuyStepProps) => {
 			progress: undefined
 		});
 	};
-console.log(paymentMethod);
+console.log(status);
 	return (
 		<StepLayout>
 			<div className="my-0 md:my-8">

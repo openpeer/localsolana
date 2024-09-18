@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Token } from 'models/types';
+import { Token, User } from 'models/types';
 import { useQRCode } from 'next-qrcode';
 //import { allChains } from 'models/networks';
 import ClipboardText from 'components/Buy/ClipboardText';
@@ -15,6 +15,8 @@ import Button from 'components/Button/Button';
 //import Network from 'components/Network/Network';
 import StepLayout from './StepLayout';
 import { PublicKey } from '@solana/web3.js';
+import { BLOCK_EXPLORER } from '@/utils';
+import { useUserProfile } from '@/hooks';
 
 interface FundsEscrowProps {
 	token: Token;
@@ -31,8 +33,11 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 	const [depositAmount, setDepositAmount] = useState<number | undefined>(listTotalNumber);
 	const { SVG } = useQRCode();
 	//const chain = allChains.find((c) => c.id === chainId);
-	const sellerContractDeployed = !!sellerContract && sellerContract !== PublicKey.default.toString();
-	
+	const { user } = useUserProfile({
+		onUpdateProfile: setUser
+	});
+	const sellerContractDeployed = user?.contract_address;
+	console.log("Seller Contract deployed",sellerContractDeployed);
 
 	return (
 		<StepLayout buttonText={`Deposit ${token.name}`}>
@@ -52,7 +57,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 							<>
 								Deposit {token.name} into your{' '}
 								<a
-									//href={`${chain?.blockExplorers.etherscan.url}/address/${sellerContract}`}
+									href={`${BLOCK_EXPLORER[0]}/address/${sellerContract}`}
 									className="text-cyan-600"
 									target="_blank"
 									rel="noreferrer"
@@ -134,3 +139,6 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 };
 
 export default FundEscrow;
+function setUser(user: User): void {
+}
+

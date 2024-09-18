@@ -45,4 +45,17 @@ export const listToMessage = (list: UIList): string => {
 
   export const CURRENT_NETWORK = Network.Devnet; // Change this to MAINNET or LOCALNET as needed
   export const CURRENT_NETWORK_URL = 'https://api.devnet.solana.com';
-  export const BLOCK_EXPLORER = ['https://solscan.io/']
+  export const BLOCK_EXPLORER = ['https://solscan.io/'];
+
+const ORDER_STATUS_MAPPING: { [key: number]: string } = {
+	1: 'created',
+	2: 'escrowed',
+	3: 'release',
+	4: 'cancelled',
+	5: 'dispute',
+	6: 'closed'
+  };
+
+  export function getStatusString(status: number): string {
+	return ORDER_STATUS_MAPPING[status] || 'unknown';
+  }

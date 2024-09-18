@@ -102,7 +102,20 @@ const useLocalSolana = () => {
     return tx;
   };
 
-  return { program, provider,myWallet,idl,connection, initialiseSolanaAccount, getEscrowStatePDA,getEscrowPDA,markAsPaid };
+  const createEscrowSol = async (orderId: string,time:number,amount:number,buyer:string,seller:string,partner:string) => {
+    if (!program || !provider) {
+      throw new Error('Program or provider is not initialized');
+    }
+ const tx = await program.methods.createEscrowSol(orderId,new anchor.BN(amount),new anchor.BN(time)).
+        accounts( {
+          buyer: new PublicKey(buyer),
+          seller: new PublicKey(seller),
+          partner: new PublicKey(partner)
+        }).transaction();
+    return tx;
+  };
+
+  return { program, provider,myWallet,idl,connection, initialiseSolanaAccount, getEscrowStatePDA,getEscrowPDA,markAsPaid,createEscrowSol };
 };
 
 export default useLocalSolana;

@@ -1,9 +1,9 @@
 import { UseEscrowTransactionProps } from '../types';
 import useGaslessMarkAsPaid from './useGaslessMarkAsPaid';
-import useGasMarkAsPaid from './useGasMarkAsPaid';
+//import useGasMarkAsPaid from './useGasMarkAsPaid';
 
 const useMarkAsPaid = ({ orderID, buyer, amount, token, contract,seller }: UseEscrowTransactionProps) => {
-	const withGasCall = useGasMarkAsPaid({ orderID, buyer, amount, token, contract,seller });
+	//const withGasCall = useGasMarkAsPaid({ orderID, buyer, amount, token, contract,seller });
 
 	const { gaslessEnabled, isFetching, isLoading, isSuccess, data, markAsPaid } = useGaslessMarkAsPaid({
 		orderID,
@@ -22,7 +22,7 @@ const useMarkAsPaid = ({ orderID, buyer, amount, token, contract,seller }: UseEs
 		return { isLoading, isSuccess, data, markAsPaid, isFetching };
 	}
 
-	return withGasCall;
+	//return withGasCall;
 };
 
 export default useMarkAsPaid;
