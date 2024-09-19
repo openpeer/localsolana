@@ -5,6 +5,7 @@ import { Order } from 'models/types';
 import React, { useEffect, useState } from 'react';
 import { useAccount } from 'hooks';
 import qs from 'qs';
+import { getStatusString } from '@/utils';
 
 const OrdersPage = () => {
 	const [activeOrders, setActiveOrders] = useState<Order[]>([]);
@@ -27,13 +28,19 @@ const OrdersPage = () => {
 			type === 'active' ? setActiveOrders : type === 'closed' ? setClosedOrders : setCancelledOrders;
 		
 		loadingFunction(true);
-		fetch(`/api/orders?${qs.stringify({ status })}`, {
+		fetch(`/api/ordersStatus?${qs.stringify({ status })}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
 			.then((res) => res.json())
+			.then((res) => res.data)
 			.then((data) => {
+				data=data.filter((order:Order)=>{
+					const getCurrentStatus = getStatusString(Number(order?.status));
+					order.status = typeof getCurrentStatus==="string"?getCurrentStatus:String(getCurrentStatus);
+					return order;
+				});
 				
 				setFunction(
 					data.filter(
