@@ -285,7 +285,7 @@ console.log(status);
 							buyer={buyer!.address}
 							token={token}
 							tokenAmount={tokenAmount || 0}
-							uuid={uuid!}
+							uuid={order.id.toString()}
 							instantEscrow={instantEscrow}
 							seller={seller.address}
 							sellerWaitingTime={Number(paymentTimeLimit) * 60}
