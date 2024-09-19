@@ -148,7 +148,15 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 		});
 		const { data } = await result.json();
 		if (data.id) {
-			router.push(`/orders/${data.id}`);
+			const result = await fetch(`/api/updateTrade?id=${data.id}`, {
+				method: 'POST',
+				body: JSON.stringify({"trade_id" : "testing 72346234gy23g4y2v34utf24"}),
+				headers: {
+					Authorization: `Bearer ${getAuthToken()}`,
+					'Content-Type':'application/json',
+				}
+			});
+			if(result.status==200) router.push(`/orders/${data.id}`);
 			//useGaslessEscrow({})
 		}
 	};

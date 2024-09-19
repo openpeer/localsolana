@@ -22,6 +22,7 @@ const NextButton = ({
 		uuid,
 		status,
 		seller,
+		id,
 		list: { escrow_type: escrowType }
 	},
 	address
@@ -47,7 +48,8 @@ const NextButton = ({
 		label = 'See Order';
 	}
 
-	const url = `/orders/${encodeURIComponent(uuid)}`;
+	// const url = `/orders/${encodeURIComponent(uuid)}`;
+	const url = `/orders/${id}`;
 
 	return (
 		<Link href={url}>
@@ -59,7 +61,6 @@ const OrdersTable = ({ orders }: OrdersTableProps) => {
 	const { address: account } = useAccount();
 	const { primaryWallet } = useDynamicContext();
 	const address = account || primaryWallet?.address;
-
 	if (!orders) return <p>No orders</p>;
 
 	const orderStatus = (status: Order['status'], instantEscrow: boolean) => {
