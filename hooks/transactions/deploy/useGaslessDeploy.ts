@@ -21,13 +21,12 @@ const useGaslessDeploy = () => {
 
     const { primaryWallet } = useDynamicContext();
     const {sendTransactionWithShyft,getAccountInfo} = useShyft(); 
-    const {initialiseSolanaAccount,getEscrowStatePDA,getEscrowPDA} = useLocalSolana();
+    const {initialiseSolanaAccount,getEscrowStatePDA,getEscrowPDA,createEscrowSol} = useLocalSolana();
 
     const deploy = async () => {
         if (!primaryWallet?.isConnected) return;
 
         setIsLoading(true);
-        console.log("starting deploy");
 
         try {
             const  escrowStatePDA =  await getEscrowStatePDA(primaryWallet?.address);
@@ -40,7 +39,7 @@ const useGaslessDeploy = () => {
             }
 
             console.log(`Status ${status}`);
-            updateData(escrowStatePDA?.toBase58());
+            updateData(escrowStatePDA?.toString());
             setIsLoading(false);
 			setIsSuccess(true);
         } catch (error) {

@@ -19,6 +19,7 @@ const Release = ({ order }: BuyStepProps) => {
 	const { token_amount: tokenAmount, list, fiat_amount: fiatAmount, escrow, seller } = order;
 	const { token, fiat_currency: currency } = list || {};
 	const selling = seller.address === address;
+	console.log(selling);
 
 	return (
 		<>
@@ -47,7 +48,7 @@ const Release = ({ order }: BuyStepProps) => {
 						</span>
 						<span className="w-full">
 							{selling ? (
-								!!escrow && <ReleaseFundsButton order={order} dispute={false} />
+								 <ReleaseFundsButton order={order} dispute={false} />
 							) : (
 								<CancelOrderButton order={order} />
 							)}

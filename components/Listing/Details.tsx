@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useState } from "react";
 import snakecaseKeys from "snakecase-keys";
 
-import { Token } from "models/types";
+import { Token, User } from "models/types";
 import Checkbox from "components/Checkbox/Checkbox";
 import dynamic from "next/dynamic";
 import Label from "../Label/Label";
@@ -18,6 +18,7 @@ import { listToMessage } from "@/utils";
 import { parseUnits } from "viem";
 import { useShyft } from "@/hooks/transactions";
 import { PublicKey } from "@solana/web3.js";
+import Loading from "../Loading/Loading";
 
 const QuillEditor = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -33,13 +34,15 @@ const Details = ({ list, updateList }: ListStepProps) => {
     escrowType,
   } = list;
   const { address, isAuthenticated } = useAccount();
-  const { contract_address } = useUserProfile({});
+  const { user } = useUserProfile({
+    onUpdateProfile: setUser
+  });
   const {getTokenBalance,getWalletBalance} = useShyft();
   
   const router = useRouter();
 
   // @ts-ignore
-  const createList = async (data) => {
+  const createList = async () => {
     const escrowVal = escrowType === "manual" ? 0 : 1;
     
     if (isAuthenticated) {
@@ -74,10 +77,10 @@ const Details = ({ list, updateList }: ListStepProps) => {
       }
     }
   };
-
+console.log('Contract Address of Seller: ',user?.contract_address);
   const { signMessage } = useConfirmationSignMessage({
     onSuccess: async (data) => {
-      createList(data);
+      createList();
     },
   });
 
@@ -85,7 +88,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
     updateList({ ...list, ...{ terms: value } });
   };
 
-  const needToDeploy = contract_address==null || contract_address=='';
+  const needToDeploy = user?.contract_address===undefined ||user?.contract_address==null || user?.contract_address=='';
   const [balance, setBalance] = useState<number | null>(null);
   const needToFund = (balance??0) == 0 || (balance??0)< (list.totalAvailableAmount??0);
 
@@ -96,26 +99,30 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
     try {
       let fetchedBalance;
+      if(!user?.contract_address){
+        return;
+    }
       if ((token?.address ?? '') === PublicKey.default.toBase58()) {
-        fetchedBalance = await getWalletBalance(address);
+       
+        fetchedBalance = await getWalletBalance(user?.contract_address);
         console.log("SOL Balance:", fetchedBalance);
         setBalance(fetchedBalance ?? null);
       } else {
-        fetchedBalance = await getTokenBalance(address, token?.address ?? '');
+        fetchedBalance = await getTokenBalance(user?.contract_address, token?.address ?? '');
         console.log("Token Balance:", fetchedBalance);
-        setBalance(fetchedBalance?.balance ?? null);
+        setBalance(fetchedBalance ?? null);
       }
     } catch (error) {
       console.error("Error fetching balance:", error);
     }
-  }, [address, token, getWalletBalance, getTokenBalance]);
+  }, [address, user?.contract_address, token, getWalletBalance, getTokenBalance]);
 
   // Only run the effect once or when address or token changes
   useEffect(() => {
     if (address) {
       fetchBalance();
     }
-  }, [address, fetchBalance]);
+  }, [address, user?.contract_address, fetchBalance]);
 
 
 
@@ -125,20 +132,23 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
   const onProceed = () => {
     if (!needToDeployOrFund) {
-      createList('0x2ad3022365874e29e4220612c546499dedae4f9e826d6cb78aa0a7ed19f562903d87f0758a147c2aa43fac12c88ce07c2afa993ad68792c4026c5b64de50d3381c');
-      return;
       const message = listToMessage(list);
       signMessage({ message });
     }
   };
 
+if(!needToDeploy && balance == null){
+  return <Loading/>
+}
+
+
   if (needToDeployOrFund) {
     return (
       <>
-        {/* <Button title="Click Me" onClick={()=>createList('0x2ad3022365874e29e4220612c546499dedae4f9e826d6cb78aa0a7ed19f562903d87f0758a147c2aa43fac12c88ce07c2afa993ad68792c4026c5b64de50d3381c')}/> */}
+        
         <FundEscrow
           token={token as Token}
-          sellerContract={contract_address}
+          sellerContract={user?.contract_address || ''}
           chainId={chainId}
           balance={balance??0 }
           totalAvailableAmount={list.totalAvailableAmount!}
@@ -252,3 +262,6 @@ const Details = ({ list, updateList }: ListStepProps) => {
 };
 
 export default Details;
+function setUser(user: User): void {
+}
+

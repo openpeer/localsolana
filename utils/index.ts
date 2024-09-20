@@ -1,4 +1,5 @@
 
+import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { Network } from '@shyft-to/js';
 import { UIList } from 'components/Listing/Listing.types';
 import { List, Token } from 'models/types';
@@ -45,7 +46,7 @@ export const listToMessage = (list: UIList): string => {
 
   export const CURRENT_NETWORK = Network.Devnet; // Change this to MAINNET or LOCALNET as needed
   export const CURRENT_NETWORK_URL = 'https://api.devnet.solana.com';
-  export const BLOCK_EXPLORER = ['https://solscan.io/'];
+  export const BLOCK_EXPLORER = ['https://explorer.solana.com/'];
 
 const ORDER_STATUS_MAPPING: { [key: number]: string } = {
 	1: 'created',
@@ -59,3 +60,10 @@ const ORDER_STATUS_MAPPING: { [key: number]: string } = {
   export function getStatusString(status: number): string {
 	return ORDER_STATUS_MAPPING[status] || 'unknown';
   }
+
+
+  // Reversing the ORDER_STATUS_MAPPING object
+const ORDER_STATUS_MAPPING_TO_NUMBER: { [key: string]: number } = Object.fromEntries(
+	Object.entries(ORDER_STATUS_MAPPING).map(([key, value]) => [value, Number(key)])
+);
+

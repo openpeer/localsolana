@@ -1,4 +1,5 @@
 import { Token } from 'models/types';
+import { UIOrder } from '../Buy.types';
 
 export interface EscrowFundsParams {
 	uuid: string;
@@ -8,6 +9,7 @@ export interface EscrowFundsParams {
 	tokenAmount: number;
 	instantEscrow: boolean;
 	sellerWaitingTime: number;
+	tradeID:string;
 }
 
 export interface EscrowFundsButtonProps extends EscrowFundsParams {

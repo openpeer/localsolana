@@ -15,8 +15,8 @@ import Button from 'components/Button/Button';
 //import Network from 'components/Network/Network';
 import StepLayout from './StepLayout';
 import { PublicKey } from '@solana/web3.js';
-import { BLOCK_EXPLORER } from '@/utils';
-import { useUserProfile } from '@/hooks';
+import { BLOCK_EXPLORER, CURRENT_NETWORK } from '@/utils';
+import { useAccount, useUserProfile } from '@/hooks';
 
 interface FundsEscrowProps {
 	token: Token;
@@ -36,8 +36,10 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 	const { user } = useUserProfile({
 		onUpdateProfile: setUser
 	});
+	const {address} = useAccount();
 	const sellerContractDeployed = user?.contract_address;
-	console.log("Seller Contract deployed",sellerContractDeployed);
+
+	console.log(`contract`,sellerContractDeployed);
 
 	return (
 		<StepLayout buttonText={`Deposit ${token.name}`}>
@@ -57,12 +59,12 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 							<>
 								Deposit {token.name} into your{' '}
 								<a
-									href={`${BLOCK_EXPLORER[0]}/address/${sellerContract}`}
+									href={`${BLOCK_EXPLORER[0]}/address/${sellerContract}?cluster=${CURRENT_NETWORK}`}
 									className="text-cyan-600"
 									target="_blank"
 									rel="noreferrer"
 								>
-									Escrow Contract.
+									LocalSolana Account.
 								</a>
 							</>
 						)}
@@ -84,10 +86,10 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 								/>
 								{ (
 									<DepositFunds
-										contract={sellerContract}
+										contract={user?.contract_address || ''}
 										token={token}
 										tokenAmount={depositAmount!}
-										disabled={(depositAmount || 0) < toDeposit}
+										disabled={(depositAmount || 0) < toDeposit }
 									/>
 								)}
 							</div>
@@ -103,7 +105,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 							</h2>
 							<div className="mt-2 mb-4 border border-gray-200 rounded-lg py-8 px-4 md:px-8  flex flex-col xl:flex-row items-center">
 								<SVG
-									text={sellerContract}
+									text={address || ''}
 									options={{
 										errorCorrectionLevel: 'L',
 										margin: 0,
@@ -114,7 +116,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 								<div className="p-4">
 									<div className="mb-4">
 										<span className="font-bold">Send to Address</span>
-										<ClipboardText itemValue={sellerContract} extraStyle="break-all" />
+										<ClipboardText itemValue={address || ''} extraStyle="break-all" />
 									</div>
 									{/* <div className="text-sm font-bold">
 										<ExplainerNotification

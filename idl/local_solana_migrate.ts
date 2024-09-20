@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/local_solana_migrate.json`.
  */
 export type LocalSolanaMigrate = {
-  "address": "CCuEMUp5dNWkfCwLX6zFr96n2hKs9DbmZ9yxjA1pbjyt",
+  "address": "3ZCPySRfFaDPthn5G5en7WzvZd5dtv3XvBR7zjHVRxZh",
   "metadata": {
     "name": "localSolanaMigrate",
     "version": "0.1.0",
@@ -165,6 +165,11 @@ export type LocalSolanaMigrate = {
           "signer": true
         },
         {
+          "name": "feePayer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "buyer"
         },
         {
@@ -261,6 +266,11 @@ export type LocalSolanaMigrate = {
           "signer": true
         },
         {
+          "name": "feePayer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "buyer"
         },
         {
@@ -351,6 +361,29 @@ export type LocalSolanaMigrate = {
           }
         },
         {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "orderId"
+              }
+            ]
+          }
+        },
+        {
           "name": "seller",
           "writable": true,
           "signer": true
@@ -415,6 +448,11 @@ export type LocalSolanaMigrate = {
         },
         {
           "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "feePayer",
           "writable": true,
           "signer": true
         },

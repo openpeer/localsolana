@@ -38,7 +38,7 @@ const OrdersPage = () => {
 			.then((data) => {
 				data=data.filter((order:Order)=>{
 					const getCurrentStatus = getStatusString(Number(order?.status));
-					order.status = typeof getCurrentStatus==="string"?getCurrentStatus:String(getCurrentStatus);
+					order.status = getCurrentStatus as "created" | "escrowed" | "release" | "cancelled" | "dispute" | "closed";
 					return order;
 				});
 				

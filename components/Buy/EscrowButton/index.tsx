@@ -9,10 +9,11 @@ import ApproveTokenButton from "./ApproveTokenButton";
 import DeploySellerContract from "./DeploySellerContract";
 import { EscrowFundsParams } from "./EscrowButton.types";
 import EscrowFundsButton from "./EscrowFundsButton";
-import { PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useContractRead } from "@/hooks/transactions/useContractRead";
 import useEscrowFee from "@/hooks/useEscrowFee";
 import { User } from "@/models/types";
+import CreateEscrowAccount from "./CreateEscrowAccount";
 
 const EscrowButton = ({
   token,
@@ -22,37 +23,36 @@ const EscrowButton = ({
   uuid,
   instantEscrow,
   sellerWaitingTime,
+  tradeID,
 }: EscrowFundsParams) => {
   const nativeToken = token.address === PublicKey.default.toBase58();
-  const [approved, setApproved] = useState(nativeToken || instantEscrow);
-  //const { chain } = useNetwork();
-  //const deployer = chain ? DEPLOYER_CONTRACTS[chain.id] : undefined;
+  const [approved, setApproved] = useState( instantEscrow);
   const { address } = useAccount();
 
-  // const { data: sellerContract } = useContractRead({
-  // 	functionName: 'sellerContracts',
-  // 	args: [instantEscrow ? seller : address],
-  // 	enabled: !!address,
-  // 	watch: true
-  // });
-
+console.log('trade id',tradeID);
   // const { isFetching, fee, totalAmount } = useEscrowFee({
   // 	address: sellerContract as string | undefined,
   // 	token,
   // 	tokenAmount,
   // });
   const isFetching = false;
-  const fee = 10;
-  const totalAmount = tokenAmount + fee;
-  if (isFetching || fee === undefined) return <>adasasda</>;
+  const fee = 1 * LAMPORTS_PER_SOL;
+  const totalAmount = tokenAmount * 10 **token.decimals;
+
+  //orderId,
+  //         new BN(1 * web3.LAMPORTS_PER_SOL),
+  //         new BN(20 * 60)
+
+
+  // if (isFetching || fee === undefined) return <>adasasda</>;
   const { user } = useUserProfile({
 	onUpdateProfile: setUser
 });
-  const needsToDeploy = !instantEscrow && (user?.contract_address);
+  const needsToDeploy = (!tradeID|| tradeID=='');
 console.log('instantEscrow',instantEscrow);
   return (
     <span className="w-full">
-      {(nativeToken || approved) && !needsToDeploy ? (
+      {(nativeToken ) && !needsToDeploy ? (
         <EscrowFundsButton
           buyer={buyer}
           fee={fee}
@@ -61,11 +61,16 @@ console.log('instantEscrow',instantEscrow);
           uuid={uuid}
           contract={"asd"}
           seller={seller}
+          tradeID= {tradeID}
           instantEscrow={instantEscrow}
           sellerWaitingTime={sellerWaitingTime}
         />
       ) : (
-        needsToDeploy && <DeploySellerContract />
+        needsToDeploy && <CreateEscrowAccount buyer={buyer}
+        token={token}
+        amount={tokenAmount}
+        orderId={uuid}
+        time={sellerWaitingTime} seller={seller} />
       )}
       {!instantEscrow && !nativeToken && (
         <div
@@ -74,7 +79,7 @@ console.log('instantEscrow',instantEscrow);
           <ApproveTokenButton
             token={token}
             amount={totalAmount!}
-            spender={'asdas'}
+            spender={seller}
             onApprovalChange={setApproved}
           />
         </div>

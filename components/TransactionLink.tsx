@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Connection } from '@solana/web3.js';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { BLOCK_EXPLORER } from '@/utils';
 
+const TransactionLink = ({ hash = '' }: { hash: string | undefined }) => {
+    const [url, setUrl] = useState<string | null>(null);
 
-const TransactionLink = async ({ hash }: { hash: string | undefined }) => {
-    const connection = useDynamicContext();
-	if (!hash) return <>Done</>;
-    connection.primaryWallet?.network
-    //href={`${etherscan?.url || url}/tx/${hash}`}
-    //{etherscan?.name || name}
-	return (
-		<a target="_blank" rel="noreferrer" >
-			<>Done. View on { connection.primaryWallet?.network}</>
-		</a>
-	);
+    useEffect(() => {
+        if (hash) {
+            // Perform any asynchronous operations here if needed
+            setUrl(`${BLOCK_EXPLORER[0]}/tx/${hash}`);
+        }
+    }, [hash]);
+
+    if (!hash) return <>Done</>;
+
+    return (
+        <a href={url??''} target="_blank" rel="noreferrer">
+            <>Done. View on {BLOCK_EXPLORER[0]}</>
+        </a>
+    );
 };
 
 export default TransactionLink;

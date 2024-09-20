@@ -2,6 +2,9 @@ import { PublicKey, Connection, Transaction, SystemProgram } from '@solana/web3.
 import { useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { UseDepositFundsProps } from '../types';
+import useLocalSolana from '../useLocalSolana';
+import { web3 } from '@coral-xyz/anchor';
+import useShyft from '../useShyft';
 //import { Shyft } from '@shyft-to/js';
 
 interface Data {
@@ -14,9 +17,8 @@ const useGaslessDepositFunds = ({ contract, token, amount }: UseDepositFundsProp
     const [isLoading, setIsLoading] = useState(false);
 
     const { primaryWallet } = useDynamicContext();
-    const connection = new Connection('https://api.mainnet-beta.solana.com'); // Adjust the cluster as needed
-
-    //const shyft = new Shyft({ Key: 'YOUR_SHYFT_API_KEY' }); // Replace with your Shyft API key
+    const {sendTransactionWithShyft,shyft} = useShyft();
+    const{depositFundsToLocalSolana} = useLocalSolana();
 
     if (!primaryWallet?.address) {
         return { isFetching: true, gaslessEnabled: false, isSuccess, isLoading, data };
@@ -28,26 +30,51 @@ const useGaslessDepositFunds = ({ contract, token, amount }: UseDepositFundsProp
         setIsLoading(true);
 
         try {
-            const transaction = new Transaction().add(
+            if(token.address == PublicKey.default.toBase58()){
+            const transaction = new web3.Transaction().add(
                 SystemProgram.transfer({
                     fromPubkey: new PublicKey(primaryWallet.address),
                     toPubkey: new PublicKey(contract),
                     lamports: Number(amount) // Adjust the amount as needed
                 })
             );
-
-            //const signedTransaction = await primaryWallet.signTransaction(transaction);
-           // const serializedTransaction = signedTransaction.serialize();
-
-            //const response = await shyft.sendTransaction(serializedTransaction);
-
-            // if (response.success) {
-            //     setIsSuccess(true);
-            //     updateData({ hash: response.txId });
-            // } else {
-            //     throw new Error(response.error);
-            // }
-			setIsSuccess(true);
+            if(shyft == null){
+                console.error('Deposit failed');
+                setIsSuccess(false);
+                setIsLoading(false);
+                return;
+            }else{
+                const finalTx =await sendTransactionWithShyft(transaction);
+                if(finalTx !== undefined){
+                    setIsLoading(false);
+                    setIsSuccess(true);
+                    updateData({hash: finalTx} );
+                }else{
+                    console.error('error', finalTx);
+                    setIsLoading(false);
+                    setIsSuccess(false);
+                }
+            }
+        } else{
+            const tx = await depositFundsToLocalSolana(amount,new PublicKey(primaryWallet?.address),new PublicKey(contract),new PublicKey(token.address))
+            if(tx===undefined || shyft == null){
+                console.error('Deposit failed,',tx,shyft);
+                setIsSuccess(false);
+                setIsLoading(false);
+                return;
+            }else{
+                const finalTx =await sendTransactionWithShyft(tx);
+                if(finalTx !== undefined){
+                    setIsLoading(false);
+                    setIsSuccess(true);
+                    updateData({hash: finalTx||''} );
+                }else{
+                    console.error('error', finalTx);
+                    setIsLoading(false);
+                    setIsSuccess(false);
+                }
+            }
+        }
         } catch (error) {
             console.error('Deposit failed', error);
             setIsSuccess(false);

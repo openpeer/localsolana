@@ -3,12 +3,13 @@ import TransactionLink from 'components/TransactionLink';
 import {  useAccount } from 'hooks';
 import { useEscrowFunds } from 'hooks/transactions';
 import React, { useEffect, useState } from 'react';
-import { truncate } from 'utils';
+import { getStatusString, truncate } from 'utils';
 import { parseUnits } from 'viem';
 
 import { EscrowFundsButtonProps } from './EscrowButton.types';
 import useTransactionFeedback from '@/hooks/useTransactionFeedback';
 import useGaslessEscrow from '@/hooks/transactions/escrow/useGaslessEscrow';
+import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 
 const EscrowFundsButton = ({
 	uuid,
@@ -50,6 +51,23 @@ const EscrowFundsButton = ({
 			escrow();
 		}
 	}, [escrowConfirmed]);
+
+	useEffect(()=>{
+		if(data){
+            updateTrade();
+			
+		}
+	},[ data]);
+    const updateTrade = async () => {
+		const result = await fetch(`/api/updateOrder/?id=${uuid}`, {
+			method: 'POST',
+			body: JSON.stringify({status:3}),
+			headers: {
+				Authorization: `Bearer ${getAuthToken()}`,
+				'Content-Type': 'application/json',
+			}
+		});
+    };
 
 	useTransactionFeedback({
 		hash: data?.hash,

@@ -21,8 +21,9 @@ import PreShowDetails from './PreShowDetails';
 import ReleaseFundsButton from './ReleaseFundsButton';
 import { useContractRead } from '@/hooks/transactions/useContractRead';
 import { getStatusString } from '@/utils';
+import { BN } from '@coral-xyz/anchor';
 
-const Payment = ({ order }: BuyStepProps) => {
+const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	const {
 		list,
 		fiat_amount: fiatAmount,
@@ -30,7 +31,7 @@ const Payment = ({ order }: BuyStepProps) => {
 		price,
 		uuid,
 		buyer,
-		escrow,
+		//escrow,
 		id,
 		status,
 		seller,
@@ -46,8 +47,10 @@ const Payment = ({ order }: BuyStepProps) => {
 
 	const { data: escrowData } = useContractRead(
 		tradeId,
-		"read"
+		"escrow"
 	);
+	console.log('EscrowData',escrowData);
+	console.log('Status',order.status);
 
 	// change here
 	const { balance, loading, error } = useBalance(address??'');// Fetch wallet balance
@@ -60,10 +63,10 @@ const Payment = ({ order }: BuyStepProps) => {
 
 	const timeLeft = timeLimit - (new Date().getTime() - new Date(order.created_at).getTime());
 	const instantEscrow = escrowType === 'instant';
+	const sellerCanCancelAfter = ((escrowData?.sellerCanCancelAfter?? new BN(0)) as BN).toNumber();
 
-	 const [, sellerCanCancelAfter] = escrowData ? (escrowData as [boolean, bigint]) : [false, BigInt(0)];
 
-	const sellerCanCancelAfterSeconds = parseInt('60', 10);
+	const sellerCanCancelAfterSeconds = parseInt(sellerCanCancelAfter.toString(), 10);
 	const timeLimitForPayment =
 		status === 'escrowed' && order.escrow && sellerCanCancelAfter && sellerCanCancelAfterSeconds > 0
 			? sellerCanCancelAfterSeconds * 1000
@@ -83,7 +86,6 @@ const Payment = ({ order }: BuyStepProps) => {
 			progress: undefined
 		});
 	};
-console.log(status);
 	return (
 		<StepLayout>
 			<div className="my-0 md:my-8">
@@ -127,7 +129,7 @@ console.log(status);
 				)}
 				<div className="flex flex-col justify-around bg-gray-100 rounded-lg p-4 my-4">
 					{selling ? (
-						<FeeDisplay escrow={escrow?.address} token={token} tokenAmount={tokenAmount} />
+						<FeeDisplay escrow={escrowData?.address} token={token} tokenAmount={tokenAmount} />
 					) : (
 						<div className="flex flex-row items-center mb-1">
 							<span className="text-sm mr-2">Amount to pay</span>
@@ -282,26 +284,26 @@ console.log(status);
 					</span>
 					{status === 'created' && (selling || instantEscrow) && (
 						<EscrowButton
-							buyer={buyer!.address}
+							buyer={buyer.address}
 							token={token}
 							tokenAmount={tokenAmount || 0}
 							uuid={order.id.toString()}
+							tradeID= {order.trade_id}
 							instantEscrow={instantEscrow}
 							seller={seller.address}
 							sellerWaitingTime={Number(paymentTimeLimit) * 60}
 						/>
 					)}
 					{status === 'escrowed' &&
-						!!escrow &&
 						(selling ? (
 							<ReleaseFundsButton order={order} dispute={false} />
 						) : (
-							<MarkAsPaidButton order={order} />
+							<MarkAsPaidButton order={order} updateOrder={updateOrder} />
 						))}
 				</div>
 			</div>
 		</StepLayout>
 	);
 };
-
+//escrow &&
 export default Payment;

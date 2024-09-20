@@ -66,7 +66,6 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 	const { address } = useAccount();
 	const { primaryWallet } = useDynamicContext();
 	//const chains = allChains;
-	const { user } = useUserProfile({});
 
 	const contracts = lists
 		.filter(({ contract }) => !!contract)

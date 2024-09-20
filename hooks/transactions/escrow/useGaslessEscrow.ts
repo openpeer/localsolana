@@ -27,7 +27,7 @@ const useGaslessEscrow = ({
 	const [isLoading, setIsLoading] = useState(false);
 
 	const { address } = useAccount();
-	const {createEscrowSol} = useLocalSolana();
+	const {depositFundsEscrow,getEscrowPDA} = useLocalSolana();
 
 	const { shyft,sendTransactionWithShyft } = useShyft();
 
@@ -42,24 +42,25 @@ const useGaslessEscrow = ({
 	const escrowFunds = async () => {
 		try {
 			const partner = PublicKey.default.toBase58();
+			const escrow = await getEscrowPDA(orderID);
+			if(!escrow){
+				console.error('Error Funding escrow');
+				setIsLoading(false);
+				setIsSuccess(false);
+				return
+			}
 			const  tx =
 				token.address === PublicKey.default.toBase58()
-					? await createEscrowSol(
-							orderID,
-							sellerWaitingTime,
+					? await depositFundsEscrow(
 							amount,
-							buyer,
-							seller,
-							partner,
+							new PublicKey(seller),
+							escrow,new PublicKey(token.address)
 					  )
-					: await createEscrowSol(
-						orderID,
-						sellerWaitingTime,
+					: await depositFundsEscrow(
 						amount,
-						buyer,
-						seller,
-						partner,
-				  );
+						escrow,
+						escrow,new PublicKey(seller)
+				  )
 
 
 			setIsLoading(true);
@@ -67,9 +68,9 @@ const useGaslessEscrow = ({
 			if(finalTx !==undefined){
 				setIsLoading(false);
 				setIsSuccess(true);
-				updateData({hash:finalTx});
+				updateData({hash:escrow.toString()});
 			}else{
-				console.error('Error Marking as paid');
+				console.error('Error Funding escrow');
 				setIsLoading(false);
 				setIsSuccess(false);
 			}

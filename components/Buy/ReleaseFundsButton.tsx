@@ -1,3 +1,4 @@
+import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { Button, Modal } from 'components';
 import TransactionLink from 'components/TransactionLink';
 import { useTransactionFeedback, useAccount } from 'hooks';
@@ -22,12 +23,14 @@ const ReleaseFundsButton = ({
 	const { escrow, uuid, buyer, token_amount: tokenAmount, list } = order;
 	const { token } = list;
 	const { isConnected } = useAccount();
-	const { isLoading, isSuccess, data, releaseFunds, isFetching } = useReleaseFunds({
-		contract: escrow!.address,
-		orderID: uuid,
+	console.log('buyer',buyer);
+	const { isLoading, isSuccess, data, releaseFund, isFetching } = useReleaseFunds({
+		orderID: order.id.toString(),
 		buyer: buyer.address,
 		token,
-		amount: parseUnits(String(tokenAmount), token.decimals)
+		seller: order.seller.address,
+		contract: order.trade_id, // Assuming escrow has a contractAddress property
+		amount: tokenAmount // Assuming token has a decimals property
 	});
 	const [modalOpen, setModalOpen] = useState(false);
 	const [releaseConfirmed, setReleaseConfirmed] = useState(false);
@@ -40,7 +43,7 @@ const ReleaseFundsButton = ({
 			return;
 		}
 
-		releaseFunds?.();
+		releaseFund?.();
 	};
 
 	useTransactionFeedback({
@@ -55,7 +58,22 @@ const ReleaseFundsButton = ({
 			onReleaseFunds();
 		}
 	}, [releaseConfirmed]);
-
+	useEffect(()=>{
+		if(isSuccess){
+            updateTrade();
+			
+		}
+	},[ isSuccess]);
+    const updateTrade = async () => {
+		const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
+			method: 'POST',
+			body: JSON.stringify({status:6}),
+			headers: {
+				Authorization: `Bearer ${getAuthToken()}`,
+				'Content-Type': 'application/json',
+			}
+		});
+    };
 	return (
 		<>
 			<Button

@@ -29,7 +29,7 @@ export interface UseEscrowCancelProps extends UseEscrowTransactionProps {
 }
 
 export interface UseDepositFundsProps {
-	amount: bigint;
+	amount: number;
 	token: Token;
 	contract: string;
 }

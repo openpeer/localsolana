@@ -58,7 +58,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	}, [user]);
 
 	const updateUserProfile = async (profile: User, showNotification = true) => {
-		console.log(JSON.stringify(profile));
+		console.log("here",JSON.stringify(profile));
 		
 		const result = await fetch(`/api/user_profiles/${address}`, {
 			method: 'POST',

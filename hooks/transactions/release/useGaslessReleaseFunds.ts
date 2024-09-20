@@ -4,36 +4,35 @@ import { useAccount } from 'hooks';
 import { UseEscrowTransactionProps } from '../types';
 import useShyft from '../useShyft';
 import useLocalSolana from '../useLocalSolana';
+import DeploySellerContract from '@/components/Buy/EscrowButton/DeploySellerContract';
 import { PublicKey } from '@solana/web3.js';
 
 interface Data {
 	hash?: string;
 }
 
-const useGaslessMarkAsPaid = ({ orderID,buyer,seller }: {orderID:string,buyer:string,seller:string}) => {
+const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTransactionProps) => {
 	const [data, updateData] = useState<Data>({});
 	const [isSuccess, setIsSuccess] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
 	const { address } = useAccount();
+	const{shyft,sendTransactionWithShyft} = useShyft();
+	const {connection,releaseFunds} = useLocalSolana();
 
-	const { shyft,sendTransactionWithShyft } = useShyft();
-	const {markAsPaid} = useLocalSolana();
+	// if (connection === shyft || connection === undefined) {
+	// 	return { isFetching: true, isSuccess, isLoading, data };
+	// }
 
-	if (data === undefined ) {
-		return { isFetching: true, isSuccess, isLoading, data };
+	if (connection === null || shyft==null) {
+		return { isFetching: false, gaslessEnabled: false, isSuccess, isLoading, data };
 	}
 
-	if (shyft === null) {
-		return { isFetching: false, isSuccess, isLoading, data };
-	}
-
-	const marksAsPaid = async () => {
+	const releaseFund = async () => {
 		try {
-			
 			setIsLoading(true);
 			console.log('order id',orderID);
-			const tx = await markAsPaid(orderID,new PublicKey(buyer),new PublicKey(seller));
+			const tx = await releaseFunds(orderID,new PublicKey(seller),new PublicKey(buyer),new PublicKey(token.address),);
 			const finalTx = await sendTransactionWithShyft(tx);
 			if(finalTx !== undefined){
 				setIsLoading(false);
@@ -49,8 +48,9 @@ const useGaslessMarkAsPaid = ({ orderID,buyer,seller }: {orderID:string,buyer:st
 			setIsLoading(false);
 			setIsSuccess(false);
 		}
+		
 	};
-	return { isFetching: false, gaslessEnabled: true, isLoading, isSuccess, data, marksAsPaid };
+	return { isFetching: false, gaslessEnabled: true, isLoading, isSuccess, data, releaseFund };
 };
 
-export default useGaslessMarkAsPaid;
+export default useGaslessReleaseFunds;

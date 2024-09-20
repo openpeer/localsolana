@@ -23,7 +23,7 @@ const App = ({ Component, pageProps,router}: AppProps) => {
         settings={{
           environmentId: "61e5473a-281c-4dbc-89d6-5d1a3061d835",
           walletConnectors: [SolanaWalletConnectors],
-          initialAuthenticationMode:simpleLayout?'connect-only':"connect-and-sign",
+          initialAuthenticationMode:"connect-and-sign",
           siweStatement: "Welcome to Local Solana. ",
           eventsCallbacks: {
             onSignedMessage: async ({ messageToSign: msg, signedMessage: signature }) => {

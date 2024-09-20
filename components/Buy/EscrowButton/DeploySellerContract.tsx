@@ -5,10 +5,10 @@ import { Button } from 'components';
 import TransactionLink from 'components/TransactionLink';
 import {  useAccount, useUserProfile } from 'hooks';
 import useDeploy from 'hooks/transactions/deploy/useDeploy';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 
-const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: string }) => {
+const DeploySellerContract = ({ label = 'Create LocalSolana Account' }: { label?: string }) => {
 	const { primaryWallet } = useDynamicContext();
 	const {
 		user,
@@ -19,7 +19,7 @@ const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: st
 	  } = useUserProfile({ onUpdateProfile: (updatedUser) => console.log('Profile updated:', updatedUser) });
 	
 
-	const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy();
+	const { isFetching, isLoading, isSuccess=false, data, deploy } = useGaslessDeploy();
 
 	useTransactionFeedback({
 		hash: data??'',
@@ -30,22 +30,35 @@ const DeploySellerContract = ({ label = 'Create Escrow Contract' }: { label?: st
 
 
 	const deploySellerContract = async () => {
-		
 		if (!primaryWallet?.isConnected) return;
 		console.log('Deploy');
 		await deploy?.();
-		
-		
-		
 	};
-	useEffect(()	=>{
-		if(data){
-			toast.success(`Deployed Contract successfully ${data}`);
-			setContractAddress(data);
-			updateProfile();
-		}
-	},[ data, updateProfile])
 
+	const prevIsSuccessRef = useRef<boolean>(false);
+	const hasUpdatedProfileRef = useRef<boolean>(false);
+
+	useEffect(() => {
+        if (isSuccess && !prevIsSuccessRef.current) {
+            prevIsSuccessRef.current = true;
+            toast.success(`Deployed Contract successfully ${data}`);
+            setContractAddress(data);
+        }
+    }, [isSuccess, data, setContractAddress]);
+
+    useEffect(() => {
+        if (contract_address && isSuccess && !hasUpdatedProfileRef.current) {
+            console.log('Contract is', contract_address);
+            updateProfile();
+			hasUpdatedProfileRef.current = true;
+        }
+    }, [contract_address, updateProfile]);
+	useEffect(() => {
+        if (!isSuccess) {
+			prevIsSuccessRef.current = false;
+            hasUpdatedProfileRef.current = false;
+        }
+    }, [isSuccess]);
 	return (
 		<Button
 			title={isLoading ? 'Processing...' : isSuccess ? 'Done' : label}

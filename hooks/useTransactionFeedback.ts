@@ -1,5 +1,5 @@
 import { useTransactionFeedbackModal } from 'contexts/TransactionFeedContext';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 
 interface Params {
@@ -12,15 +12,17 @@ interface Params {
 const useTransactionFeedback = ({ isSuccess, hash, Link, description }: Params) => {
 	//const { chain } = 'solana';
 
-	const { addRecentTransaction } = useTransactionFeedbackModal();
-
+	//const { addRecentTransaction } = useTransactionFeedbackModal();
+	const prevIsSuccessRef = useRef<boolean>(false);
 	useEffect(() => {
-		if (hash) {
-			addRecentTransaction({
-				hash,
-				description
-			});
-			if (isSuccess) {
+		console.log(`hash is ${hash}`);
+		if (hash!==undefined && isSuccess) {
+			// addRecentTransaction({
+			// 	hash,
+			// 	description
+			// });
+			if (isSuccess && !prevIsSuccessRef.current) {
+				prevIsSuccessRef.current = true;
 				toast.success(Link, {
 					theme: 'dark',
 					position: 'top-right',
@@ -34,6 +36,12 @@ const useTransactionFeedback = ({ isSuccess, hash, Link, description }: Params) 
 			}
 		}
 	}, [isSuccess, hash,]);
+
+	useEffect(() => {
+		if (!isSuccess) {
+		  prevIsSuccessRef.current = false;
+		}
+	  }, [isSuccess]);
 };
 
 export default useTransactionFeedback;

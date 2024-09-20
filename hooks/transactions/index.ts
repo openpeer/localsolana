@@ -3,7 +3,7 @@
 //import useEscrowCancel from './cancel/useEscrowCancel';
 import useEscrowFunds from './escrow/useEscrowFunds';
 import useMarkAsPaid from './markAsPaid/useMarkAsPaid';
-//import useReleaseFunds from './release/useReleaseFunds';
+import useReleaseFunds from './release/useGaslessReleaseFunds';
 import useDepositFunds from './deposit/useDepositFunds';
 import useShyft from './useShyft';
 import { useBalance } from './useBalance';
@@ -13,7 +13,7 @@ export {
 	useEscrowFunds,
 	useMarkAsPaid,
 	//useEscrowCancel,
-	//useReleaseFunds,
+	useReleaseFunds,
 	useDepositFunds,
 	useShyft,
 	useBalance

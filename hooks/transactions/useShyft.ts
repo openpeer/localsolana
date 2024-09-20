@@ -16,9 +16,8 @@ import { toast } from "react-toastify";
 
 const useShyft = () => {
   const [shyft, setShyft] = useState<ShyftSdk | null>(null);
-  const [connection, setConnection] = useState<Connection | null>(null);
   const { primaryWallet } = useDynamicContext();
-  const { provider, program,idl } = useLocalSolana();
+  const { provider, program,idl,connection } = useLocalSolana();
 
   useEffect(() => {
     const initializeShyft = async () => {
@@ -37,7 +36,6 @@ const useShyft = () => {
   const sendTransactionWithShyft = async (transaction: Transaction) => {
     const connection = new Connection("https://api.devnet.solana.com");
     const recentBlockhash = await connection.getLatestBlockhash();
-    const walletPublicKey = new PublicKey(primaryWallet?.address ?? "");
 
     console.log("Recent blockhash: " + recentBlockhash.blockhash);
     transaction.recentBlockhash = recentBlockhash.blockhash;
@@ -126,7 +124,7 @@ const useShyft = () => {
     }
     const balance = await shyft.wallet.getBalance({ wallet: address });
     console.log(balance);
-    return balance;
+    return balance ;
   };
 
   const getTokenBalance = async (address: string, tokenAddress: string) => {
@@ -138,7 +136,7 @@ const useShyft = () => {
       wallet: address,
     });
     console.log(balance);
-    return balance;
+    return balance.balance ;
   };
 
   const getAllTokenBalance = async (address: string) => {
