@@ -8,6 +8,7 @@ import Head from 'app/head';
 import { MessageContextProvider } from '@/contexts/MessageContext';
 import SolanaWalletProvider from '@/providers/SolanaWalletProvider';
 import { TransactionFeedbackProvider } from '@/contexts/TransactionFeedContext';
+import ChatProvider from '@/providers/ChatProvider';
 
 
 const AuthLayout = dynamic(() => import('./AuthLayout'), { ssr: false });
@@ -43,7 +44,9 @@ const App = ({ Component, pageProps,router}: AppProps) => {
         {simpleLayout ? (
           <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
         ) : (
-          <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass pageProps
+          <ChatProvider>
+            <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
+          </ChatProvider>          
         )}
         </MessageContextProvider>
         </TransactionFeedbackProvider>
