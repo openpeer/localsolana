@@ -17,6 +17,7 @@
     "@dynamic-labs/utils": "*",
     "@headlessui/react": "^1.7.5",
     "@heroicons/react": "^2.1.5",
+    "@intercom/messenger-js-sdk": "^0.0.14",
     "@next/font": "^14.2.6",
     "@rails/actioncable": "^7.2.100",
     "@shyft-to/js": "^0.2.40",

@@ -9,6 +9,8 @@ import { MessageContextProvider } from '@/contexts/MessageContext';
 import SolanaWalletProvider from '@/providers/SolanaWalletProvider';
 import { TransactionFeedbackProvider } from '@/contexts/TransactionFeedContext';
 import ChatProvider from '@/providers/ChatProvider';
+import IntercomWidget from '../IntercomWidget';
+import { useUserProfile } from '@/hooks';
 
 
 const AuthLayout = dynamic(() => import('./AuthLayout'), { ssr: false });
@@ -18,6 +20,7 @@ const App = ({ Component, pageProps,router}: AppProps) => {
 	const { simpleLayout } = pageProps;
   const [messageToSign, setMessageToSign] = useState('');
 	const [signedMessage, setSignedMessage] = useState('');
+ 
 	return (
 
 		<DynamicContextProvider
@@ -44,10 +47,12 @@ const App = ({ Component, pageProps,router}: AppProps) => {
         {simpleLayout ? (
           <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
         ) : (
-          <ChatProvider>
-            <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
-          </ChatProvider>          
+          // <ChatProvider>
+          //   <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
+          // </ChatProvider>
+            <AuthLayout pageProps={pageProps} Component={Component} router={router}/>            
         )}
+        <IntercomWidget/>
         </MessageContextProvider>
         </TransactionFeedbackProvider>
       </DynamicContextProvider>

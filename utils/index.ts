@@ -49,12 +49,12 @@ export const listToMessage = (list: UIList): string => {
   export const BLOCK_EXPLORER = ['https://explorer.solana.com/'];
 
 const ORDER_STATUS_MAPPING: { [key: number]: string } = {
-	1: 'created',
-	2: 'escrowed',
-	3: 'release',
-	4: 'cancelled',
-	5: 'dispute',
-	6: 'closed'
+	0: 'created',
+	1: 'escrowed',
+	2: 'release',
+	3: 'cancelled',
+	4: 'dispute',
+	5: 'closed'
   };
 
   export function getStatusString(status: number): string {

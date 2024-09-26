@@ -20,7 +20,14 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	const [errors, setErrors] = useState<Errors>({});
 	const [contract_address, setContractAddress] = useState<string | null>();
 
-	const { primaryWallet } = useDynamicContext();
+	let primaryWallet;
+	try {
+		const context = useDynamicContext();
+		primaryWallet = context.primaryWallet;
+	} catch (error) {
+		console.error('Error in useDynamicContext:', error);
+	}
+
 	const address  = primaryWallet?.address;
 
 	const fetchUserProfile = async () => {
@@ -40,6 +47,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 				}
 			});
 	};
+
 	useEffect(() => {
 		fetchUserProfile();
 	}, [address]);
@@ -58,7 +66,6 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	}, [user]);
 
 	const updateUserProfile = async (profile: User, showNotification = true) => {
-		console.log("here",JSON.stringify(profile));
 		
 		const result = await fetch(`/api/user_profiles/${address}`, {
 			method: 'POST',
@@ -94,7 +101,6 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 	const updateProfile = () => {
 		setErrors({});
-		console.log(`Nve user da data: ${contract_address}`)
 		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contract_address || null} };
 		updateUserProfile(newUser as User);
 	};

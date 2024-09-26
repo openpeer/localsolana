@@ -106,7 +106,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 
             if (!window.talkSession) {
                 window.talkSession = new Talk.Session({
-                    appId: 'tMPnPVYF', // Replace with your actual app ID
+                    appId: 'ts7dsdWy', // Replace with your actual app ID
                     me: me,
                 });
             }
