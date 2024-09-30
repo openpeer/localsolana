@@ -26,33 +26,21 @@ const EscrowButton = ({
   tradeID,
 }: EscrowFundsParams) => {
   const nativeToken = token.address === PublicKey.default.toBase58();
-  const [approved, setApproved] = useState( instantEscrow);
+  const [approved, setApproved] = useState(instantEscrow);
   const { address } = useAccount();
 
-console.log('trade id',tradeID);
-  // const { isFetching, fee, totalAmount } = useEscrowFee({
-  // 	address: sellerContract as string | undefined,
-  // 	token,
-  // 	tokenAmount,
-  // });
-  const isFetching = false;
-  const fee = 1 * LAMPORTS_PER_SOL;
-  const totalAmount = tokenAmount * 10 **token.decimals;
+  const { data: sellerContract } = useContractRead(tradeID, "escrow", true);
+  const { data: fee, loadingContract } = useContractRead(tradeID, "fee", true);
 
-  //orderId,
-  //         new BN(1 * web3.LAMPORTS_PER_SOL),
-  //         new BN(20 * 60)
+  const totalAmount = (tokenAmount + fee) * 10 ** token.decimals;
 
+  if (loadingContract || fee === undefined) return <></>;
 
-  // if (isFetching || fee === undefined) return <>adasasda</>;
-  const { user } = useUserProfile({
-	onUpdateProfile: setUser
-});
-  const needsToDeploy = (!tradeID|| tradeID=='');
-console.log('instantEscrow',instantEscrow);
+  const needsToDeploy = !instantEscrow && !sellerContract;
+
   return (
     <span className="w-full">
-      {(nativeToken ) && !needsToDeploy ? (
+      {!needsToDeploy && !instantEscrow ? (
         <EscrowFundsButton
           buyer={buyer}
           fee={fee}
@@ -61,18 +49,24 @@ console.log('instantEscrow',instantEscrow);
           uuid={uuid}
           contract={"asd"}
           seller={seller}
-          tradeID= {tradeID}
+          tradeID={tradeID}
           instantEscrow={instantEscrow}
           sellerWaitingTime={sellerWaitingTime}
         />
       ) : (
-        needsToDeploy && <CreateEscrowAccount buyer={buyer}
-        token={token}
-        amount={tokenAmount}
-        orderId={uuid}
-        time={sellerWaitingTime} seller={seller} />
+        needsToDeploy && (
+          <CreateEscrowAccount
+            buyer={buyer}
+            token={token}
+            amount={tokenAmount}
+            orderId={uuid}
+            time={sellerWaitingTime}
+            seller={seller}
+            instantEscrow={instantEscrow}
+          />
+        )
       )}
-      {!instantEscrow && !nativeToken && (
+      {/* {!instantEscrow && !nativeToken && (
         <div
           className={nativeToken || approved || needsToDeploy ? "hidden" : ""}
         >
@@ -83,11 +77,10 @@ console.log('instantEscrow',instantEscrow);
             onApprovalChange={setApproved}
           />
         </div>
-      )}
+      )} */}
     </span>
   );
 };
 
 export default EscrowButton;
-function setUser(user: User): void {
-}
+function setUser(user: User): void {}

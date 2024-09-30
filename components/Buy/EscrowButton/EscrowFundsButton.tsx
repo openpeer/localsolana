@@ -25,6 +25,7 @@ const EscrowFundsButton = ({
 	const amount = tokenAmount;
 	const [modalOpen, setModalOpen] = useState(false);
 	const [escrowConfirmed, setEscrowConfirmed] = useState(false);
+	console.log('UUID is ',uuid);
 
 	const { isLoading, isSuccess, data, escrowFunds, isFetching } = useGaslessEscrow({
 		orderID: uuid!,
@@ -53,15 +54,15 @@ const EscrowFundsButton = ({
 	}, [escrowConfirmed]);
 
 	useEffect(()=>{
-		if(data){
+		if(isSuccess && data){
             updateTrade();
 			
 		}
-	},[ data]);
+	},[ data,isSuccess]);
     const updateTrade = async () => {
 		const result = await fetch(`/api/updateOrder/?id=${uuid}`, {
 			method: 'POST',
-			body: JSON.stringify({status:3}),
+			body: JSON.stringify({status:1}),
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`,
 				'Content-Type': 'application/json',
@@ -69,12 +70,12 @@ const EscrowFundsButton = ({
 		});
     };
 
-	useTransactionFeedback({
-		hash: data?.hash,
-		isSuccess,
-		Link: <TransactionLink hash={data?.hash} />,
-		description: instantEscrow ? 'Confirmed the order' : 'Escrowed funds'
-	});
+	// useTransactionFeedback({
+	// 	hash: data?.hash,
+	// 	isSuccess,
+	// 	Link: <TransactionLink hash={data?.hash} />,
+	// 	description: instantEscrow ? 'Confirmed the order' : 'Escrowed funds'
+	// });
 
 	return (
 		<>

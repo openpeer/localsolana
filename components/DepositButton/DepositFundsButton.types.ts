@@ -5,4 +5,6 @@ export interface DepositFundsParams {
 	tokenAmount: number;
 	contract: string;
 	disabled?: boolean;
+	onFundsDeposited: () => void; 
+
 }

@@ -166,10 +166,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 					const banks = type === 'BuyList' ? list.bank : paymentMethods?.map((pm) => pm.bank);
 					const { address: sellerAddress, name } = seller;
 					const isSeller = primaryWallet && sellerAddress === address;
-					// const isSeller=true;
-					// change here
-					// console.log(isSeller, sellerAddress, address);
-					
+
 					const { symbol, minimum_amount: minimumAmount = 0 } = token;
 					//const chain = chains.find((c) => c.id === chainId);
 

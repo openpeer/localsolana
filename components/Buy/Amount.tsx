@@ -1,311 +1,347 @@
 /* eslint-disable react/jsx-curly-newline */
-import { getAuthToken } from '@dynamic-labs/sdk-react-core';
-import Flag from 'components/Flag/Flag';
-import Input from 'components/Input/Input';
-import { AccountInfo } from 'components/Listing';
-import StepLayout from 'components/Listing/StepLayout';
-import Token from 'components/Token/Token';
-import { useFormErrors, useAccount, useEscrowFee } from 'hooks';
-import { countries } from 'models/countries';
-import { Errors, Resolver } from 'models/errors';
-import { Bank, List, Order, User } from 'models/types';
-import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
-import { truncate } from 'utils';
+import { getAuthToken } from "@dynamic-labs/sdk-react-core";
+import Flag from "components/Flag/Flag";
+import Input from "components/Input/Input";
+import { AccountInfo } from "components/Listing";
+import StepLayout from "components/Listing/StepLayout";
+import Token from "components/Token/Token";
+import { useFormErrors, useAccount } from "hooks";
+import { countries } from "models/countries";
+import { Errors, Resolver } from "models/errors";
+import { Bank, List, Order, User } from "models/types";
+import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
+import { truncate } from "utils";
 
-import snakecaseKeys from 'snakecase-keys';
+import snakecaseKeys from "snakecase-keys";
 // import { useContractRead } from 'wagmi';
 // import { OpenPeerDeployer, OpenPeerEscrow } from 'abis';
-import { Abi, formatUnits, parseUnits } from 'viem';
+import { Abi, formatUnits, parseUnits } from "viem";
 // import { DEPLOYER_CONTRACTS } from 'models/networks';
-import ModalWindow from 'components/Modal/ModalWindow';
-import BankSelect from 'components/Select/BankSelect';
-import { BuyStepProps, UIOrder } from './Buy.types';
-import useGaslessEscrow from '@/hooks/transactions/escrow/useGaslessEscrow';
+import ModalWindow from "components/Modal/ModalWindow";
+import BankSelect from "components/Select/BankSelect";
+import { BuyStepProps, UIOrder } from "./Buy.types";
+import useGaslessEscrow from "@/hooks/transactions/escrow/useGaslessEscrow";
+import { useContractRead } from "@/hooks/transactions/useContractRead";
+import { PublicKey } from "@solana/web3.js";
+import { useBalance } from "@/hooks/transactions";
 
 interface BuyAmountStepProps extends BuyStepProps {
-	price: number | undefined;
+  price: number | undefined;
 }
 
-const Prefix = ({ label, image }: { label: string; image: React.ReactNode }) => (
-	<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-		<div className="flex flex-row">
-			<span className="mr-2">{image}</span>
-			<span className="text-gray-500">{label}</span>
-		</div>
-	</div>
+const Prefix = ({
+  label,
+  image,
+}: {
+  label: string;
+  image: React.ReactNode;
+}) => (
+  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+    <div className="flex flex-row">
+      <span className="mr-2">{image}</span>
+      <span className="text-gray-500">{label}</span>
+    </div>
+  </div>
 );
 
 const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
-	const router = useRouter();
-	
-	const { fiatAmount: quickBuyFiat, tokenAmount: quickBuyToken } = router.query;
+  const router = useRouter();
 
-	const { list = {} as List, token_amount: orderTokenAmount, fiat_amount: orderFiatAmount } = order;
-	const { address } = useAccount();
-	const { fiat_currency: currency, token, accept_only_verified: acceptOnlyVerified } = list;
+  const { fiatAmount: quickBuyFiat, tokenAmount: quickBuyToken } = router.query;
 
-	const [fiatAmount, setFiatAmount] = useState<number | undefined>(
-		orderFiatAmount || (quickBuyFiat ? Number(quickBuyFiat) : undefined)
-	);
-	const [tokenAmount, setTokenAmount] = useState<number | undefined>(
-		orderTokenAmount || (quickBuyToken ? Number(quickBuyToken) : undefined)
-	);
-	const [user, setUser] = useState<User | null>();
-	const [bank, setBank] = useState<Bank>();
+  const {
+    list = {} as List,
+    token_amount: orderTokenAmount,
+    fiat_amount: orderFiatAmount,
+  } = order;
+  const { address } = useAccount();
+  const {
+    fiat_currency: currency,
+    token,
+    accept_only_verified: acceptOnlyVerified,
+  } = list;
 
-	const { errors, clearErrors, validate } = useFormErrors();
+  const [fiatAmount, setFiatAmount] = useState<number | undefined>(
+    orderFiatAmount || (quickBuyFiat ? Number(quickBuyFiat) : undefined)
+  );
+  const [tokenAmount, setTokenAmount] = useState<number | undefined>(
+    orderTokenAmount || (quickBuyToken ? Number(quickBuyToken) : undefined)
+  );
+  const [user, setUser] = useState<User | null>();
+  const [bank, setBank] = useState<Bank>();
 
-	const banks = Array.isArray(list.payment_methods)?list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id })):[list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
-	const instantEscrow = list?.escrow_type === 'instant';
+  const { errors, clearErrors, validate } = useFormErrors();
 
-	// const { data: sellerContract } = useContractRead({
-	// 	address: DEPLOYER_CONTRACTS[list.chain_id],
-	// 	abi: OpenPeerDeployer,
-	// 	functionName: 'sellerContracts',
-	// 	args: [list.seller.address],
-	// 	enabled: instantEscrow,
-	// 	watch: true,
-	// 	chainId: list.chain_id
-	// });
+  const banks = Array.isArray(list.payment_methods)
+    ? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id }))
+    : [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
+  const instantEscrow = list?.escrow_type === "instant";
+  console.log(order.list.seller.contract_address);
+  const { data: sellerContract } = useContractRead(
+    order.list.seller.address || "",
+    "escrowState",
+    true
+  );
+  console.log(sellerContract, token?.address);
+  const { balance: balance } = useBalance(
+    sellerContract || "",
+    token?.address || PublicKey.default.toBase58(),
+    true
+  );
 
-	// const { data: balance } = useContractRead({
-	// 	address: (sellerContract as `0x${string}`) || list?.contract,
-	// 	abi: OpenPeerEscrow as Abi,
-	// 	functionName: 'balances',
-	// 	args: [list?.token?.address],
-	// 	enabled: instantEscrow,
-	// 	watch: true,
-	// 	chainId: list.chain_id
-	// });
+  const { data: fee } = useContractRead(sellerContract || "", "fee", true);
 
-	// const { fee } = useEscrowFee({
-	// 	token,
-	// 	address: (sellerContract as `0x${string}`) || list?.contract,
-	// 	tokenAmount,
-	// 	chainId: list.chain_id
-	// });
+  const resolver: Resolver = () => {
+    const error: Errors = {};
 
-	const resolver: Resolver = () => {
-		const error: Errors = {};
+    const {
+      limit_min: limitMin,
+      limit_max: limitMax,
+      total_available_amount: totalAvailableAmount,
+    } = list;
+    const max = Number(limitMax) || Number(totalAvailableAmount) * (price || 0);
 
-		const { limit_min: limitMin, limit_max: limitMax, total_available_amount: totalAvailableAmount } = list;
-		const max = Number(limitMax) || Number(totalAvailableAmount) * (price || 0);
+    if (!fiatAmount) {
+      error.fiatAmount = "Should be bigger than 0";
+    } else if (fiatAmount < (Number(limitMin) || 0)) {
+      error.fiatAmount = `Should be more or equal ${limitMin}`;
+    } else if (fiatAmount > max) {
+      error.fiatAmount = `Should be less or equal ${max}`;
+    }
 
-		if (!fiatAmount) {
-			error.fiatAmount = 'Should be bigger than 0';
-		} else if (fiatAmount < (Number(limitMin) || 0)) {
-			error.fiatAmount = `Should be more or equal ${limitMin}`;
-		} else if (fiatAmount > max) {
-			error.fiatAmount = `Should be less or equal ${max}`;
-		}
+    if (!tokenAmount) {
+      error.tokenAmount = "Should be bigger than 0";
+    } else {
+      const escrowFee = fee || BigInt(0);
+      //const escrowFee = 20;
 
-		if (!tokenAmount) {
-			error.tokenAmount = 'Should be bigger than 0';
-		} else {
-			// const escrowFee = fee || BigInt(0);
-			const escrowFee = 20;
-			// const escrowedBalance = ((balance as bigint) || BigInt(0)) - escrowFee;
-			const escrowedBalance = BigInt(100);
+      const escrowedBalance =
+       // (token.address != PublicKey.default.toBase58()?
+           BigInt(
+              Math.floor(
+                parseFloat(balance?.toString() ?? "0.0") * 10 ** token.decimals
+              )
+            );
+         // : BigInt(balance || 0)) - escrowFee;
+      //const escrowedBalance = BigInt(100);
+      console.log(escrowedBalance||0);
+      if (
+        instantEscrow &&
+        escrowedBalance < parseUnits(String(tokenAmount), token.decimals)
+      ) {
+        error.tokenAmount = `Only ${formatUnits(
+          escrowedBalance,
+          token.decimals
+        )} ${
+          token.symbol
+        } is available in the escrow contract. Should be less or equal ${formatUnits(
+          escrowedBalance,
+          token.decimals
+        )} ${token.symbol}.`;
+      }
+    }
 
-			if (instantEscrow && escrowedBalance < parseUnits(String(tokenAmount), token.decimals)) {
-				error.tokenAmount = `Only ${formatUnits(escrowedBalance, token.decimals)} ${
-					token.symbol
-				} is available in the escrow contract. Should be less or equal ${formatUnits(
-					escrowedBalance,
-					token.decimals
-				)} ${token.symbol}.`;
-			}
-		}
+    if (list.type === "SellList" && !bank?.id) {
+      error.bankId = "Should be present";
+    }
 
-		if (list.type === 'SellList' && !bank?.id) {
-			error.bankId = 'Should be present';
-		}
+    return error;
+  };
 
-		return error;
-	};
+  const createOrder = async (newOrder: Order) => {
+    console.log("createOrder",truncate(newOrder.token_amount, token.decimals), newOrder.token_amount *10 **token.decimals,newOrder.token_amount);
+    return;
+    const result = await fetch("/api/createOrder/", {
+      method: "POST",
+      body: JSON.stringify(
+        snakecaseKeys(
+          {
+            listId: newOrder.list.id,
+            fiatAmount: newOrder.fiat_amount,
+            tokenAmount: truncate(newOrder.token_amount, token.decimals),
+            price: newOrder.price,
+            paymentMethod: { id: bank?.id },
+            buyer_id: address,
+          },
+          { deep: true }
+        )
+      ),
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const { data } = await result.json();
+    // if (data.id) {
+    // 	const result = await fetch(`/api/updateTrade?id=${data.id}`, {
+    // 		method: 'POST',
+    // 		body: JSON.stringify({"trade_id" : }),
+    // 		headers: {
+    // 			Authorization: `Bearer ${getAuthToken()}`,
+    // 			'Content-Type':'application/json',
+    // 		}
+    // 	});
+    // 	if(result.status==200) router.push(`/orders/${data.id}`);
+    // 	//useGaslessEscrow({})
+    // }
 
-	const createOrder = async (newOrder: Order) => {
-		const result = await fetch('/api/createOrder/', {
-			method: 'POST',
-			body: JSON.stringify(
-				snakecaseKeys(
-					{
-						listId: newOrder.list.id,
-						fiatAmount: newOrder.fiat_amount,
-						tokenAmount: truncate(newOrder.token_amount, token.decimals),
-						price: newOrder.price,
-						paymentMethod: { id: bank?.id },
-						buyer_id:address
-					},
-					{ deep: true }
-				)
-			),
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`,
-				'Content-Type':'application/json',
-			}
-		});
-		const { data } = await result.json();
-		// if (data.id) {
-		// 	const result = await fetch(`/api/updateTrade?id=${data.id}`, {
-		// 		method: 'POST',
-		// 		body: JSON.stringify({"trade_id" : }),
-		// 		headers: {
-		// 			Authorization: `Bearer ${getAuthToken()}`,
-		// 			'Content-Type':'application/json',
-		// 		}
-		// 	});
-		// 	if(result.status==200) router.push(`/orders/${data.id}`);
-		// 	//useGaslessEscrow({})
-		// }
+    router.push(`/orders/${data.id}`);
+  };
 
-		router.push(`/orders/${data.id}`);
-	};
+  const onProceed = async () => {
+    if (acceptOnlyVerified && user && !user.verified) {
+      router.push(`/${user.address}`);
+      return;
+    }
 
-	const onProceed = async () => {
-		if (acceptOnlyVerified && user && !user.verified) {
-			router.push(`/${user.address}`);
-			return;
-		}
+    if (list && price) {
+      if (!validate(resolver)) return;
+      const newOrder: UIOrder = {
+        ...order,
+        ...{ fiat_amount: fiatAmount!, token_amount: 1, price },
+      };
+      if (list.type === "SellList") {
+        await createOrder(newOrder);
+      } else {
+        updateOrder({ ...newOrder, ...{ step: newOrder.step + 1 } });
+      }
+    }
+  };
 
-		if (list && price) {
-			const newOrder: UIOrder = {
-				...order,
-				...{ fiat_amount: fiatAmount!, token_amount: 1, price }
-			};
-			if (list.type === 'SellList') {
-				await createOrder(newOrder);
-			} else {
-				updateOrder({ ...newOrder, ...{ step: newOrder.step + 1 } });
-			}
-		}
-	};
+  function onChangeFiat(val: number | undefined) {
+    clearErrors(["fiatAmount"]);
+    setFiatAmount(val);
+    if (price && val) setTokenAmount(truncate(val / price, token.decimals));
+  }
 
-	function onChangeFiat(val: number | undefined) {
-		clearErrors(['fiatAmount']);
-		setFiatAmount(val);
-		if (price && val) setTokenAmount(truncate(val / price, token.decimals));
-	}
+  function onChangeToken(val: number | undefined) {
+    clearErrors(["tokenAmount"]);
 
-	function onChangeToken(val: number | undefined) {
-		clearErrors(['tokenAmount']);
+    if (val) {
+      setTokenAmount(truncate(val, token.decimals));
+    } else {
+      setTokenAmount(val);
+    }
+    if (price && val) setFiatAmount(val * price);
+  }
 
-		if (val) {
-			setTokenAmount(truncate(val, token.decimals));
-		} else {
-			setTokenAmount(val);
-		}
-		if (price && val) setFiatAmount(val * price);
-	}
+  useEffect(() => {
+    updateOrder({
+      ...order,
+      ...{ fiatAmount, tokenAmount },
+    });
+  }, [tokenAmount, fiatAmount]);
 
-	useEffect(() => {
-		updateOrder({
-			...order,
-			...{ fiatAmount, tokenAmount }
-		});
-	}, [tokenAmount, fiatAmount]);
+  useEffect(() => {
+    updateOrder({
+      ...order,
+      ...{
+        paymentMethod: bank ? { id: bank.id, bank, values: {} } : undefined,
+      },
+    });
+  }, [bank]);
 
-	useEffect(() => {
-		updateOrder({
-			...order,
-			...{ paymentMethod: bank ? { id: bank.id, bank, values: {} } : undefined }
-		});
-	}, [bank]);
+  useEffect(() => {
+    if (!address) return;
 
-	useEffect(() => {
-		if (!address) return;
+    fetch(`/api/user_profiles/${address}`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => res.data)
+      .then((data) => {
+        if (data.errors) {
+          setUser(null);
+        } else {
+          setUser(data);
+        }
+      });
+  }, [address]);
 
-		fetch(`/api/user_profiles/${address}`, {
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`
-			}
-		})
-			.then((res) => res.json())
-			.then((res) => res.data)
-			.then((data) => {
-				if (data.errors) {
-					setUser(null);
-				} else {
-					setUser(data);
-				}
-			});
-	}, [address]);
+  useEffect(() => {
+    if (list.type === "SellList" && banks.length > 0 && !bank) {
+      setBank(banks[0]);
+    }
+  }, [banks]);
 
-	useEffect(() => {
-		if (list.type === 'SellList' && banks.length > 0 && !bank) {
-			setBank(banks[0]);
-		}
-	}, [banks]);
+  if (!user?.email) {
+    return <AccountInfo setUser={setUser} />;
+  }
 
-	if (!user?.email) {
-		return <AccountInfo setUser={setUser} />;
-	}
+  const buyCrypto = list.type === "BuyList";
+  const verificationRequired = acceptOnlyVerified && !user?.verified;
+  const buttonText = verificationRequired ? "Verify" : "";
 
-	const buyCrypto = list.type === 'BuyList';
-	const verificationRequired = acceptOnlyVerified && !user?.verified;
-	const buttonText = verificationRequired ? 'Verify' : '';
+  return (
+    <StepLayout onProceed={onProceed} buttonText={buttonText}>
+      <div className="my-8">
+        {verificationRequired ? (
+          <ModalWindow
+            title="ID Verification Needed"
+            content={
+              <div className="py-4">
+                You&apos;re almost set. Please, take a moment to verify some
+                information before continue, we use Quadrata a secure service.
+              </div>
+            }
+            type="confirmation"
+            actionButtonTitle="Verify ID"
+            open
+            onClose={() => router.back()}
+            onAction={() => router.push(`/${address}`)}
+            closeAfterAction={false}
+          />
+        ) : (
+          <>
+            <Input
+              label={buyCrypto ? "Amount to sell" : "Amount to buy"}
+              prefix={
+                <Prefix
+                  label={token!.name}
+                  image={<Token token={token} size={24} />}
+                />
+              }
+              id="amountToReceive"
+              value={tokenAmount}
+              onChangeNumber={(t) => onChangeToken(t)}
+              type="decimal"
+              decimalScale={token.decimals}
+              error={errors.tokenAmount}
+            />
+            <Input
+              label={buyCrypto ? "Amount you'll receive" : "Amount you'll pay"}
+              prefix={
+                <Prefix
+                  label={currency!.symbol}
+                  image={
+                    <Flag name={countries[currency.country_code]} size={24} />
+                  }
+                />
+              }
+              id="amountBuy"
+              value={fiatAmount}
+              onChangeNumber={(f) => onChangeFiat(f)}
+              type="decimal"
+              error={errors.fiatAmount}
+            />
 
-	return (
-		<StepLayout onProceed={onProceed} buttonText={buttonText}>
-			<div className="my-8">
-				{verificationRequired ? (
-					<ModalWindow
-						title="ID Verification Needed"
-						content={
-							<div className="py-4">
-								You&apos;re almost set. Please, take a moment to verify some information before
-								continue, we use Quadrata a secure service.
-							</div>
-						}
-						type="confirmation"
-						actionButtonTitle="Verify ID"
-						open
-						onClose={() => router.back()}
-						onAction={() => router.push(`/${address}`)}
-						closeAfterAction={false}
-					/>
-				) : (
-					<>
-						<Input
-							label={buyCrypto ? 'Amount to sell' : 'Amount to buy'}
-							prefix={<Prefix label={token!.name} image={<Token token={token} size={24} />} />}
-							id="amountToReceive"
-							value={tokenAmount}
-							onChangeNumber={(t) => onChangeToken(t)}
-							type="decimal"
-							decimalScale={token.decimals}
-							error={errors.tokenAmount}
-						/>
-						<Input
-							label={buyCrypto ? "Amount you'll receive" : "Amount you'll pay"}
-							prefix={
-								<Prefix
-									label={currency!.symbol}
-									image={<Flag name={countries[currency.country_code]} size={24} />}
-								/>
-							}
-							id="amountBuy"
-							value={fiatAmount}
-							onChangeNumber={(f) => onChangeFiat(f)}
-							type="decimal"
-							error={errors.fiatAmount}
-						/>
-
-						{!buyCrypto && (
-							<BankSelect
-								currencyId={currency.id}
-								onSelect={(b) => setBank(b as Bank)}
-								selected={bank}
-								options={banks}
-								error={errors.bankId}
-							/>
-						)}
-					</>
-				)}
-			</div>
-		</StepLayout>
-	);
+            {!buyCrypto && (
+              <BankSelect
+                currencyId={currency.id}
+                onSelect={(b) => setBank(b as Bank)}
+                selected={bank}
+                options={banks}
+                error={errors.bankId}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </StepLayout>
+  );
 };
 
 export default Amount;

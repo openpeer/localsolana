@@ -16,9 +16,11 @@ import "react-quill/dist/quill.snow.css";
 import Button from "../Button/Button";
 import { listToMessage } from "@/utils";
 import { parseUnits } from "viem";
-import { useShyft } from "@/hooks/transactions";
+import { useBalance, useShyft } from "@/hooks/transactions";
 import { PublicKey } from "@solana/web3.js";
 import Loading from "../Loading/Loading";
+import { useContractRead } from "@/hooks/transactions/useContractRead";
+import { watch } from "fs";
 
 const QuillEditor = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -34,17 +36,24 @@ const Details = ({ list, updateList }: ListStepProps) => {
     escrowType,
   } = list;
   const { address, isAuthenticated } = useAccount();
-  const { user } = useUserProfile({
-    onUpdateProfile: setUser
-  });
-  const {getTokenBalance,getWalletBalance} = useShyft();
-  
+  const { user, fetchUserProfile } = useUserProfile({});
+  const { data: sellerContract } = useContractRead(
+    address || "",
+    "escrowState"
+  );
+
+  const { balance: balance } = useBalance(
+    sellerContract || "",
+    token?.address || PublicKey.default.toBase58(),true
+  );
+
+  const contracts = (user?.contract_address);
   const router = useRouter();
 
   // @ts-ignore
   const createList = async () => {
     const escrowVal = escrowType === "manual" ? 0 : 1;
-    
+
     if (isAuthenticated) {
       // need to add data inside the body
       const result = await fetch(
@@ -59,8 +68,8 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 marginType: list.marginType === "fixed" ? 0 : 1,
                 seller_address: address,
                 escrowType: escrowVal,
-                price:list.margin,
-                bank_id:16
+                price: list.margin,
+                bank_id: 16,
               },
               { deep: true }
             )
@@ -77,7 +86,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
       }
     }
   };
-console.log('Contract Address of Seller: ',user?.contract_address);
+
   const { signMessage } = useConfirmationSignMessage({
     onSuccess: async (data) => {
       createList();
@@ -88,43 +97,11 @@ console.log('Contract Address of Seller: ',user?.contract_address);
     updateList({ ...list, ...{ terms: value } });
   };
 
-  const needToDeploy = user?.contract_address===undefined ||user?.contract_address==null || user?.contract_address=='';
-  const [balance, setBalance] = useState<number | null>(null);
-  const needToFund = (balance??0) == 0 || (balance??0)< (list.totalAvailableAmount??0);
 
-   (balance??0) < parseUnits(String((list.totalAvailableAmount || 0) / 4), (token as Token)!.decimals);
-
-   const fetchBalance = useCallback(async () => {
-    if (!address) return;
-
-    try {
-      let fetchedBalance;
-      if(!user?.contract_address){
-        return;
-    }
-      if ((token?.address ?? '') === PublicKey.default.toBase58()) {
-       
-        fetchedBalance = await getWalletBalance(user?.contract_address);
-        console.log("SOL Balance:", fetchedBalance);
-        setBalance(fetchedBalance ?? null);
-      } else {
-        fetchedBalance = await getTokenBalance(user?.contract_address, token?.address ?? '');
-        console.log("Token Balance:", fetchedBalance);
-        setBalance(fetchedBalance ?? null);
-      }
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-    }
-  }, [address, user?.contract_address, token, getWalletBalance, getTokenBalance]);
-
-  // Only run the effect once or when address or token changes
-  useEffect(() => {
-    if (address) {
-      fetchBalance();
-    }
-  }, [address, user?.contract_address, fetchBalance]);
-
-
+  const needToDeploy = !sellerContract
+  var needToFund =
+    (balance ?? 0) == 0 ||
+    (balance || 0) < (list.totalAvailableAmount || 0);
 
 
   const needToDeployOrFund =
@@ -136,21 +113,30 @@ console.log('Contract Address of Seller: ',user?.contract_address);
       signMessage({ message });
     }
   };
+  useEffect(() => {
+		if (sellerContract) {
+			const deployed = user?.contract_address;
+    
+			if (!deployed) {
+				fetchUserProfile();
+			}
+		}
+	}, [contracts, sellerContract]);
+  if ((!needToDeploy && balance == null) || user === undefined) {
+    return <Loading />;
+  }
 
-if(!needToDeploy && balance == null){
-  return <Loading/>
-}
-
+  
 
   if (needToDeployOrFund) {
     return (
       <>
-        
+        <Label title="Deposit Time Limit" />
         <FundEscrow
           token={token as Token}
-          sellerContract={user?.contract_address || ''}
+          sellerContract={user?.contract_address || ""}
           chainId={chainId}
-          balance={balance??0 }
+          balance={balance ?? 0}
           totalAvailableAmount={list.totalAvailableAmount!}
         />
       </>
@@ -262,6 +248,3 @@ if(!needToDeploy && balance == null){
 };
 
 export default Details;
-function setUser(user: User): void {
-}
-

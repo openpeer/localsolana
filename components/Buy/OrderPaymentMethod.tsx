@@ -20,7 +20,6 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 	const { address } = useAccount();
 	const { list, paymentMethod = {} as PaymentMethodType } = order;
 	const { fiat_currency: currency, type, bank: banks, token } = list;
-	console.log(list);
 	
 	const { id, bank, values = {} } = paymentMethod;
 	const { account_info_schema: schema = [] } = (bank || {}) as Bank;

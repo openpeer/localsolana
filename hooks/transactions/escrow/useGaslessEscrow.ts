@@ -1,5 +1,4 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
-/* eslint-disable @typescript-eslint/indent */
 import { useState } from 'react';
 import { useAccount } from 'hooks';
 import { toast } from 'react-toastify';
@@ -49,21 +48,14 @@ const useGaslessEscrow = ({
 				setIsSuccess(false);
 				return
 			}
-			const  tx =
-				token.address === PublicKey.default.toBase58()
-					? await depositFundsEscrow(
-							amount,
-							new PublicKey(seller),
-							escrow,new PublicKey(token.address)
-					  )
-					: await depositFundsEscrow(
-						amount,
-						escrow,
-						escrow,new PublicKey(seller)
-				  )
-
-
+			console.log('Escrow is ',escrow.toBase58());
+			const  tx = await depositFundsEscrow(
+				amount,
+				new PublicKey(seller),
+				new PublicKey(token.address),orderID
+		  );
 			setIsLoading(true);
+			console.log('Deposit Transaction',tx.signature);
 			const finalTx =await sendTransactionWithShyft(tx)
 			if(finalTx !==undefined){
 				setIsLoading(false);

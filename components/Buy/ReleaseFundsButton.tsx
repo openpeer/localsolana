@@ -23,7 +23,7 @@ const ReleaseFundsButton = ({
 	const { escrow, uuid, buyer, token_amount: tokenAmount, list } = order;
 	const { token } = list;
 	const { isConnected } = useAccount();
-	console.log('buyer',buyer);
+
 	const { isLoading, isSuccess, data, releaseFund, isFetching } = useReleaseFunds({
 		orderID: order.id.toString(),
 		buyer: buyer.address,
@@ -46,12 +46,12 @@ const ReleaseFundsButton = ({
 		releaseFund?.();
 	};
 
-	useTransactionFeedback({
-		hash: data?.hash,
-		isSuccess,
-		Link: <TransactionLink hash={data?.hash} />,
-		description: 'Released the funds'
-	});
+	// useTransactionFeedback({
+	// 	hash: data?.hash,
+	// 	isSuccess,
+	// 	Link: <TransactionLink hash={data?.hash} />,
+	// 	description: 'Released the funds'
+	// });
 
 	useEffect(() => {
 		if (releaseConfirmed) {
@@ -59,7 +59,7 @@ const ReleaseFundsButton = ({
 		}
 	}, [releaseConfirmed]);
 	useEffect(()=>{
-		if(isSuccess){
+		if(isSuccess && data){
             updateTrade();
 			
 		}
@@ -67,7 +67,7 @@ const ReleaseFundsButton = ({
     const updateTrade = async () => {
 		const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
 			method: 'POST',
-			body: JSON.stringify({status:6}),
+			body: JSON.stringify({status:5}),
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`,
 				'Content-Type': 'application/json',

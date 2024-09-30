@@ -3,6 +3,7 @@ import { getAuthToken, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { Errors } from 'models/errors';
 import { User } from 'models/types';
 import { useEffect, useState } from 'react';
+import { minkeApi } from '../pages/api/utils/utils';
 
 interface ErrorObject {
 	[fieldName: string]: string[];
@@ -18,7 +19,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	const [availableTo, setAvailableTo] = useState<number>();
 	const [weekendOffline, setWeekendOffline] = useState<boolean>();
 	const [errors, setErrors] = useState<Errors>({});
-	const [contract_address, setContractAddress] = useState<string | null>();
+	const [contractAddress, setContractAddress] = useState<string | null>();
 
 	const { primaryWallet } = useDynamicContext();
 	const address  = primaryWallet?.address;
@@ -26,17 +27,19 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	const fetchUserProfile = async () => {
 		if (!address) return;
 
-		fetch(`/api/user_profiles/${address}`, {
+		minkeApi.get(`/api/user_profiles/${address}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
-			.then((res) => res.json())
+			.then((res) => res.data)
 			.then((data) => {
 				if (data.errors) {
 					setUser(null);
 				} else {
 					setUser(data.data);
+					console.log('Here in fetch Profile',data.data);
+					setContractAddress(data.data.contract_address); 
 				}
 			});
 	};
@@ -58,8 +61,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	}, [user]);
 
 	const updateUserProfile = async (profile: User, showNotification = true) => {
-		console.log("here",JSON.stringify(profile));
-		
+
 		const result = await fetch(`/api/user_profiles/${address}`, {
 			method: 'POST',
 			body: JSON.stringify(profile),
@@ -93,9 +95,15 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	// };
 
 	const updateProfile = () => {
+		console.log('Here in update profile',user,contractAddress);
 		setErrors({});
-		console.log(`Nve user da data: ${contract_address}`)
-		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contract_address || null} };
+		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contractAddress || null} };
+		updateUserProfile(newUser as User);
+	};
+	const updateContractAddress = (contractAddress: string) => {
+		console.log('Here in update profile',user,contractAddress);
+		setErrors({});
+		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contractAddress || null} };
 		updateUserProfile(newUser as User);
 	};
 
@@ -120,8 +128,9 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		setWeekendOffline,
 		updateUserProfile,
 		fetchUserProfile,
-		contract_address,
-		setContractAddress
+		contractAddress,
+		setContractAddress,
+		updateContractAddress
 	};
 };
 

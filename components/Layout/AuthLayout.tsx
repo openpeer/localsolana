@@ -67,7 +67,7 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 	const { authenticateUser, isAuthenticating } = useAuthenticateConnectedUser();
 
 	const authenticate = () => {
-		if (primaryWallet?.address) {
+		if (primaryWallet?.address && !primaryWallet.isAuthenticated) {
 			authenticateUser();
 		}
 	};
@@ -166,7 +166,6 @@ const Unauthenticated = () => {
             if (primaryWallet?.isAuthenticated) {
                 const connected = await primaryWallet?.isConnected();
                 setIsConnected(connected);
-				console.log(`Wallet Connection is ${connected}`);
             }
         };
         checkConnection();
