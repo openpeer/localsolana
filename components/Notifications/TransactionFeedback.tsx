@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
 import Avatar from 'components/Avatar';
 import { User } from 'models/types';
 import React, { Fragment, useEffect } from 'react';

@@ -33,16 +33,16 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 
 	const router = useRouter();
 
-	useEffect(() => {
-		 const result = useEscrowFee({ token, tokenAmount });
-    if (typeof result === 'function') {
-        result().then((res) => {
-           setFee(res.fee );
-        });
-    } else {
-        setFee(result.fee);
-    }
-	}	, [token]);
+	// useEffect(() => {
+	// 	 const result = useEscrowFee({ token, tokenAmount });
+    // if (typeof result === 'function') {
+    //     result().then((res) => {
+    //        setFee(res.fee );
+    //     });
+    // } else {
+    //     setFee(result.fee);
+    // }
+	// }	, [token]);
 
 	const updateLoading = (l: boolean) => {
 		setLoading(l);

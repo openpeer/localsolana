@@ -19,6 +19,7 @@ import { BuyStepProps } from './Buy.types';
 const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 	const { address } = useAccount();
 	const { list, paymentMethod = {} as PaymentMethodType } = order;
+	//  @ts-ignore-next-line
 	const { fiat_currency: currency, type, bank: banks, token } = list;
 	
 	const { id, bank, values = {} } = paymentMethod;
@@ -141,7 +142,7 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 			.then((res) => res.json())
 			.then((res) => res.data)
 			.then((data: PaymentMethodType[]) => {
-				const listBankIds = banks?banks.map((b) => b?.id):[]
+				const listBankIds = banks?banks.map((b: any) => b?.id):[]
 				const filtered = data.filter((pm) => listBankIds.includes(pm?.bank?.id));
 				setPaymentMethods(filtered);
 				if (!paymentMethod.values) {

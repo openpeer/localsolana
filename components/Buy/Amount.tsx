@@ -72,10 +72,8 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   const [bank, setBank] = useState<Bank>();
 
   const { errors, clearErrors, validate } = useFormErrors();
-
-  const banks = Array.isArray(list.payment_methods)
-    ? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id }))
-    : [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
+//@ts-ignore
+  const banks = Array.isArray(list.payment_methods)? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id })): [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
 
   const instantEscrow = list?.escrow_type === "instant";
 

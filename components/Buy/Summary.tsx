@@ -44,14 +44,8 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 	const selling = seller.address === address;
 	const chatAddress = selling ? buyer.address : seller.address;
 	const user = !!selling && !!buyer ? buyer : seller;
-	const banks = paymentMethod
-		? [paymentMethod.bank]
-		: type === 'BuyList'
-		? list.bank
-		: Array.isArray(paymentMethods)
-		? paymentMethods.map((pm) => pm.bank)
-		: [paymentMethods].map((pm) => pm?.bank);
-
+	//@ts-ignore
+	const banks = paymentMethod? [paymentMethod.bank]: type === 'BuyList'? list.bank: Array.isArray(paymentMethods)? paymentMethods.map((pm) => pm.bank): [paymentMethods].map((pm) => pm?.bank);
 	const depositTimeLimit = order.deposit_time_limit || list.deposit_time_limit;
 	const paymentTimeLimit = order.payment_time_limit || list.payment_time_limit;
 	const instantEscrow = escrowType === 'instant';
@@ -110,8 +104,9 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
                 photoUrl: currentUser.photo,
 				role:"default"
             });
-
+			//@ts-ignore
             if (!window.talkSession) {
+				//@ts-ignore
                 window.talkSession = new Talk.Session({
                     appId: talkJsAppId, // Replace with your actual app ID
                     me: me,
@@ -121,7 +116,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 			let otherUser = new Talk.User(userType(chatAddress));
 
 			const myConversation = (address<chatAddress)?address+chatAddress:chatAddress+address;
-			
+			//@ts-ignore
 			let conversation1 = window.talkSession.getOrCreateConversation(myConversation);
 			
 			conversation1.setParticipant(me);
@@ -233,7 +228,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 					{banks.length > 0 && (
 						<div className="w-full flex flex-row mb-4 space-x-2">
 							<div className="text-sm">Payment methods</div>
-							{banks.map((bank) => (
+							{banks.map((bank: any) => (
 								<div className="flex flex-row items-center" key={bank?.id}>
 									<span
 										className="bg-gray-500 w-1 h-3 rounded-full"
