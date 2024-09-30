@@ -155,6 +155,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
       }
     >
       <div className="my-8">
+      <button onClick={()=>createList()}>Create Ad</button>
         {list.escrowType === "manual" && (
           <>
             <Label title="Deposit Time Limit" />

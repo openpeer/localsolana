@@ -51,7 +51,7 @@ const manrope = Manrope({
 // 	/>
 // );
 
-const navigation = [
+let navigation = [
 	{ name: 'Trade P2P', href: '/trade', icon: ChartBarSquareIcon },
 	{ name: 'Post Ad', href: '/sell', icon: PlusCircleIcon },
 	{ name: 'My Ads', href: '/ads', icon: PencilIcon },
@@ -71,6 +71,15 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 			authenticateUser();
 		}
 	};
+
+	const addConversation = navigation.some(item => item.name === 'My Conversations');
+
+	if(primaryWallet?.address && (!addConversation)){
+		navigation.push({ name: 'My Conversations', href: '/conversation', icon: ChatBubbleLeftIcon });
+	}
+	else if((primaryWallet && (!primaryWallet.address) || (!primaryWallet)) && addConversation){
+		navigation = navigation.filter(item => item.name !== 'My Conversations');
+	}
 
 	return (
 		<div>
