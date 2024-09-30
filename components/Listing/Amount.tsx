@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Input, Label, Loading, MarginSwitcher } from 'components';
 import { useFormErrors } from 'hooks';
 import { Errors, Resolver } from 'models/errors';
@@ -189,7 +190,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 				onUpdatePriceSource={(ps) => updateValue({ priceSource: ps })}
 			/>
 
-			<div className="w-full flex flex-row justify-between mb-8 hidden">
+			<div className="w-full flex flex-row justify-between mb-8">
 				<div>
 					<div>Lowest price</div>
 					<div className="text-xl font-bold">25.9 {currency.name}</div>

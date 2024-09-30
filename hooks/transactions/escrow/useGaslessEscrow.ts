@@ -48,14 +48,19 @@ const useGaslessEscrow = ({
 				setIsSuccess(false);
 				return
 			}
-			console.log('Escrow is ',escrow.toBase58());
+			console.log('Escrow is ',escrow.toBase58(),orderID,seller);
 			const  tx = await depositFundsEscrow(
 				amount,
 				new PublicKey(seller),
-				new PublicKey(token.address),orderID
+				new PublicKey(token.address),orderID,token.decimals
 		  );
+		  if(tx ===undefined){
+			setIsLoading(false);
+			setIsSuccess(false);
+			return;
+		}
 			setIsLoading(true);
-			console.log('Deposit Transaction',tx.signature);
+			console.log('Deposit Transaction');
 			const finalTx =await sendTransactionWithShyft(tx)
 			if(finalTx !==undefined){
 				setIsLoading(false);

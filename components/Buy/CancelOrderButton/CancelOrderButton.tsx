@@ -42,10 +42,10 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 			});
 			const savedOrder = await result.json();
 	
-			if (savedOrder.uuid) {
-				if (status !== 'cancelled') {
+			if (savedOrder.status === 200) {
+				//if (status !== 'cancelled') {
 					window.location.reload();
-				}
+				//}
 			} else {
 				toast.error('Error cancelling the order', {
 					theme: 'dark',
@@ -95,7 +95,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 	});
 
 	const cancelIsNotAvailable = ['cancelled', 'closed'].includes(order.status);
-	const simpleCancel: boolean = true;//!order.escrow && order.status === 'created'; // no need to talk to the blockchain
+	const simpleCancel: boolean = true;//!order.tradeID && order.status === 'created'; // no need to talk to the blockchain
 
 	const onCancelOrder = () => {
 		if (cancelIsNotAvailable) return;

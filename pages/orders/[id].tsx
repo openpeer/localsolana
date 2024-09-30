@@ -8,6 +8,8 @@ import { useAccount } from 'hooks';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getStatusString } from '@/utils';
 import io from 'socket.io-client';
+import { snakeCase } from 'lodash';
+import snakecaseKeys from 'snakecase-keys';
 
 const ERROR_STEP = 0;
 const PAYMENT_METHOD_STEP = 2;
@@ -41,7 +43,7 @@ const OrderPage = ({ id }: { id: string }) => {
                 });
                 const result = await response.json();
                 const data = result.data;
-                setOrder({ ...data, status: getStatusString(data.status), step: steps[getStatusString(data.status) || 'error'] });
+                setOrder(snakecaseKeys({ ...data, status: getStatusString(data.status), step: steps[getStatusString(data.status) || 'error'] },{deep: true}));
             } catch (error) {
                 console.error('Error fetching order:', error);
             }
@@ -59,18 +61,19 @@ const OrderPage = ({ id }: { id: string }) => {
             if (!socketRef.current) {
                 socketRef.current = io(`${process.env.NEXT_PUBLIC_API_WS_URL}`, {
                     query: { token },
+                    transports: ['websocket'],
                 },);
     
                 socketRef.current.on('connect', () => {
                     console.log('Connected to socket server');
                     socketRef.current.emit('subscribeToOrder', { channel: 'OrdersChannel',
-                        order_id: id });
+                        orderId: id });
                 });
     
                 socketRef.current.on('orderUpdate', (response: string) => {
                     const { data: updatedOrder } = JSON.parse(response);
                     console.log('updatedOrder', updatedOrder);
-                    setOrder({ ...updatedOrder, step: steps[updatedOrder.status] });
+                    setOrder(snakecaseKeys({ ...updatedOrder, step: steps[updatedOrder.status] },{deep: true}));
                 });
     
                 socketRef.current.on('disconnect', () => {

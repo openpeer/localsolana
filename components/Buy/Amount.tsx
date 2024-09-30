@@ -76,16 +76,17 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   const banks = Array.isArray(list.payment_methods)
     ? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id }))
     : [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
+
   const instantEscrow = list?.escrow_type === "instant";
-  console.log(order.list.seller.contract_address);
+
   const { data: sellerContract } = useContractRead(
-    order.list.seller.address || "",
+    list.type === "SellList"? (order.list.seller.address || ""):(address ||''),
     "escrowState",
     true
   );
-  console.log(sellerContract, token?.address);
+  console.log('Here in AMount',sellerContract.toBase58(), token?.address);
   const { balance: balance } = useBalance(
-    sellerContract || "",
+    list.type === "SellList"?(sellerContract || ""):(address || ''),
     token?.address || PublicKey.default.toBase58(),
     true
   );
@@ -117,15 +118,15 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
       //const escrowFee = 20;
 
       const escrowedBalance =
-       // (token.address != PublicKey.default.toBase58()?
-           BigInt(
-              Math.floor(
-                parseFloat(balance?.toString() ?? "0.0") * 10 ** token.decimals
-              )
-            );
-         // : BigInt(balance || 0)) - escrowFee;
+        // (token.address != PublicKey.default.toBase58()?
+        BigInt(
+          Math.floor(
+            parseFloat(balance?.toString() ?? "0.0") * 10 ** token.decimals
+          )
+        ) - escrowFee;
+      // : BigInt(balance || 0)) - escrowFee;
       //const escrowedBalance = BigInt(100);
-      console.log(escrowedBalance||0);
+      console.log(escrowedBalance || 0);
       if (
         instantEscrow &&
         escrowedBalance < parseUnits(String(tokenAmount), token.decimals)
@@ -150,8 +151,12 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   };
 
   const createOrder = async (newOrder: Order) => {
-    console.log("createOrder",truncate(newOrder.token_amount, token.decimals), newOrder.token_amount *10 **token.decimals,newOrder.token_amount);
-    return;
+    console.log(
+      "createOrder",
+      truncate(newOrder.token_amount, token.decimals),
+      newOrder.token_amount * 10 ** token.decimals,
+      newOrder.token_amount
+    );
     const result = await fetch("/api/createOrder/", {
       method: "POST",
       body: JSON.stringify(
@@ -199,7 +204,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
       if (!validate(resolver)) return;
       const newOrder: UIOrder = {
         ...order,
-        ...{ fiat_amount: fiatAmount!, token_amount: 1, price },
+        ...{ fiat_amount: fiatAmount!, token_amount: tokenAmount!, price },
       };
       if (list.type === "SellList") {
         await createOrder(newOrder);
@@ -216,6 +221,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   }
 
   function onChangeToken(val: number | undefined) {
+    console.log("OnChange Token", val);
     clearErrors(["tokenAmount"]);
 
     if (val) {

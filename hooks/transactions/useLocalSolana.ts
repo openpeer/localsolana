@@ -145,7 +145,12 @@ const useLocalSolana = () => {
     }
     const tx = new Transaction().add(
       await program.methods
-        .createEscrowSol(orderId, new anchor.BN(amount), new anchor.BN(time),automaticEscrow)
+        .createEscrowSol(
+          orderId,
+          new anchor.BN(amount),
+          new anchor.BN(time),
+          automaticEscrow
+        )
         .accounts({
           buyer: new PublicKey(buyer),
           seller: new PublicKey(seller),
@@ -173,10 +178,14 @@ const useLocalSolana = () => {
       throw new Error("Program or provider is not initialized");
     }
     var escrow = await getEscrowPDA(orderId);
-    if(!escrow){
+    if (!escrow) {
       return null;
     }
-    var escrowTokenAccount = await getAssociatedTokenAddress(new PublicKey(token),escrow,true);
+    var escrowTokenAccount = await getAssociatedTokenAddress(
+      new PublicKey(token),
+      escrow,
+      true
+    );
 
     const tx = await program.methods
       .createEscrowToken(
@@ -217,7 +226,12 @@ const useLocalSolana = () => {
       );
       return transaction;
     } else {
-      var escrowTokenAccount = await getAssociatedTokenAddress(token,escrow,true);
+      console.log("Here is UseGaslessDepositFunds", token, escrow);
+      var escrowTokenAccount = await getAssociatedTokenAddress(
+        token,
+        escrow,
+        true
+      );
 
       const tx = new Transaction().add(
         await program.methods
@@ -227,8 +241,8 @@ const useLocalSolana = () => {
             feePayer: new PublicKey(
               "2Hu9fgnKUWyxqGwLVLhoUPsG9PJ15YbNxB8boWmCdSqC"
             ),
-            mintAccount:token,
-            escrowStateTokenAccount:escrowTokenAccount.toBase58()
+            mintAccount: token,
+            escrowStateTokenAccount: escrowTokenAccount.toBase58(),
           })
           .instruction()
       );
@@ -240,27 +254,37 @@ const useLocalSolana = () => {
     amount: number,
     seller: PublicKey,
     token: PublicKey,
-    orderID: string
+    orderID: string,decimals: number
   ) => {
     if (!program || !provider) {
       throw new Error("Program or provider is not initialized");
     }
-    var escrow= await getEscrowPDA(orderID);
-    if(!escrow){return;}
+    var escrow = await getEscrowPDA(orderID);
+    if (!escrow) {
+      throw new Error("Unable to get Escrow PDA");
+    }
+    try{
     const tx = new Transaction().add(
       await program.methods
-        .depositToEscrow(orderID, new anchor.BN(amount), token,false)
+        .depositToEscrow(orderID, new anchor.BN((amount * 10 ** decimals)), token, false)
         .accounts({
           seller: seller,
           feePayer: new PublicKey(
             "2Hu9fgnKUWyxqGwLVLhoUPsG9PJ15YbNxB8boWmCdSqC"
           ),
-          mintAccount:token!=PublicKey.default? token:null,
-          escrowTokenAccount:token!=PublicKey.default?await getAssociatedTokenAddress(token,escrow,true):null
+          mintAccount: token != PublicKey.default ? token : null,
+          escrowTokenAccount:
+            token != PublicKey.default
+              ? await getAssociatedTokenAddress(token, escrow, true)
+              : null,
         })
         .instruction()
     );
+    console.log('Got Transaction');
     return tx;
+  }catch(err){
+    console.log('Error',err);
+  }
   };
 
   const releaseFunds = async (
@@ -280,10 +304,8 @@ const useLocalSolana = () => {
         feeRecipient: new PublicKey(
           "5ma3WQEhs1kimMVqDB8Rc9PceTkEUVkm68A6g6cgxWjJ"
         ),
-        mintAccount:token,
-        feePayer:new PublicKey(
-          "2Hu9fgnKUWyxqGwLVLhoUPsG9PJ15YbNxB8boWmCdSqC"
-        ),
+        mintAccount: token,
+        feePayer: new PublicKey("2Hu9fgnKUWyxqGwLVLhoUPsG9PJ15YbNxB8boWmCdSqC"),
       })
       .transaction();
     return tx;
