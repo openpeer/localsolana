@@ -126,6 +126,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 	};
 
 	const createOrder = async (newOrder: Order) => {
+		
 		const result = await fetch('/api/createOrder/', {
 			method: 'POST',
 			body: JSON.stringify(

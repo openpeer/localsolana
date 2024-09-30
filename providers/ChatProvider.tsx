@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAccount, useUserProfile } from 'hooks';
 import Talk from 'talkjs';
+import { talkJsAppId } from '@/utils/constants';
 
 function ChatProvider() {
     const { user } = useUserProfile({});
     const { address } = useAccount();
-    const [inboxVisible, setInboxVisible] = useState(false);
     const talkjsContainer = useRef<HTMLDivElement>(null); // Use `useRef` instead of `createRef`
 
     useEffect(() => {
@@ -34,7 +34,7 @@ function ChatProvider() {
 
             if (!window.talkSession) {
                 window.talkSession = new Talk.Session({
-                    appId: 'ts7dsdWy', // Replace with your actual app ID
+                    appId: talkJsAppId, // Replace with your actual app ID
                     me: me,
                 });
             }

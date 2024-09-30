@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Intercom, shutdown } from "@intercom/messenger-js-sdk";
 import { useUserProfile } from "@/hooks";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { intercomAppId } from "@/utils/constants";
 
 export default function IntercomWidget() {
   const { user} = useUserProfile({});
@@ -17,15 +18,15 @@ export default function IntercomWidget() {
       Intercom(
         user
           ? {
-              app_id: "umqk8oq3",
+              app_id: intercomAppId,
               user_id: user.id.toString(),
               name: user.name || user.address,
               email: user.email || user.address,
             }
-          : { app_id: "umqk8oq3" } // Initialize without user details
+          : { app_id: intercomAppId } // Initialize without user details
       );
     }else{
-      Intercom( { app_id: "umqk8oq3" }); 
+      Intercom( { app_id: intercomAppId }); 
     }
   }, [primaryWallet, user]);
 

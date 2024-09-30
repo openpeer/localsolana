@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/indent */
 import Avatar from 'components/Avatar';
 import Link from 'next/link';
-import React,{useRef,useState} from 'react';
+import React from 'react';
 import { smallWalletAddress } from 'utils';
 import { useAccount } from 'hooks';
 
@@ -11,9 +11,12 @@ import { ChartBarSquareIcon, StarIcon } from '@heroicons/react/24/outline';
 import { UIOrder } from './Buy.types';
 import Button from '../Button/Button';
 import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/20/solid';
-// import Chat from './Chat';
+import { useRouter } from 'next/navigation';
+import Talk from 'talkjs';
+import { talkJsAppId } from '@/utils/constants';
 
 const SummaryBuy = ({ order }: { order: UIOrder }) => {
+	const route = useRouter();
 	const {
 		list,
 		price,
@@ -53,9 +56,8 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 	const paymentTimeLimit = order.payment_time_limit || list.payment_time_limit;
 	const instantEscrow = escrowType === 'instant';
 
-	// const { address } = useAccount();
-    const [inboxVisible, setInboxVisible] = useState(false);
-    const talkjsContainer = useRef<HTMLDivElement>(null); // Use `useRef` instead of `createRef`
+    // const [inboxVisible, setInboxVisible] = useState(false);
+    // const talkjsContainer = useRef<HTMLDivElement>(null); // Use `useRef` instead of `createRef`
 
 	const userType = (address:string)=>{
 		if(order.buyer?.address && order.buyer.address===address){
@@ -64,6 +66,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 				name: order.buyer?.name||order.buyer.address,
 				email: (order.buyer?.email && order.buyer.email)?order.buyer.email:order.buyer.address,
 				photo: 'https://source.unsplash.com/random/200x200?person',
+				role:"default"
 			};
 		}
 		else if(order.seller?.address && order.seller.address===address){
@@ -72,6 +75,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 				name: order.seller?.name||order.seller.address,
 				email: (order.seller?.email && order.seller.email)?order.seller.email:order.seller.address,
 				photo: 'https://source.unsplash.com/random/200x200?person',
+				role:"default"
 			};
 		}
 		else if(list.seller?.address && list.seller.address===address){
@@ -80,6 +84,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 				name: list.seller?.name||list.seller.address,
 				email: (list.seller?.email && list.seller.email)?list.seller.email:list.seller.address,
 				photo: 'https://source.unsplash.com/random/200x200?person',
+				role:"default"
 			};
 		}
 
@@ -88,10 +93,11 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 			name: list.seller.name||list.seller.address,
 			email: (list.seller?.email && list.seller.email)?list.seller.email:list.seller.address,
 			photo: 'https://source.unsplash.com/random/200x200?person',
+			role:"default"
 		};
 	}
 	
-	const openChat = async()=>{
+	const createNewConversation = async()=>{
 		if (!address) return; // Avoid running if the user is not logged in
 
         const currentUser = userType(address);
@@ -102,44 +108,26 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
                 name: currentUser.name,
                 email: currentUser.email,
                 photoUrl: currentUser.photo,
+				role:"default"
             });
 
             if (!window.talkSession) {
                 window.talkSession = new Talk.Session({
-                    appId: 'ts7dsdWy', // Replace with your actual app ID
+                    appId: talkJsAppId, // Replace with your actual app ID
                     me: me,
                 });
             }
 
-			// let otherUser = new Talk.User({
-			// 	id: chatAddress,
-			// 	name: seller.name||seller.address,
-			// 	email: (seller.email)?seller.email:'',
-			// 	photoUrl: "https://source.unsplash.com/random/200x200?person",
-			// 	welcomeMessage: "Hey, how can I help?"
-			// });
-
 			let otherUser = new Talk.User(userType(chatAddress));
-	
-			// First conversation (e.g., Project Discussion)
-			const myConversation = (address<chatAddress)?address+chatAddress:chatAddress+address;
-			let conversation1 = window.talkSession.getOrCreateConversation(myConversation);
-			conversation1.setParticipant(me);
-			conversation1.setParticipant(otherUser);
 
+			const myConversation = (address<chatAddress)?address+chatAddress:chatAddress+address;
+			
+			let conversation1 = window.talkSession.getOrCreateConversation(myConversation);
+			
 			conversation1.setParticipant(me);
       		conversation1.setParticipant(otherUser);
-
-            const inbox = window.talkSession.createInbox({
-                showFeed: true, // Show conversation list (feed)
-				selected: conversation1
-            });
-
-
-            if (talkjsContainer.current) {
-                inbox.mount(talkjsContainer.current); // Mount once, and control visibility with CSS
-            }
-			setInboxVisible(true);
+			conversation1.sendMessage("Hi....");
+			route.push('/conversation');
         });
 	}
 
@@ -312,10 +300,10 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 						</span>
 					}
 					outlined
-					onClick={openChat}
+					onClick={createNewConversation}
 				/>
 
-			<div
+			{/* <div
                 style={{
                     width: '100%',
                     height: '500px',
@@ -329,7 +317,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
                     visibility: inboxVisible ? 'visible' : 'hidden', // Hide when not visible
                 }}
                 ref={talkjsContainer}
-            />
+            /> */}
 				{/* {!!chatAddress && <Chat address={chatAddress} label={selling ? 'buyer' : 'seller'} />} */}
 				<div className="bg-[#FEFAF5] text-[#E37A00] p-4 rounded">
 					<p className="text-sm font-bold mb-2">Disclaimer</p>
