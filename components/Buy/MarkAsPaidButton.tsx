@@ -32,12 +32,12 @@ const MarkAsPaidButton = ({ order,updateOrder }: MarkAsPaidButtonParams) => {
 
 	};
 
-	useTransactionFeedback({
-		hash: data?.hash,
-		isSuccess,
-		Link: <TransactionLink hash={data?.hash} />,
-		description: 'Marked the order as paid'
-	});
+	// useTransactionFeedback({
+	// 	hash: data?.hash,
+	// 	isSuccess,
+	// 	Link: <TransactionLink hash={data?.hash} />,
+	// 	description: 'Marked the order as paid'
+	// });
 
 
 	const prevIsSuccessRef = useRef<boolean>(false);
@@ -53,7 +53,7 @@ const MarkAsPaidButton = ({ order,updateOrder }: MarkAsPaidButtonParams) => {
     const updateTrade = async () => {
 		const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
 			method: 'POST',
-			body: JSON.stringify({status:3}),
+			body: JSON.stringify({status:2}),
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`,
 				'Content-Type': 'application/json',

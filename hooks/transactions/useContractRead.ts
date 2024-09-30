@@ -1,70 +1,198 @@
-import { useState, useEffect } from 'react';
-import { Connection, PublicKey } from '@solana/web3.js';
-import useLocalSolana from './useLocalSolana';
+import { useState, useEffect } from "react";
+import { Connection, PublicKey } from "@solana/web3.js";
+import useLocalSolana from "./useLocalSolana";
+import { BN } from "@coral-xyz/anchor";
+import useAccount from "../useAccount";
 
-
-export const useContractRead = (contractAddress: string, method: string) => {
+export const useContractRead = (contractAddress: string, method: string,watch? : boolean) => {
   const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingContract, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const {provider,program,connection} = useLocalSolana();
+  const { provider, program, connection,getEscrowStatePDA } = useLocalSolana();
+
 
   useEffect(() => {
     const fetchData = async () => {
-
-      console.log('CtradeId',contractAddress);
       setLoading(true);
       setError(null);
-
+      var escrowStateAddress;
+      if(method =="escrowState"){
+        escrowStateAddress = await getEscrowStatePDA(contractAddress);
+      
+      if(!escrowStateAddress){
+        setData(null);
+        setLoading(false);
+        setError('Unable to find LocalSolana account');
+        return;
+      }
+    }
+    if(!escrowStateAddress && !contractAddress){
+      setError('Error in address');
+      setData(null);
+      setLoading(false);
+      return;
+    }
+      const publicKey = method =="escrowState"?escrowStateAddress:new PublicKey(contractAddress);
       try {
-        const publicKey = new PublicKey(contractAddress);
-        if(!connection){
-          console.log('Connection not found',connection);
-            setError('Connection  not found');
-            setLoading(false);
-            return;
+       
+        if (!connection) {
+          setError("Connection  not found");
+          setLoading(false);
+          return;
         }
-        console.log('Connection is established',connection);
 
-        const accountInfo = await connection.getAccountInfo(publicKey);
+        const accountInfo = await connection.getAccountInfo(publicKey!);
         const accountBuffer = accountInfo?.data;
-        console.log('Account ',accountInfo);
-        if(!accountBuffer){
-          console.log('Account not found');
-            setError('Unable to retrieve account information');
-            setLoading(false);
-            return;
+
+        if (!accountBuffer) {
+          setError("Unable to retrieve account information");
+          setLoading(false);
+          return;
         }
-        var decodedData ;
-        switch(method){
-            case 'escrow':
-              try{
-                decodedData  = program?.account.escrow.coder.accounts.decode('escrow',accountBuffer);
-              }catch(err){
+        var decodedData;
+        switch (method) {
+          case "escrow":
+            try {
+              decodedData = program?.account.escrow.coder.accounts.decode(
+                "escrow",
+                accountBuffer
+              );
+              console.log(decodedData);
+            } catch (err) {
+              console.log(err);
+            }
+            break;
+          case "fee":
+            try {
+              var decodedEscrowData =
+                program?.account.escrow.coder.accounts.decode(
+                  "escrow",
+                  accountBuffer
+                );
+              decodedData = decodedEscrowData.fee ?? new BN(0);
+            } catch (err: any) {
+              console.log(err);
+              setError(err?.toString());
+              setData(null);
+            }
+            break;
+
+            case "escrowState":
+              try {
+                var decodedEscrowStateData =
+                  program?.account.escrowState.coder.accounts.decode(
+                    "escrowState",
+                    accountBuffer
+                  );
+                decodedData = decodedEscrowStateData!=null?escrowStateAddress:null;
+              } catch (err: any) {
                 console.log(err);
+                setError(err?.toString());
+                setData(null);
               }
-                break;
+              break;
+
         }
-        
         if (decodedData) {
-            console.log('Account data',decodedData);
+          console.log("Account data", decodedData);
           setData(decodedData);
         } else {
-            console.log('Account data not found');
-          setError('No data found');
+          console.log("Account data not found");
+          setError("No data found");
         }
-      } catch (err) {
-        console.error('Account data',err);
+      } catch (err: any) {
+        console.error("Account data", err);
         setError(err?.message);
         setData(null);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
     };
-    console.log('Useasldjlas');
     fetchData();
-    
-  }, [contractAddress, method,connection]);
 
-  return { data, loading, error };
+    if(watch){
+      var escrowStateAddress: PublicKey | undefined;
+      if(method =="escrowState"){
+        escrowStateAddress =  getEscrowStatePDA(contractAddress);
+      }
+      if(!escrowStateAddress){
+        return;
+      }
+      const publicKey = method =="escrowState"?escrowStateAddress:new PublicKey(contractAddress);
+      if(publicKey === undefined){
+        return;
+      }
+      // Subscribe to account changes by watching for account changes
+    const subscriptionId = connection?.onAccountChange(publicKey, (updatedAccountInfo) => {
+      const accountBuffer = updatedAccountInfo?.data;
+      if (!accountBuffer) {
+        setError("Unable to retrieve account information");
+        setLoading(false);
+        return;
+      }
+      var decodedData;
+      switch (method) {
+        case "escrow":
+          try {
+            decodedData = program?.account.escrow.coder.accounts.decode(
+              "escrow",
+              accountBuffer
+            );
+          } catch (err) {
+            console.log(err);
+          }
+          break;
+        case "fee":
+          try {
+            var decodedEscrowData =
+              program?.account.escrow.coder.accounts.decode(
+                "escrow",
+                accountBuffer
+              );
+            decodedData = decodedEscrowData.fee ?? new BN(0);
+          } catch (err: any) {
+            console.log(err);
+            setError(err?.toString());
+            setData(null);
+          }
+          break;
+
+          case "escrowState":
+            try {
+              var decodedEscrowStateData =
+                program?.account.escrowState.coder.accounts.decode(
+                  "escrowState",
+                  accountBuffer
+                );
+              decodedData = decodedEscrowStateData!=null?escrowStateAddress:null;
+            } catch (err: any) {
+              console.log(err);
+              setError(err?.toString());
+              setData(null);
+            }
+            break;
+
+      }
+      if (decodedData) {
+        console.log("Account data", decodedData);
+        setData(decodedData);
+        setLoading(false);
+      } else {
+        console.log("Account data not found");
+        setError("No data found");
+        setLoading(false);
+      }
+    });
+
+    // Cleanup the subscription on component unmount
+    return () => {
+      if(subscriptionId)
+      connection?.removeAccountChangeListener(subscriptionId);
+    };
+    }
+
+  }, [contractAddress, method, connection]);
+
+  return { data, loadingContract, error };
 };

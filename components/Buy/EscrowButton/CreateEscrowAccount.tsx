@@ -18,7 +18,8 @@ interface CreateEscrowAccountProps {
     amount:number,
     time:number,
     token:Token,
-    seller:string
+    seller:string,
+	instantEscrow: boolean
 
 }
 
@@ -27,7 +28,7 @@ const CreateEscrowAccount = ({ orderId,
     buyer,
     amount,
     time,
-    token,seller}: CreateEscrowAccountProps) => {
+    token,seller,instantEscrow}: CreateEscrowAccountProps) => {
 	const { primaryWallet } = useDynamicContext();
 	const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessEscrowAccountDeploy({
 		orderId: orderId,
@@ -36,45 +37,38 @@ const CreateEscrowAccount = ({ orderId,
 		amount: amount,
 		time: time,
 		tokenAddress: token.address,
-		tokenDecimal: token.decimals
+		tokenDecimal: token.decimals,
+		instantEscrow
 	});
 
-	useTransactionFeedback({
-		hash: data?.hash??'',
-		isSuccess,
-		Link: <TransactionLink hash={data?.hash} />,
-		description: 'Deployed the escrow account'
-	});
+	// useTransactionFeedback({
+	// 	hash: data?.hash??'',
+	// 	isSuccess,
+	// 	Link: <TransactionLink hash={data?.hash} />,
+	// 	description: 'Deployed the escrow account'
+	// });
 
-
+	useEffect(()=>{
+		if(isSuccess && data && instantEscrow){
+            updateTrade();
+			
+		}
+	},[ data,isSuccess]);
+    const updateTrade = async () => {
+		const result = await fetch(`/api/updateOrder/?id=${orderId}`, {
+			method: 'POST',
+			body: JSON.stringify({status:1}),
+			headers: {
+				Authorization: `Bearer ${getAuthToken()}`,
+				'Content-Type': 'application/json',
+			}
+		});
+    };
 	const deployEscrowAccount = async () => {
 		if (!primaryWallet?.isConnected) return;
-		console.log('Deploy');
 		await deploy?.();
 
 	};
-	useEffect(()=>{
-		if(data){
-            updateTrade(data.hash??'');
-			
-		}
-	},[ data]);
-    const updateTrade = async (tradeId:string) => {
-        try {
-            const result = await fetch(`/api/updateTrade?id=${orderId}`, {
-				method: 'POST',
-				body: JSON.stringify({"trade_id" : tradeId}),
-				headers: {
-					Authorization: `Bearer ${getAuthToken()}`,
-					'Content-Type':'application/json',
-				}
-			});
-            console.log('Trade updated successfully:', result.status==200);
-
-        } catch (error) {
-            console.error('Error updating trade:', error);
-        }
-    };
 	return (
 		<Button
 			title={isLoading ? 'Processing...' : isSuccess ? 'Done' : 'Create Escrow Account'}

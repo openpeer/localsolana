@@ -14,7 +14,8 @@ interface UseGaslessEscrowAccountDeployProps {
     amount:number,
     time:number,
     tokenAddress:string,
-    tokenDecimal:number
+    tokenDecimal:number,
+    instantEscrow: boolean
 
 }
 
@@ -28,7 +29,7 @@ const useGaslessEscrowAccountDeploy = ({ orderId,
     amount,
     time,
     tokenAddress,
-    tokenDecimal}: UseGaslessEscrowAccountDeployProps) => {
+    tokenDecimal,instantEscrow}: UseGaslessEscrowAccountDeployProps) => {
     const [data, updateData] = useState<Data>();
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +49,7 @@ const useGaslessEscrowAccountDeploy = ({ orderId,
             const status = await getAccountInfo(escrowPDA?.toBase58()??'');
             if(status == null || status == undefined){
                 if(tokenAddress == PublicKey.default.toBase58()){
-                    const transaction = await createEscrowSol(orderId,time,amount*10 ** tokenDecimal,buyer,seller,PublicKey.default.toBase58());
+                    const transaction = await createEscrowSol(orderId,time,amount*10 ** tokenDecimal,buyer,seller,PublicKey.default.toBase58(),instantEscrow);
                     const finalTx = await sendTransactionWithShyft(transaction)
                     console.log(`Status ${status}`);
                     if(finalTx !== undefined){
@@ -61,7 +62,12 @@ const useGaslessEscrowAccountDeploy = ({ orderId,
                         setIsSuccess(false);
                     }
                 }else{
-                    const transaction = await createEscrowToken(orderId,time,amount*10 ** tokenDecimal,buyer,seller,PublicKey.default.toBase58(),tokenAddress,true);
+                    const transaction = await createEscrowToken(orderId,time,amount*10 ** tokenDecimal,buyer,seller,PublicKey.default.toBase58(),tokenAddress,instantEscrow);
+                    if(transaction==null){
+                        setIsLoading(false);
+                        setIsSuccess(false);
+                        return;
+                    }
                     const finalTx = await sendTransactionWithShyft(transaction)
                     console.log(`Status ${status}`);
                     if(finalTx !== undefined){

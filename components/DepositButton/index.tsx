@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { DepositFundsParams } from './DepositFundsButton.types';
 import DepositFundsButton from './DepositFundsButton';
 
-const DepositFunds = ({ token, tokenAmount, contract, disabled }: DepositFundsParams) => {
+const DepositFunds = ({ token, tokenAmount, contract, disabled,onFundsDeposited }: DepositFundsParams) => {
 	const nativeToken = token.address === "LocalSolanaAdress";
 	const [approved, setApproved] = useState(nativeToken);
 
@@ -15,6 +15,7 @@ const DepositFunds = ({ token, tokenAmount, contract, disabled }: DepositFundsPa
 						tokenAmount={tokenAmount}
 						contract={contract}
 						disabled={disabled}
+						onFundsDeposited={ onFundsDeposited}
 					/>
 				))}
 				{/* {!nativeToken && (

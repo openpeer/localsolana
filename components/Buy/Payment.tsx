@@ -22,6 +22,7 @@ import ReleaseFundsButton from './ReleaseFundsButton';
 import { useContractRead } from '@/hooks/transactions/useContractRead';
 import { getStatusString } from '@/utils';
 import { BN } from '@coral-xyz/anchor';
+import Loading from '../Loading/Loading';
 
 const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	const {
@@ -44,17 +45,18 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	const { bank, values = {} } = paymentMethod;
 	const { address } = useAccount();
 	const selling = seller.address === address;
-
-	const { data: escrowData } = useContractRead(
+console.log('In Payments.tsx',tradeId);
+	const { data: escrowData,loadingContract } = useContractRead(
 		tradeId,
-		"escrow"
+		"escrow",
+		true
 	);
-	console.log('EscrowData',escrowData);
-	console.log('Status',order.status);
+	if(escrowData){
+	console.log('Escrow Data',escrowData?.amount?.toString(),escrowData?.openPeerFee?.toString());
+	}
 
 	// change here
-	const { balance, loading, error } = useBalance(address??'');// Fetch wallet balance
-	
+	const { balance, loadingBalance, error } = useBalance(seller.address,token.address,true);// Fetch wallet balance
 
 	const timeLimit =
 		status === 'created' && depositTimeLimit && Number(depositTimeLimit) > 0
@@ -86,6 +88,11 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 			progress: undefined
 		});
 	};
+console.log(loadingBalance,loadingContract);
+	// if((!escrowData) || !balance){ 
+
+	// 	return <Loading/>
+	// }
 	return (
 		<StepLayout>
 			<div className="my-0 md:my-8">
@@ -275,7 +282,7 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 						</button>
 					</div>
 					<p className="text-base">
-						<strong>Your Wallet Balance:</strong> {balance} SOL
+						<strong>Your Wallet Balance:</strong> {balance} {token?.symbol}
 					</p>
 				</div>
 				<div className="flex flex-col-reverse md:flex-row items-center justify-between mt-0">

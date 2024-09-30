@@ -30,48 +30,6 @@ const Setup = ({ list, updateList }: ListStepProps) => {
 		setLastCurrency(c);
 	};
 
-	// useEffect(() => {
-	// 	axios
-	// 		.get(`/api/fiatCurrencies`)
-	// 		.then((resp) => {
-	// 			if (resp.status === 200) {
-	// 				console.log(resp);
-					
-	// 			} else {
-	// 				console.log("Empty");
-	// 			}
-	// 		})
-	// 		.catch((err:any) => console.log('Error encountered: ', err));
-	// }, []);
-
-	// useEffect(() => {
-	// 	if (!chain && !chainId && connectedChain) {
-	// 		setChain({
-	// 			...connectedChain,
-	// 			// @ts-expect-error
-	// 			symbol: connectedChain.nativeCurrency.symbol
-	// 		});
-	// 	}
-	// }, [connectedChain]);
-
-	// useEffect(() => {
-	// 	if (chainId && !chain) {
-	// 		const newChain = allChains.find((c) => c.id === chainId);
-	// 		setChain({
-	// 			...newChain,
-	// 			// @ts-expect-error
-	// 			symbol: newChain.nativeCurrency.symbol
-	// 		});
-	// 	}
-	// }, [chainId]);
-
-	// useEffect(() => {
-	// 	if (!chain) return;
-
-	// 	if (token && chain.id !== (token as Token).chain_id) {
-	// 		updateToken(undefined);
-	// 	}
-	// }, [chain]);
 
 	useEffect(() => {
 		updateList({

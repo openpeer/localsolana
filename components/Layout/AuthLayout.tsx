@@ -66,8 +66,8 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 	const {primaryWallet } = useDynamicContext();
 	const { authenticateUser, isAuthenticating } = useAuthenticateConnectedUser();
 
-	const authenticate = async() => {
-		if (primaryWallet?.address) {
+	const authenticate = () => {
+		if (primaryWallet?.address && !primaryWallet.isAuthenticated) {
 			authenticateUser();
 		}
 	};
@@ -175,7 +175,6 @@ const Unauthenticated = () => {
             if (primaryWallet?.isAuthenticated) {
                 const connected = await primaryWallet?.isConnected();
                 setIsConnected(connected);
-				console.log(`Wallet Connection is ${connected}`);
             }
         };
         checkConnection();

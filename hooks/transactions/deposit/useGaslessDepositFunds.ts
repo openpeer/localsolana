@@ -1,6 +1,6 @@
 import { PublicKey, Connection, Transaction, SystemProgram } from '@solana/web3.js';
 import { useState } from 'react';
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { ErrorBoundary, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { UseDepositFundsProps } from '../types';
 import useLocalSolana from '../useLocalSolana';
 import { web3 } from '@coral-xyz/anchor';
@@ -35,7 +35,7 @@ const useGaslessDepositFunds = ({ contract, token, amount }: UseDepositFundsProp
                 SystemProgram.transfer({
                     fromPubkey: new PublicKey(primaryWallet.address),
                     toPubkey: new PublicKey(contract),
-                    lamports: Number(amount) // Adjust the amount as needed
+                    lamports: Number(amount),
                 })
             );
             if(shyft == null){
@@ -44,6 +44,7 @@ const useGaslessDepositFunds = ({ contract, token, amount }: UseDepositFundsProp
                 setIsLoading(false);
                 return;
             }else{
+                try{
                 const finalTx =await sendTransactionWithShyft(transaction);
                 if(finalTx !== undefined){
                     setIsLoading(false);
@@ -54,6 +55,11 @@ const useGaslessDepositFunds = ({ contract, token, amount }: UseDepositFundsProp
                     setIsLoading(false);
                     setIsSuccess(false);
                 }
+            }catch(err){
+                console.error('error', err);
+                    setIsLoading(false);
+                    setIsSuccess(false);
+            }
             }
         } else{
             const tx = await depositFundsToLocalSolana(amount,new PublicKey(primaryWallet?.address),new PublicKey(contract),new PublicKey(token.address))
@@ -63,6 +69,12 @@ const useGaslessDepositFunds = ({ contract, token, amount }: UseDepositFundsProp
                 setIsLoading(false);
                 return;
             }else{
+                if(tx == null){
+                    console.error('error', tx);
+                    setIsLoading(false);
+                    setIsSuccess(false);
+                    return;
+                }
                 const finalTx =await sendTransactionWithShyft(tx);
                 if(finalTx !== undefined){
                     setIsLoading(false);

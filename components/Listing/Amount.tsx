@@ -100,18 +100,10 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 		if(tokenName==='USDC')tokenName='usd-coin';
 		else if(tokenName==='USDT')tokenName='tether';
 
-		// fetch(
-		// 	`/api/prices?token=${coingeckoId}&fiat=${currency.name.toLowerCase()}&tokenSymbol=${
-		// 		token.name
-		// 	}&priceSource=${priceSource}&type=${type === 'BuyList' ? 'SELL' : 'BUY'}`
-		// )
-		// console.log(,);
-		// minkeApi.get(`/binance`)
 		minkeApi.get(`/api/prices?ids=${tokenName}&vs_currencies=${currency.name.toLowerCase()}`)
 			.then((res) => res.data.data)
 			.then((data) => {
 				if(Object.keys(data).length>0) setPrice(data[coingeckoId || token.name][currency.name.toLowerCase()]);
-				// console.log(data,data.tether);
 
 				// need to change this
 				// const firstKey = Object.keys(data[token.name])[0]; // Get the first key

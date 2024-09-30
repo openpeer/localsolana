@@ -1,4 +1,4 @@
-import { useAccount, useTransactionFeedback } from 'hooks';
+import { useAccount, useTransactionFeedback, useUserProfile } from 'hooks';
 import { useDepositFunds } from 'hooks/transactions';
 import React, { useEffect, useState } from 'react';
 import { parseUnits } from 'viem';
@@ -10,7 +10,7 @@ import { DepositFundsParams } from './DepositFundsButton.types';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import useGaslessDepositFunds from '@/hooks/transactions/deposit/useGaslessDepositFunds';
 
-const DepositFundsButton = ({ token, tokenAmount, contract, disabled }: DepositFundsParams) => {
+const DepositFundsButton = ({ token, tokenAmount, contract, disabled,onFundsDeposited }: DepositFundsParams) => {
 	const { primaryWallet } = useDynamicContext();
 	const amount = tokenAmount* 10 ** (token.decimals);
 	const [modalOpen, setModalOpen] = useState(false);
@@ -22,16 +22,19 @@ const DepositFundsButton = ({ token, tokenAmount, contract, disabled }: DepositF
 		contract
 	});
 
-	console.log('amount and token in:: ',tokenAmount * 10 ** token.decimals,amount,token.decimals);
-	const deposit = () => {
-		console.log(primaryWallet?.isAuthenticated);
+	const { fetchUserProfile } = useUserProfile({});
+
+	const deposit = async() => {
+
 		if (!primaryWallet?.isAuthenticated) return;
 
 		if (!depositConfirmed) {
 			setModalOpen(true);
 			return;
 		}
-		depositFunds?.();
+		console.log('Contract address',contract);
+		await depositFunds?.();
+		onFundsDeposited();
 	};
 
 	useEffect(() => {
@@ -40,12 +43,12 @@ const DepositFundsButton = ({ token, tokenAmount, contract, disabled }: DepositF
 		}
 	}, [depositConfirmed]);
 
-	useTransactionFeedback({
-		hash: data?.hash,
-		isSuccess,
-		Link: <TransactionLink hash={data?.hash} />,
-		description: 'Deposited funds'
-	});
+	// useTransactionFeedback({
+	// 	hash: data?.hash,
+	// 	isSuccess,
+	// 	Link: <TransactionLink hash={data?.hash} />,
+	// 	description: 'Deposited funds'
+	// });
 
 	return (
 		<>

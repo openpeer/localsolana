@@ -22,6 +22,7 @@ export interface TransactionFeedbackProps {
 	open: boolean;
 	onClose: () => void;
 	hash: string;
+
 	description: string;
 	onTransactionReplaced: (hash: string) => void;
 }

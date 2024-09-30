@@ -12,6 +12,7 @@ import CancelOrderButton from './CancelOrderButton/CancelOrderButton';
 import OpenDisputeButton from './OpenDisputeButton';
 import OrderResume from './OrderResume';
 import ReleaseFundsButton from './ReleaseFundsButton';
+import { useContractRead } from '@/hooks/transactions/useContractRead';
 
 const Release = ({ order }: BuyStepProps) => {
 	const { address } = useAccount();
@@ -19,7 +20,14 @@ const Release = ({ order }: BuyStepProps) => {
 	const { token_amount: tokenAmount, list, fiat_amount: fiatAmount, escrow, seller } = order;
 	const { token, fiat_currency: currency } = list || {};
 	const selling = seller.address === address;
-	console.log(selling);
+	const { data: escrowData,loadingContract } = useContractRead(
+		order.trade_id,
+		"escrow",
+		true
+	);
+	if(escrowData){
+	console.log('Escrow Data',escrowData?.amount?.toString(),escrowData?.openPeerFee?.toString());
+	}
 
 	return (
 		<>

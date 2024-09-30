@@ -28,7 +28,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);
 
 	const cancelOrder = async () => {
-		//console.log(order);
+
 			const result = await fetch(`/api/orders/${id}/cancel`, {
 				method: 'POST',
 				headers: {
@@ -41,7 +41,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 				})
 			});
 			const savedOrder = await result.json();
-			console.log((`Ho gya cancel ${savedOrder}`));
+	
 			if (savedOrder.uuid) {
 				if (status !== 'cancelled') {
 					window.location.reload();
@@ -62,7 +62,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 
 	const { signMessage } = useConfirmationSignMessage({
 		onSuccess: async () => {
-			console.log(order);
+			
 			const result = await fetch(`/api/orders/${id}/cancel`, {
 				method: 'PUT',
 				headers: {

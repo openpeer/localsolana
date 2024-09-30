@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/local_solana_migrate.json`.
  */
 export type LocalSolanaMigrate = {
-  "address": "3ZCPySRfFaDPthn5G5en7WzvZd5dtv3XvBR7zjHVRxZh",
+  "address": "1w3ekpHrruiEJPYKpQH6rQssTRNKCKiqUjfQeJXTTrX",
   "metadata": {
     "name": "localSolanaMigrate",
     "version": "0.1.0",
@@ -192,6 +192,10 @@ export type LocalSolanaMigrate = {
         {
           "name": "sellerWaitingTime",
           "type": "i64"
+        },
+        {
+          "name": "automaticEscrow",
+          "type": "bool"
         }
       ]
     },
@@ -275,24 +279,221 @@ export type LocalSolanaMigrate = {
         },
         {
           "name": "escrowTokenAccount",
-          "writable": true,
-          "optional": true
+          "docs": [
+            "CHECK This is safe because the escrow token account is being verified in program"
+          ],
+          "writable": true
         },
         {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
+          "name": "partner"
+        },
+        {
+          "name": "mintAccount"
         },
         {
           "name": "sellerTokenAccount",
           "writable": true,
-          "optional": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
-          "name": "partner"
+          "name": "escrowStateTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "escrowState"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associatedTokenProgram",
+          "docs": [
+            "Associated Token Program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System Program (needed to create token accounts)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar (for rent exemption)"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -319,16 +520,16 @@ export type LocalSolanaMigrate = {
       ]
     },
     {
-      "name": "deposit",
+      "name": "depositToEscrow",
       "discriminator": [
-        242,
-        35,
-        198,
-        137,
-        82,
-        225,
-        242,
-        182
+        246,
+        134,
+        57,
+        199,
+        116,
+        101,
+        68,
+        224
       ],
       "accounts": [
         {
@@ -389,8 +590,419 @@ export type LocalSolanaMigrate = {
           "signer": true
         },
         {
+          "name": "feePayer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "mintAccount",
+          "optional": true
+        },
+        {
+          "name": "escrowStateTokenAccount",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "escrowState"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "sellerTokenAccount",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associatedTokenProgram",
+          "docs": [
+            "Associated Token Program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System Program (needed to create token accounts)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar (for rent exemption)"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "escrowTokenAccount",
+          "writable": true,
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "orderId",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "token",
+          "type": "pubkey"
+        },
+        {
+          "name": "instantEscrow",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "depositToEscrowState",
+      "discriminator": [
+        134,
+        106,
+        233,
+        104,
+        81,
+        213,
+        234,
+        193
+      ],
+      "accounts": [
+        {
+          "name": "escrowState",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "feePayer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "mintAccount"
+        },
+        {
+          "name": "walletTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "seller"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "escrowStateTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "associatedTokenProgram",
+          "docs": [
+            "Associated Token Program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System Program (needed to create token accounts)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar (for rent exemption)"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -698,8 +1310,290 @@ export type LocalSolanaMigrate = {
           "writable": true
         },
         {
+          "name": "feeRecipientTokenAccount",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "feeRecipient"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "mintAccount",
+          "optional": true
+        },
+        {
+          "name": "escrowTokenAccount",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "escrow"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "buyerTokenAccount",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "buyer"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintAccount"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "feePayer",
+          "writable": true,
+          "signer": true
         }
       ],
       "args": [
@@ -1152,6 +2046,11 @@ export type LocalSolanaMigrate = {
       "code": 6015,
       "name": "invalidDisputeInitiator",
       "msg": "Invalid Dispute Initiator"
+    },
+    {
+      "code": 6016,
+      "name": "accountError",
+      "msg": "You missed to pass one important account"
     }
   ],
   "types": [

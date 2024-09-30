@@ -1,22 +1,19 @@
 
-import React, { useState } from 'react';
 import { Token, User } from 'models/types';
 import { useQRCode } from 'next-qrcode';
+import { useEffect, useState } from 'react';
 //import { allChains } from 'models/networks';
 import ClipboardText from 'components/Buy/ClipboardText';
 import DeploySellerContract from 'components/Buy/EscrowButton/DeploySellerContract';
 import Input from 'components/Input/Input';
 //import ExplainerNotification from 'components/Notifications/ExplainerNotification';
-import { formatUnits, parseUnits } from 'viem';
 import DepositFunds from 'components/DepositButton';
 //import { constants } from 'ethers';
 //import { useNetwork, useSwitchNetwork } from 'wagmi';
-import Button from 'components/Button/Button';
 //import Network from 'components/Network/Network';
-import StepLayout from './StepLayout';
-import { PublicKey } from '@solana/web3.js';
-import { BLOCK_EXPLORER, CURRENT_NETWORK } from '@/utils';
 import { useAccount, useUserProfile } from '@/hooks';
+import { BLOCK_EXPLORER, CURRENT_NETWORK } from '@/utils';
+import StepLayout from './StepLayout';
 
 interface FundsEscrowProps {
 	token: Token;
@@ -33,13 +30,21 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 	const [depositAmount, setDepositAmount] = useState<number | undefined>(listTotalNumber);
 	const { SVG } = useQRCode();
 	//const chain = allChains.find((c) => c.id === chainId);
-	const { user } = useUserProfile({
-		onUpdateProfile: setUser
-	});
+	// const { user,setContractAddress } = useUserProfile({
+	// 	onUpdateProfile: setUser
+	// });
 	const {address} = useAccount();
-	const sellerContractDeployed = user?.contract_address;
+	const { user,updateContractAddress } = useUserProfile({});
+	  const handleContractUpdate=async (contractAddress:string|undefined)=>{
+		if(contractAddress !== undefined){
+		await updateContractAddress(contractAddress);
+		}
+	  }
+	  var sellerContractDeployed = user?.contract_address;
 
-	console.log(`contract`,sellerContractDeployed);
+	function handleFundsDeposited(): void {
+		
+	}
 
 	return (
 		<StepLayout buttonText={`Deposit ${token.name}`}>
@@ -51,7 +56,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 					</span>
 				</div>
 				<h2 className="block text-xl font-medium mb-1 font-bold">
-					{`${sellerContractDeployed ? 'Fund' : 'Deploy'} Escrow Contract`}
+					{`${sellerContractDeployed ? 'Fund' : 'Create'} Escrow Account`}
 				</h2>
 				<div className="mb-4">
 					<div className="text-sm text-gray-600 mb-4">
@@ -90,11 +95,12 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 										token={token}
 										tokenAmount={depositAmount!}
 										disabled={(depositAmount || 0) < toDeposit }
+										onFundsDeposited={handleFundsDeposited}
 									/>
 								)}
 							</div>
 						) : (
-							<DeploySellerContract />
+							<DeploySellerContract setContractAddress={handleContractUpdate} />
 						)}
 						<span className="text-sm text-gray-500">Available funds can be withdrawn at any time</span>
 					</div>
@@ -141,6 +147,6 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 };
 
 export default FundEscrow;
-function setUser(user: User): void {
-}
+// function setUser(user: User): void {
+// }
 

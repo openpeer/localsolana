@@ -50,34 +50,44 @@ const OrderPage = ({ id }: { id: string }) => {
         fetchOrder();
     }, [id, token]);
 
+    console.log('Socket',socketRef);
     useEffect(() => {
-        if (!socketRef.current) {
-            socketRef.current = io(process.env.NEXT_PUBLIC_API_WS_URL || '', {
-                query: { token }
-            });
-
-            socketRef.current.on('connect', () => {
-                console.log('Connected to socket server');
-                socketRef.current.emit('subscribeToOrder', { orderId: id });
-            });
-
-            socketRef.current.on('orderUpdate', (updatedOrder: UIOrder) => {
-                console.log('Order updated:', updatedOrder);
-                setOrder({ ...updatedOrder, step: steps[updatedOrder.status] });
-            });
-
-            socketRef.current.on('disconnect', () => {
-                console.log('Disconnected from socket server');
-            });
-        }
-
+        const setupChannel = async () => {
+            
+            if (!token) return;
+            console.log('Socket on',process.env.NEXT_PUBLIC_API_WS_URL);
+            if (!socketRef.current) {
+                socketRef.current = io(`${process.env.NEXT_PUBLIC_API_WS_URL}`, {
+                    query: { token },
+                },);
+    
+                socketRef.current.on('connect', () => {
+                    console.log('Connected to socket server');
+                    socketRef.current.emit('subscribeToOrder', { channel: 'OrdersChannel',
+                        order_id: id });
+                });
+    
+                socketRef.current.on('orderUpdate', (response: string) => {
+                    const { data: updatedOrder } = JSON.parse(response);
+                    console.log('updatedOrder', updatedOrder);
+                    setOrder({ ...updatedOrder, step: steps[updatedOrder.status] });
+                });
+    
+                socketRef.current.on('disconnect', () => {
+                    console.log('Disconnected from socket server');
+                });
+            }
+        };
+    
+        setupChannel();
+    
         return () => {
             if (socketRef.current) {
                 socketRef.current.disconnect();
                 socketRef.current = null;
             }
         };
-    }, [token]);
+    }, [token, id]);
 
     if (!order?.id) return <Loading />;
 
@@ -108,7 +118,7 @@ const OrderPage = ({ id }: { id: string }) => {
                         //         <Chat address={chatAddress} label={selling ? 'buyer' : 'seller'} />
                         //     </div>
                         // )
-						<p>We could not find this order</p>
+						<></>
                     )}
                 </div>
                 {!!list && <Summary order={order} />}
