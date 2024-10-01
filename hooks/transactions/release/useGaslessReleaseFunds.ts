@@ -1,11 +1,10 @@
-import { useState } from 'react';
 import { useAccount } from 'hooks';
+import { useState } from 'react';
 
-import { UseEscrowTransactionProps } from '../types';
-import useShyft from '../useShyft';
-import useLocalSolana from '../useLocalSolana';
-import DeploySellerContract from '@/components/Buy/EscrowButton/DeploySellerContract';
 import { PublicKey } from '@solana/web3.js';
+import { UseEscrowTransactionProps } from '../types';
+import useLocalSolana from '../useLocalSolana';
+import useShyft from '../useShyft';
 
 interface Data {
 	hash?: string;
@@ -19,10 +18,6 @@ const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTran
 	const { address } = useAccount();
 	const{shyft,sendTransactionWithShyft} = useShyft();
 	const {connection,releaseFunds} = useLocalSolana();
-
-	// if (connection === shyft || connection === undefined) {
-	// 	return { isFetching: true, isSuccess, isLoading, data };
-	// }
 
 	if (connection === null || shyft==null) {
 		return { isFetching: false, gaslessEnabled: false, isSuccess, isLoading, data };
@@ -48,7 +43,6 @@ const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTran
 			setIsLoading(false);
 			setIsSuccess(false);
 		}
-		
 	};
 	return { isFetching: false, gaslessEnabled: true, isLoading, isSuccess, data, releaseFund };
 };

@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { SolanaWalletConnectors } from "@dynamic-labs/solana";
 import Head from 'app/head';
 import { MessageContextProvider } from '@/contexts/MessageContext';
-import SolanaWalletProvider from '@/providers/SolanaWalletProvider';
+//import SolanaWalletProvider from '@/providers/SolanaWalletProvider';
 import { TransactionFeedbackProvider } from '@/contexts/TransactionFeedContext';
 import ChatProvider from '@/providers/ChatProvider';
 import IntercomWidget from '../IntercomWidget';

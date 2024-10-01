@@ -2,7 +2,7 @@
 
 import { PublicKey } from '@solana/web3.js';
 import { UseEscrowFundsProps } from '../types';
-import useEscrowWithGas from './useEscrowWithGas';
+//import useEscrowWithGas from './useEscrowWithGas';
 import useGaslessEscrow from './useGaslessEscrow';
 
 const useEscrowFunds = ({

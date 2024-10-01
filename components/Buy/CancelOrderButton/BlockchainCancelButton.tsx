@@ -33,14 +33,14 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 	// 	args: [tradeId]
 	// });
 
-	const { isLoading, isSuccess, cancelOrder, data, isFetching } = useEscrowCancel({
-		contract: escrow!.address,
-		orderID: uuid,
-		buyer: buyer.address,
-		token,
-		amount: parseUnits(String(tokenAmount), token.decimals),
-		isBuyer
-	});
+	// const { isLoading, isSuccess, cancelOrder, data, isFetching } = useEscrowCancel({
+	// 	contract: escrow!.address,
+	// 	orderID: uuid,
+	// 	buyer: buyer.address,
+	// 	token,
+	// 	amount: parseUnits(String(tokenAmount), token.decimals),
+	// 	isBuyer
+	// });
 
 	// useTransactionFeedback({
 	// 	hash: data?.hash,
@@ -55,25 +55,25 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 		}
 	}, [cancelConfirmed]);
 
-	useEffect(() => {
-		const saveCancellationReasons = async () => {
-			await fetch(`/api/orders/${uuid}/cancel`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${getAuthToken()}`
-				},
-				body: JSON.stringify({
-					cancellation,
-					other_reason: otherReason && otherReason !== '' ? otherReason : undefined
-				})
-			});
-		};
+	// useEffect(() => {
+	// 	const saveCancellationReasons = async () => {
+	// 		await fetch(`/api/orders/${uuid}/cancel`, {
+	// 			method: 'PUT',
+	// 			headers: {
+	// 				'Content-Type': 'application/json',
+	// 				Authorization: `Bearer ${getAuthToken()}`
+	// 			},
+	// 			body: JSON.stringify({
+	// 				cancellation,
+	// 				other_reason: otherReason && otherReason !== '' ? otherReason : undefined
+	// 			})
+	// 		});
+	// 	};
 
-		if (isSuccess) {
-			saveCancellationReasons();
-		}
-	}, [isSuccess]);
+	// 	if (isSuccess) {
+	// 		saveCancellationReasons();
+	// 	}
+	// }, [isSuccess]);
 
 	// if (isFetchingEscrowData) {
 	// 	return <p>Loading...</p>;
@@ -93,12 +93,12 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 			return;
 		}
 
-		cancelOrder?.();
+		//cancelOrder?.();
 	};
 
 	return (
 		<>
-			<Button
+			{/* <Button
 				title={
 					sellerCantCancel ? 'You cannot cancel' : isLoading ? 'Processing...' : isSuccess ? 'Done' : title
 				}
@@ -106,7 +106,7 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 				disabled={isSuccess || sellerCantCancel || sellerCantCancel || isFetching}
 				onClick={onBlockchainCancel}
 				outlined={outlined}
-			/>
+			/> */}
 			<>
 				<Modal
 					actionButtonTitle="Yes, confirm"

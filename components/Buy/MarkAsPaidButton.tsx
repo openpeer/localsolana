@@ -1,10 +1,9 @@
 import useGaslessMarkAsPaid from '@/hooks/transactions/markAsPaid/useGaslessMarkAsPaid';
-import { updateOrderStatus } from '@/utils';
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { Button } from 'components';
 import TransactionLink from 'components/TransactionLink';
 import { useAccount, useTransactionFeedback } from 'hooks';
-import { useMarkAsPaid } from 'hooks/transactions';
+//import { useMarkAsPaid } from 'hooks/transactions';
 import { Order } from 'models/types';
 import React, { useEffect, useRef } from 'react';
 import { parseUnits } from 'viem';

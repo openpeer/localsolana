@@ -96,22 +96,22 @@ const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 	// 	}
 	// };
 
-	useEffect(() => {
-		const fetchWalletAge = async () => {
-			const provider = new providers.EtherscanProvider();
-			const history = await provider.getHistory(address);
-			const [firstTransaction] = history;
+	// useEffect(() => {
+	// 	const fetchWalletAge = async () => {
+	// 		const provider = new providers.EtherscanProvider();
+	// 		const history = await provider.getHistory(address);
+	// 		const [firstTransaction] = history;
 
-			if (firstTransaction?.timestamp) {
-				setWalletAge(getTimePassed(firstTransaction.timestamp));
-			}
-		};
+	// 		if (firstTransaction?.timestamp) {
+	// 			setWalletAge(getTimePassed(firstTransaction.timestamp));
+	// 		}
+	// 	};
 
-		if (address) {
-			// fetchWalletAge();
-			// fetchVerificationStatus();
-		}
-	}, [address]);
+	// 	if (address) {
+	// 		// fetchWalletAge();
+	// 		// fetchVerificationStatus();
+	// 	}
+	// }, [address]);
 
 	const onFinish = async () => {
 		// await fetchVerificationStatus();
@@ -200,17 +200,22 @@ const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 								month: 'short',
 								day: 'numeric'
 							})}
+							//@ts-ignore
 							Icon={CalendarDaysIcon}
 						/>
-						<Metric label="Wallet Age" value={walletAge} Icon={CalendarIcon} />
-						<Metric label="Trades" value={trades?.toString()||""} Icon={ChartBarIcon} />
+						
+						<Metric label="Wallet Age" value={walletAge} //@ts-ignore 
+						Icon={CalendarIcon} />
+						<Metric label="Trades" value={trades?.toString()||""} //@ts-ignore
+						Icon={ChartBarIcon} />
 					</div>
 
 					<div className="w-full flex flex-col md:flex-row justify-around gap-6 mt-4">
-						<Metric label="Reviews" value="Coming soon..." Icon={StarIcon} />
+						<Metric label="Reviews" value="Coming soon..." //@ts-ignore
+						Icon={StarIcon} />
 						<Metric
 							label="Completion Rate"
-							value={completionRate ? `${(completionRate * 100).toFixed(2)}%` : 'No trades'}
+							value={completionRate ? `${(completionRate * 100).toFixed(2)}%` : 'No trades'}//@ts-ignore
 							Icon={ChartBarSquareIcon}
 						/>
 						{/* <Metric label="Avg Trade Completion" value="5 minutes" Icon={ClockIcon} /> */}

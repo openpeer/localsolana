@@ -1,7 +1,7 @@
 import CancelOrderButton from 'components/Buy/CancelOrderButton/CancelOrderButton';
 import ReleaseFundsButton from 'components/Buy/ReleaseFundsButton';
 import Label from 'components/Label/Label';
-import { useEscrowFee } from 'hooks';
+//import { useEscrowFee } from 'hooks';
 import { Order } from 'models/types';
 import Image from 'next/image';
 import React from 'react';
@@ -33,7 +33,7 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 	const tokenValue = `${tokenAmount} ${token.symbol}`;
 	const fiatValue = `${currency.symbol} ${Number(fiatAmount).toFixed(2)}`;
 	const counterpart = isBuyer ? 'seller' : 'buyer';
-	const { fee } = useEscrowFee({ address: order?.escrow?.address, token, tokenAmount, chainId: token.chain_id });
+	//const { fee } = useEscrowFee({ address: order?.escrow?.address, token, tokenAmount, chainId: token.chain_id });
 	const date = new Date(createdAt);
 
 	return (
@@ -61,7 +61,7 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 			</div>
 
 			<div className="py-8">
-				<StatusTimeLine escrow={order.escrow!.address} dispute={dispute!} isBuyer={isBuyer} />
+				{/* <StatusTimeLine escrow={order.escrow!.address} dispute={dispute!} isBuyer={isBuyer} /> */}
 			</div>
 
 			<div>
@@ -79,14 +79,14 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 						<span className="text-gray-500">Amount Paid</span>
 						<span>{isBuyer ? fiatValue : tokenValue}</span>
 					</div>
-					{!isBuyer && !!fee && (
+					{/* {!isBuyer && !!fee && (
 						<div className="flex flex-row justify-between mb-2">
 							<span className="text-gray-500">Fee</span>
 							<span>
 								{formatUnits(fee, token.decimals)} {token.symbol}
 							</span>
 						</div>
-					)}
+					)} */}
 					<div className="flex flex-row justify-between mb-2">
 						<span className="text-gray-500">Amount to Receive</span>
 						<span>{isBuyer ? tokenValue : fiatValue}</span>

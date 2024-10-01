@@ -2,7 +2,7 @@
 // import { OpenPeerEscrow } from 'abis';
 import { Button, Modal } from 'components';
 import TransactionLink from 'components/TransactionLink';
-import { useOpenDispute, useTransactionFeedback, useAccount } from 'hooks';
+import {  useTransactionFeedback, useAccount } from 'hooks'; //useOpenDispute
 import { Order } from 'models/types';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -100,20 +100,20 @@ const OpenDisputeButton = ({ order, outlined = true, title = 'Open a dispute' }:
 			return;
 		}
 
-		if (disputeFee > balance.value) {
-			toast.error(`You need ${formatUnits(disputeFee, decimals)} ${symbol} to open a dispute`, {
-				theme: 'dark',
-				position: 'top-right',
-				autoClose: 10000,
-				hideProgressBar: false,
-				closeOnClick: true,
-				pauseOnHover: true,
-				draggable: false,
-				progress: undefined
-			});
-		} else {
-			openDispute?.();
-		}
+		// if (disputeFee > balance.value) {
+		// 	toast.error(`You need ${formatUnits(disputeFee, decimals)} ${symbol} to open a dispute`, {
+		// 		theme: 'dark',
+		// 		position: 'top-right',
+		// 		autoClose: 10000,
+		// 		hideProgressBar: false,
+		// 		closeOnClick: true,
+		// 		pauseOnHover: true,
+		// 		draggable: false,
+		// 		progress: undefined
+		// 	});
+		// } else {
+		// 	openDispute?.();
+		// }
 	};
 
 	return (

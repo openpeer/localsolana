@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Connection } from '@solana/web3.js';
+import { useEffect, useState } from 'react';
 import useLocalSolana from './useLocalSolana';
 
 const SOLANA_RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';

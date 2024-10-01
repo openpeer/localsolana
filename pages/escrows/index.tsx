@@ -105,7 +105,7 @@ const TokenRow = ({
 	// });
 
  
-	const data = useBalance(token.address);
+	//const data = useBalance(token.address);
 
 	return (
 		<tr className="hover:bg-gray-50">
@@ -126,11 +126,11 @@ const TokenRow = ({
 							disabled={depositDisabled}
 							onClick={() => onSelectToken(token, contract, 'Deposit')}
 						/>
-						<Button
+						{/* <Button
 							title="Withdraw"
 							disabled={!data.balance || (data.balance <= 0)}
 							onClick={() => onSelectToken(token, contract, 'Withdraw')}
-						/>
+						/> */}
 					</span>
 				</div>
 			</div>
@@ -140,9 +140,9 @@ const TokenRow = ({
 					<span>{token.symbol}</span>
 				</div>
 			</td>
-			<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
+			{/* <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
 				{data === undefined ? '' : `${data.balance}  ${token.symbol}`}
-			</td>
+			</td> */}
 			<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
 				<div className="w-full flex flex-row space-x-4">
 					<Button
@@ -150,11 +150,11 @@ const TokenRow = ({
 						disabled={depositDisabled}
 						onClick={() => onSelectToken(token, contract, 'Deposit')}
 					/>
-					<Button
+					{/* <Button
 						title="Withdraw"
 						disabled={!data.balance || (data.balance) <= 0}
 						onClick={() => onSelectToken(token, contract, 'Withdraw')}
-					/>
+					/> */}
 				</div>
 			</td>
 		</tr>
@@ -224,10 +224,10 @@ const MyEscrows = () => {
 		fetchSettings();
 	}, []);
 
-	const contracts = (user?.contracts || []).filter((c) => c.chain_id === chain?.id && Number(c.version) >= 2);
+//	const contracts = (user?.contracts || []).filter((c) => c.chain_id === chain?.id && Number(c.version) >= 2);
 
-	const lastDeployedVersion = contracts.reduce((acc, c) => Math.max(acc, Number(c.version)), 0);
-	const needToDeploy = contracts.length === 0 || lastDeployedVersion < lastVersion;
+	//const lastDeployedVersion = contracts.reduce((acc, c) => Math.max(acc, Number(c.version)), 0);
+//	const needToDeploy = contracts.length === 0 || lastDeployedVersion < lastVersion;
 	//const lastDeployedContract = sellerContract as `0x${string}` | undefined;
 	// const contractInUse = contracts.find((c) => c.address.toLowerCase() === (lastDeployedContract || '').toLowerCase());
 	// const otherContracts = contracts.filter(
@@ -257,18 +257,18 @@ const MyEscrows = () => {
 		setAction('Deposit');
 	};
 
-	if (action && token && contract) {
-		return (
-			<EscrowDepositWithdraw
-				action={action}
-				token={token}
-				contract={contract.address}
-				onBack={onBack}
-				canDeposit={!needToDeploy} //ontract === contractInUse && 
-				canWithdraw
-			/>
-		);
-	}
+	// if (action && token && contract) {
+	// 	return (
+	// 		<EscrowDepositWithdraw
+	// 			action={action}
+	// 			token={token}
+	// 			contract={contract.address}
+	// 			onBack={onBack}
+	// 			canDeposit={!needToDeploy} //ontract === contractInUse && 
+	// 			canWithdraw
+	// 		/>
+	// 	);
+	// }
 
 	return (
 		<div className="px-6 w-full flex flex-col items-center justify-center mt-4 pt-4 md:pt-6 text-gray-700">
@@ -276,7 +276,7 @@ const MyEscrows = () => {
 				<HeaderH3 title="Deposit or Withdraw funds" />
 				<div className="border border-slate-300 mt-4 rounded">
 					<div>
-						{contracts.length > 0 && lastDeployedVersion < lastVersion && (
+						{/* {contracts.length > 0 && lastDeployedVersion < lastVersion && (
 							<p className="px-4">
 								A new version of LocalSolana is available. Please withdraw your assets and deploy a new
 								escrow contract
@@ -286,7 +286,7 @@ const MyEscrows = () => {
 							<div className="mt-4 mb-4 px-4">
 								<DeploySellerContract label="Deploy a new contract" />
 							</div>
-						)}
+						)} */}
 					</div>
 					{!!user && !loading && (
 						<>

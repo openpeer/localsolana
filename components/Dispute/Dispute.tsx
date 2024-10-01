@@ -16,33 +16,33 @@ const Dispute = ({ order }: DisputeParams) => {
 	const { address } = useAccount();
 	//const { chain } = useNetwork();
 	const escrowAddress = order?.escrow?.address;
-	const { data: paidForDispute }: { data: boolean | undefined } = useContractRead({
-		address: escrowAddress,
-		abi: OpenPeerEscrow,
-		functionName: 'disputePayments',
-		args: [order.trade_id, address],
-		watch: true,
-		enabled: !!escrowAddress
-	});
+	// const { data: paidForDispute }: { data: boolean | undefined } = useContractRead({
+	// 	address: escrowAddress,
+	// 	abi: OpenPeerEscrow,
+	// 	functionName: 'disputePayments',
+	// 	args: [order.trade_id, address],
+	// 	watch: true,
+	// 	enabled: !!escrowAddress
+	// });
 
-	const { data: disputeFee }: { data: bigint | undefined } = useContractRead({
-		address: escrowAddress,
-		abi: OpenPeerEscrow,
-		functionName: 'disputeFee',
-		enabled: !!escrowAddress
-	});
+	// const { data: disputeFee }: { data: bigint | undefined } = useContractRead({
+	// 	address: escrowAddress,
+	// 	abi: OpenPeerEscrow,
+	// 	functionName: 'disputeFee',
+	// 	enabled: !!escrowAddress
+	// });
 
 	const { token_amount: tokenAmount, list, buyer, dispute, seller } = order;
 	const { token } = list;
 	const isSeller = address === seller.address;
 	const isBuyer = address === buyer.address;
 
-	if ((!isSeller && !isBuyer) || paidForDispute === undefined || chain === undefined || disputeFee === undefined) {
-		return <Loading />;
-	}
+	// if ((!isSeller && !isBuyer) || paidForDispute === undefined || chain === undefined || disputeFee === undefined) {
+	// 	return <Loading />;
+	// }
 
 	const { user_dispute: userDispute, resolved } = dispute || {};
-	const fee = `${formatUnits(disputeFee, chain.nativeCurrency.decimals)} ${chain.nativeCurrency.symbol}`;
+	//const fee = `${formatUnits(disputeFee, chain.nativeCurrency.decimals)} ${chain.nativeCurrency.symbol}`;
 
 	return (
 		<div className="p-4 md:p-6 w-full m-auto mb-16">
@@ -55,14 +55,14 @@ const Dispute = ({ order }: DisputeParams) => {
 						</div>
 					</div>
 					<span>
-						{resolved || (!!userDispute && paidForDispute) ? (
+						{/* {resolved || (!!userDispute && paidForDispute) ? (
 							<DisputeStatus address={address} order={order} />
 						) : (
 							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={fee} />
-						)}
+						)} */}
 					</span>
 				</div>
-				<DisputeNotes fee={fee} />
+				{/* <DisputeNotes fee={fee} /> */}
 			</div>
 		</div>
 	);

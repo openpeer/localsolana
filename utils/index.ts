@@ -1,5 +1,4 @@
 
-import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { Network } from '@shyft-to/js';
 import { UIList } from 'components/Listing/Listing.types';
 import { List, Token } from 'models/types';

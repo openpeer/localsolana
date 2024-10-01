@@ -1,18 +1,16 @@
-// useShyft.ts
-import { useState, useEffect } from "react";
-import { Network, ShyftSdk } from "@shyft-to/js";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { isSolanaWallet } from "@dynamic-labs/solana-core";
+import { ShyftSdk } from "@shyft-to/js";
 import {
   Connection,
   PublicKey,
   Transaction,
-  SystemProgram,
+  TransactionSignature
 } from "@solana/web3.js";
-import { CURRENT_NETWORK } from "utils";
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
-import { ISolana, isSolanaWallet } from "@dynamic-labs/solana-core";
-import useLocalSolana from "./useLocalSolana";
-import { TransactionSignature } from "@solana/web3.js";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { CURRENT_NETWORK } from "utils";
+import useLocalSolana from "./useLocalSolana";
 
 const useShyft = () => {
   const [shyft, setShyft] = useState<ShyftSdk | null>(null);

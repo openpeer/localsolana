@@ -1,8 +1,7 @@
-import Button from 'components/Button/Button';
-import TransactionLink from 'components/TransactionLink';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { PublicKey, Connection, clusterApiUrl, Transaction, SystemProgram } from '@solana/web3.js';
-import React, { useEffect, useState } from 'react';
+import { clusterApiUrl, Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import Button from 'components/Button/Button';
+import { useEffect, useState } from 'react';
 
 const ApproveTokenButton = ({
     token,

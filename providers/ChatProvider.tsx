@@ -31,14 +31,15 @@ function ChatProvider() {
                 photoUrl: currentUser.photo,
                 role: 'default',
             });
-
+            //@ts-ignore
             if (!window.talkSession) {
+                 //@ts-ignore
                 window.talkSession = new Talk.Session({
                     appId: talkJsAppId, // Replace with your actual app ID
                     me: me,
                 });
             }
-
+ //@ts-ignore
             const inbox = window.talkSession.createInbox({
                 showFeed: true, // Show conversation list (feed)
             });

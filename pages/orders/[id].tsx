@@ -1,6 +1,6 @@
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { Loading, Steps } from 'components';
-import { Cancelled, Chat, Completed, Payment, Release, Summary } from 'components/Buy';
+import { Cancelled, Completed, Payment, Release, Summary } from 'components/Buy';
 import { UIOrder } from 'components/Buy/Buy.types';
 import Dispute from 'components/Dispute/Dispute';
 import { GetServerSideProps } from 'next';

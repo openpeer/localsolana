@@ -1,4 +1,4 @@
-import { Contract } from 'ethers';
+//import { Contract } from 'ethers';
 import { useState } from 'react';
 import { useAccount } from 'hooks';
 

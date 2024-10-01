@@ -22,26 +22,26 @@ const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
 	const counterpart = isBuyer ? 'Seller' : 'Buyer';
 	//const { chain } = useNetwork();
 
-	const { data: disputeFee } = useContractRead({
-		address: escrow,
-		abi: OpenPeerEscrow,
-		functionName: 'disputeFee'
-	});
+	// const { data: disputeFee } = useContractRead({
+	// 	address: escrow,
+	// 	abi: OpenPeerEscrow,
+	// 	functionName: 'disputeFee'
+	// });
 
-	if (!disputeFee || !chain) return <></>;
+	//if (!disputeFee || !chain) return <></>;
 
 	// const {
 	// 	nativeCurrency: { decimals, symbol }
 	// } = chain;
 
 	const steps = [
-		{
-			name: 'Pay Dispute Fee',
-			description: `Pay ${
-				disputeFee ? formatUnits(disputeFee as bigint, decimals) : 1
-			} ${symbol} to open dispute.`,
-			status: 'complete'
-		},
+		// {
+		// 	name: 'Pay Dispute Fee',
+		// 	description: `Pay ${
+		// 		disputeFee ? formatUnits(disputeFee as bigint, decimals) : 1
+		// 	} ${symbol} to open dispute.`,
+		// 	status: 'complete'
+		// },
 		{ name: `${counterpart} Notified`, description: `${counterpart} has been notified`, status: 'complete' },
 		{
 			name: `${counterpart} Responded`,
