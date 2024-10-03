@@ -39,7 +39,8 @@ const Details = ({ list, updateList }: ListStepProps) => {
   const { user, fetchUserProfile } = useUserProfile({});
   const { data: sellerContract } = useContractRead(
     address || "",
-    "escrowState"
+    "escrowState",
+    true
   );
 
   const { balance: balance } = useBalance(
@@ -134,9 +135,9 @@ const Details = ({ list, updateList }: ListStepProps) => {
         <Label title="Deposit Time Limit" />
         <FundEscrow
           token={token as Token}
-          sellerContract={user?.contract_address || ""}
+          sellerContract={sellerContract}
           chainId={chainId}
-          balance={balance ?? 0}
+          balance={balance || 0}
           totalAvailableAmount={list.totalAvailableAmount!}
         />
       </>

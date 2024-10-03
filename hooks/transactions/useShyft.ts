@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { CURRENT_NETWORK } from "utils";
 import useLocalSolana from "./useLocalSolana";
+import { feePayer } from "@/utils/constants";
 
 const useShyft = () => {
   const [shyft, setShyft] = useState<ShyftSdk | null>(null);
@@ -32,11 +33,14 @@ const useShyft = () => {
   }, []);
 
   const sendTransactionWithShyft = async (transaction: Transaction) => {
+    if(!feePayer){
+      throw new Error('Fee payer is not set in env');
+    }
     const connection = new Connection("https://api.devnet.solana.com");
     const recentBlockhash = await connection.getLatestBlockhash();
     transaction.recentBlockhash = recentBlockhash.blockhash;
     transaction.feePayer = new PublicKey(
-      "2Hu9fgnKUWyxqGwLVLhoUPsG9PJ15YbNxB8boWmCdSqC"
+      feePayer
     );
     if (primaryWallet == null || !isSolanaWallet(primaryWallet)) {
       return;

@@ -65,7 +65,6 @@ const useLocalSolana = () => {
     if(!walletAddress){
       throw new Error("Unable to access your wallet");
     }
-
     const tx = new Transaction().add(
       await program.methods
         .initialize(
@@ -75,9 +74,9 @@ const useLocalSolana = () => {
         )
         .accounts({
           seller: new PublicKey(walletAddress),
-          arbitrator: new PublicKey(arbitrator),
-          feeRecipient: new PublicKey(feeRecepient),
-          feePayer: new PublicKey(feePayer),
+          arbitrator: arbitrator,
+          feeRecipient: feeRecepient,
+          feePayer: new PublicKey(feePayer), 
         })
         .instruction()
     );
