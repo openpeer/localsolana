@@ -70,10 +70,10 @@ const OrderPage = ({ id }: { id: string }) => {
                         orderId: id });
                 });
     
-                socketRef.current.on('orderUpdate', (response: string) => {
-                    const { data: updatedOrder } = JSON.parse(response);
-                    console.log('updatedOrder', updatedOrder);
-                    setOrder(snakecaseKeys({ ...updatedOrder, step: steps[updatedOrder.status] },{deep: true}));
+                socketRef.current.on('orderUpdate', (response: any) => {
+                    console.log('updatedOrder', response);
+                    const  updatedOrder  = (response);
+                    setOrder(snakecaseKeys({ ...updatedOrder, step: steps[getStatusString(updatedOrder.status)] },{deep: true}));
                 });
     
                 socketRef.current.on('disconnect', () => {
