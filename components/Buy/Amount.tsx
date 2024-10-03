@@ -82,7 +82,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     "escrowState",
     true
   );
-  console.log('Here in AMount',sellerContract.toBase58(), token?.address);
+  //console.log('Here in AMount',sellerContract.toBase58(), token?.address);
   const { balance: balance } = useBalance(
     list.type === "SellList"?(sellerContract || ""):(address || ''),
     token?.address || PublicKey.default.toBase58(),
@@ -124,7 +124,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
         ) - escrowFee;
       // : BigInt(balance || 0)) - escrowFee;
       //const escrowedBalance = BigInt(100);
-      console.log(escrowedBalance || 0);
+      //console.log(escrowedBalance || 0);
       if (
         instantEscrow &&
         escrowedBalance < parseUnits(String(tokenAmount), token.decimals)
@@ -149,12 +149,12 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   };
 
   const createOrder = async (newOrder: Order) => {
-    console.log(
-      "createOrder",
-      truncate(newOrder.token_amount, token.decimals),
-      newOrder.token_amount * 10 ** token.decimals,
-      newOrder.token_amount
-    );
+    // console.log(
+    //   "createOrder",
+    //   truncate(newOrder.token_amount, token.decimals),
+    //   newOrder.token_amount * 10 ** token.decimals,
+    //   newOrder.token_amount
+    // );
     const result = await fetch("/api/createOrder/", {
       method: "POST",
       body: JSON.stringify(
