@@ -13,7 +13,7 @@ const nextConfig = {
       // },
     ];
   },
-  distDirectory: 'build'
+  //distDirectory: 'build'
 };
 
 module.exports = nextConfig;

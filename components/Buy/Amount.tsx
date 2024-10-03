@@ -82,7 +82,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     "escrowState",
     true
   );
-  console.log('Here in AMount',sellerContract.toBase58(), token?.address);
+  //console.log('Here in AMount',sellerContract.toBase58(), token?.address);
   const { balance: balance } = useBalance(
     list.type === "SellList"?(sellerContract || ""):(address || ''),
     token?.address || PublicKey.default.toBase58(),
