@@ -34,8 +34,6 @@ const useGaslessDeploy = () => {
   const {
     initialiseSolanaAccount,
     getEscrowStatePDA,
-    getEscrowPDA,
-    createEscrowSol,
   } = useLocalSolana();
 
   const deploy = async () => {
@@ -52,7 +50,7 @@ const useGaslessDeploy = () => {
         const transaction = await initialiseSolanaAccount(
           primaryWallet?.address
         );
-        const result = await sendTransactionWithShyft(transaction);
+        result = await sendTransactionWithShyft(transaction,false);
         console.log(`Shyft Transaction result: ${result}`);
       }
       if (status==null && (result==undefined || result == null)) {

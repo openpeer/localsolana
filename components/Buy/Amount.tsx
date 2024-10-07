@@ -25,6 +25,8 @@ import useGaslessEscrow from "@/hooks/transactions/escrow/useGaslessEscrow";
 import { useContractRead } from "@/hooks/transactions/useContractRead";
 import { PublicKey } from "@solana/web3.js";
 import { useBalance } from "@/hooks/transactions";
+import useGaslessEscrowAccountDeploy from "@/hooks/transactions/deploy/useGaslessEscrowAccountDeploy";
+import Loading from "../Loading/Loading";
 
 interface BuyAmountStepProps extends BuyStepProps {
   price: number | undefined;
@@ -47,6 +49,7 @@ const Prefix = ({
 
 const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   const router = useRouter();
+  const [orderID, setOrderID] = useState(null);
 
   const { fiatAmount: quickBuyFiat, tokenAmount: quickBuyToken } = router.query;
 
@@ -72,24 +75,26 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   const [bank, setBank] = useState<Bank>();
 
   const { errors, clearErrors, validate } = useFormErrors();
-//@ts-ignore
-  const banks = Array.isArray(list.payment_methods)? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id })): [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
+  //@ts-ignore
+  const banks = Array.isArray(list.payment_methods)
+    ? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id }))
+    : [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
 
   const instantEscrow = list?.escrow_type === "instant";
-
+console.log('list is ',list.type,list.escrow_type);
   const { data: sellerContract } = useContractRead(
-    list.type === "SellList"? (order.list.seller.address || ""):(address ||''),
+    list.type === "SellList" ? order.list.seller.address || "" : address || "",
     "escrowState",
     true
   );
-  //console.log('Here in AMount',sellerContract.toBase58(), token?.address);
   const { balance: balance } = useBalance(
-    list.type === "SellList"?(sellerContract || ""):(address || ''),
+    list.type === "SellList" ? sellerContract || "" : address || "",
     token?.address || PublicKey.default.toBase58(),
     true
   );
 
   const { data: fee } = useContractRead(sellerContract || "", "fee", true);
+  console.log('Instant',instantEscrow);
 
   const resolver: Resolver = () => {
     const error: Errors = {};
@@ -113,18 +118,13 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
       error.tokenAmount = "Should be bigger than 0";
     } else {
       const escrowFee = fee || BigInt(0);
-      //const escrowFee = 20;
 
       const escrowedBalance =
-        // (token.address != PublicKey.default.toBase58()?
         BigInt(
           Math.floor(
             parseFloat(balance?.toString() ?? "0.0") * 10 ** token.decimals
           )
         ) - escrowFee;
-      // : BigInt(balance || 0)) - escrowFee;
-      //const escrowedBalance = BigInt(100);
-      //console.log(escrowedBalance || 0);
       if (
         instantEscrow &&
         escrowedBalance < parseUnits(String(tokenAmount), token.decimals)
@@ -148,13 +148,50 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     return error;
   };
 
+  let seller = list.type === "SellList" ? list.seller.address : address;
+  let buyer = list.type === "SellList" ? address : list.seller.address;
+  let time = Number(order.list.payment_time_limit) * 60;
+  let tokenAddress = order.list.token.address;
+  let tokenDecimal = order.list.token.decimals;
+  const { isFetching, isLoading, isSuccess, data, deploy } =
+  useGaslessEscrowAccountDeploy({
+    orderId: orderID || "",
+    seller: seller || "",
+    buyer: buyer || "",
+    amount: tokenAmount || 0,
+    time: time,
+    tokenAddress: tokenAddress,
+    tokenDecimal: tokenDecimal,
+    instantEscrow,
+    isLocalSigningRequired: buyer==address,
+    fromWallet:!instantEscrow
+  });
+  useEffect(() => {
+    if (orderID && !isLoading && instantEscrow) {
+      console.log('Here in Amount', buyer==address, instantEscrow);
+      deploy?.();
+    }
+  }, [orderID]);
+
+  useEffect(() => {
+    if (isSuccess && data) {
+      updateTrade();
+    }
+  }, [isSuccess, data, orderID, router]);
+  const updateTrade = async () => {
+		const result = await fetch(`/api/updateOrder/?id=${orderID}`, {
+			method: 'POST',
+			body: JSON.stringify({status:1}),
+			headers: {
+				Authorization: `Bearer ${getAuthToken()}`,
+				'Content-Type': 'application/json',
+			}
+		});
+    if(result.status==200) {
+      router.push(`/orders/${orderID}`);
+    }
+    };
   const createOrder = async (newOrder: Order) => {
-    // console.log(
-    //   "createOrder",
-    //   truncate(newOrder.token_amount, token.decimals),
-    //   newOrder.token_amount * 10 ** token.decimals,
-    //   newOrder.token_amount
-    // );
     const result = await fetch("/api/createOrder/", {
       method: "POST",
       body: JSON.stringify(
@@ -176,20 +213,17 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
       },
     });
     const { data } = await result.json();
-    // if (data.id) {
-    // 	const result = await fetch(`/api/updateTrade?id=${data.id}`, {
-    // 		method: 'POST',
-    // 		body: JSON.stringify({"trade_id" : }),
-    // 		headers: {
-    // 			Authorization: `Bearer ${getAuthToken()}`,
-    // 			'Content-Type':'application/json',
-    // 		}
-    // 	});
-    // 	if(result.status==200) router.push(`/orders/${data.id}`);
-    // 	//useGaslessEscrow({})
-    // }
-
-    router.push(`/orders/${data.id}`);
+   
+    if (data.id) {
+      let orderId = data.id;
+      if (!seller || !buyer || !instantEscrow) {
+        router.push(`/orders/${orderId}`);
+        return;
+      }else{
+        setOrderID(orderId);
+      }
+    }
+    console.log("Order Created", data);
   };
 
   const onProceed = async () => {
@@ -273,6 +307,9 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 
   if (!user?.email) {
     return <AccountInfo setUser={setUser} />;
+  }
+  if(isLoading){
+    return <Loading/>;
   }
 
   const buyCrypto = list.type === "BuyList";

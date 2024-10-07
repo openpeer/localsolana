@@ -45,17 +45,12 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	const { bank, values = {} } = paymentMethod;
 	const { address } = useAccount();
 	const selling = seller.address === address;
-console.log('In Payments.tsx',tradeId);
+
 	const { data: escrowData,loadingContract } = useContractRead(
 		tradeId,
 		"escrow",
 		true
 	);
-	if(escrowData){
-	console.log('Escrow Data',escrowData?.amount?.toString(),escrowData?.openPeerFee?.toString());
-	}
-
-	// change here
 	const { balance, loadingBalance, error } = useBalance(seller.address,token.address,true);// Fetch wallet balance
 
 	const timeLimit =
@@ -88,7 +83,7 @@ console.log('In Payments.tsx',tradeId);
 			progress: undefined
 		});
 	};
-console.log(loadingBalance,loadingContract);
+console.log(loadingBalance,loadingContract,balance,status,selling,instantEscrow);
 	// if((!escrowData) || !balance){ 
 
 	// 	return <Loading/>
@@ -296,9 +291,10 @@ console.log(loadingBalance,loadingContract);
 							tokenAmount={tokenAmount || 0}
 							uuid={order.id.toString()}
 							tradeID= {order.trade_id}
-							instantEscrow={instantEscrow}
+							instantEscrow={true}
 							seller={seller.address}
 							sellerWaitingTime={Number(paymentTimeLimit) * 60}
+							fromWallet={!instantEscrow}
 						/>
 					)}
 					{status === 'escrowed' &&

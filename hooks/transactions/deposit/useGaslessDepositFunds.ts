@@ -65,7 +65,7 @@ const useGaslessDepositFunds = ({
           return;
         } else {
           try {
-            const finalTx = await sendTransactionWithShyft(transaction);
+            const finalTx = await sendTransactionWithShyft(transaction,true);
             if (finalTx !== undefined) {
               setIsLoading(false);
               setIsSuccess(true);
@@ -100,7 +100,7 @@ const useGaslessDepositFunds = ({
             setIsSuccess(false);
             return;
           }
-          const finalTx = await sendTransactionWithShyft(tx);
+          const finalTx = await sendTransactionWithShyft(tx,true);
           if (finalTx !== undefined) {
             setIsLoading(false);
             setIsSuccess(true);

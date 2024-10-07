@@ -190,7 +190,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 				onUpdatePriceSource={(ps) => updateValue({ priceSource: ps })}
 			/>
 
-			<div className="w-full flex flex-row justify-between mb-8">
+			{/* <div className="w-full flex flex-row justify-between mb-8">
 				<div>
 					<div>Lowest price</div>
 					<div className="text-xl font-bold">25.9 {currency.name}</div>
@@ -199,7 +199,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 					<div>Highest price</div>
 					<div className="text-xl font-bold">25.9 {currency.name}</div>
 				</div>
-			</div>
+			</div> */}
 		</StepLayout>
 	);
 };

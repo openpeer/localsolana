@@ -14,6 +14,7 @@ import DepositFunds from 'components/DepositButton';
 import { useAccount, useUserProfile } from '@/hooks';
 import { BLOCK_EXPLORER, CURRENT_NETWORK } from '@/utils';
 import StepLayout from './StepLayout';
+import React from 'react';
 
 interface FundsEscrowProps {
 	token: Token;

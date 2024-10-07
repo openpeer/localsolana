@@ -1,3 +1,4 @@
+import { truncate } from './../../../utils/index';
 import { useAccount } from 'hooks';
 import { useState } from 'react';
 
@@ -28,7 +29,7 @@ const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTran
 			setIsLoading(true);
 			console.log('order id',orderID);
 			const tx = await releaseFunds(orderID,new PublicKey(seller),new PublicKey(buyer),new PublicKey(token.address),);
-			const finalTx = await sendTransactionWithShyft(tx);
+			const finalTx = await sendTransactionWithShyft(tx,true);
 			if(finalTx !== undefined){
 				setIsLoading(false);
 				setIsSuccess(true);

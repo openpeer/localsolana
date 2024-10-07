@@ -100,18 +100,19 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
 
   const needToDeploy = !sellerContract
-  var needToFund =
+  var   needToFund =
     (balance ?? 0) == 0 ||
     (balance || 0) < (list.totalAvailableAmount || 0);
 
 
   const needToDeployOrFund =
-    escrowType === "instant" && (needToDeploy || needToFund);
+  escrowType === "instant"&&(needToDeploy || needToFund);
 
   const onProceed = () => {
     if (!needToDeployOrFund) {
       const message = listToMessage(list);
-      signMessage({ message });
+      //signMessage({ message });
+      createList();
     }
   };
   useEffect(() => {
@@ -222,7 +223,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
           maxValue={24 * 60}
         />
 
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <Checkbox
             content={`Accept only verified ${
               type === "SellList" ? "buyers" : "sellers"
@@ -237,7 +238,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
               })
             }
           />
-        </div>
+        </div> */}
         <Label title="Order Terms" />
         <QuillEditor
           value={terms}

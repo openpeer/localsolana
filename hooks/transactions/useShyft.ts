@@ -5,11 +5,11 @@ import {
   Connection,
   PublicKey,
   Transaction,
-  TransactionSignature
+  TransactionSignature,
 } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { CURRENT_NETWORK } from "utils";
+import { CURRENT_NETWORK, CURRENT_NETWORK_URL } from "utils";
 import useLocalSolana from "./useLocalSolana";
 import { feePayer } from "@/utils/constants";
 
@@ -21,7 +21,7 @@ const useShyft = () => {
   useEffect(() => {
     const initializeShyft = async () => {
       const shyftInstance = new ShyftSdk({
-        apiKey: "JwpOxgz2GUG8VMpA",
+        apiKey: 'kQyqadJtuKQUFcBt',//"JwpOxgz2GUG8VMpA",
         network: CURRENT_NETWORK,
       });
       //const connectionInstance = new Connection(CURRENT_NETWORK, "confirmed");
@@ -32,41 +32,54 @@ const useShyft = () => {
     initializeShyft();
   }, []);
 
-  const sendTransactionWithShyft = async (transaction: Transaction) => {
-    if(!feePayer){
-      throw new Error('Fee payer is not set in env');
+  const sendTransactionWithShyft = async (
+    transaction: Transaction,
+    localSignRequired: boolean
+  ) => {
+    if (!feePayer) {
+      throw new Error("Fee payer is not set in env");
     }
-    const connection = new Connection("https://api.devnet.solana.com");
+    const connection = new Connection(CURRENT_NETWORK_URL);
     const recentBlockhash = await connection.getLatestBlockhash();
     transaction.recentBlockhash = recentBlockhash.blockhash;
-    transaction.feePayer = new PublicKey(
-      feePayer
-    );
-    if (primaryWallet == null || !isSolanaWallet(primaryWallet)) {
-      return;
-    }
+    transaction.feePayer = new PublicKey(feePayer);
     let signedTransaction;
-    try{
-     signedTransaction = await (
-      await primaryWallet.getSigner()
-    ).signTransaction(transaction);
-    if (!signedTransaction) {
-      throw new Error(`Cannot sign transaction1: ${transaction}`);
-    }}
-    catch(err){
-     throw err;
+    console.log('Here is localSigning',localSignRequired);
+    if (localSignRequired ) {
+      if (primaryWallet == null || !isSolanaWallet(primaryWallet)) {
+        return;
+      }
+      console.log('wallet details',primaryWallet);
+      try {
+        if(!primaryWallet.connector.isEmbeddedWallet) {
+          if (!window.solana?.isConnected) {
+            await window.solana?.connect();
+        }
+        }
+        // signedTransaction = primaryWallet.connector.isEmbeddedWallet?await (
+        //   await primaryWallet.getSigner()
+        // ).signTransaction(transaction): await window.solana?.signTransaction(transaction).catch((error)=>{
+        //   console.log('Here in error',error);
+        // });
+        signedTransaction =  await (await primaryWallet.getSigner()).signTransaction(transaction);
+        if (!signedTransaction) {
+          throw new Error(`Cannot sign transaction1: ${transaction}`);
+        }
+      } catch (err: any) {
+        throw new Error(err);
+      }
+    } else {
+      signedTransaction = transaction;
     }
-
-    console.log(`Seller Signed Transaction::`,transaction.signatures[1].signature?.toString());
     // Serialize the transaction
     let serializedTransaction = signedTransaction.serialize({
       requireAllSignatures: false, //because we will sign it by Shyft as well
       verifySignatures: true, // will verify whether signatures are valid or not
     });
     // Convert serialized transaction to base64 string
-    let base64Transaction = Buffer.from(serializedTransaction).toString(
+    let base64Transaction = serializedTransaction.toString(
       "base64"
-    );
+    );                      //Buffer.from(
     console.log("Tansaction is " + base64Transaction);
 
     try {

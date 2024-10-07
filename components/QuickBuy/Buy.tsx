@@ -56,7 +56,8 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 					Authorization: `Bearer ${getAuthToken()}`
 				}
 			});
-			const searchLists: List[] = await response.json();
+			const getResponse = await response.json();
+            const searchLists: List[] = getResponse.data;
 			updateLists(searchLists);
 
 			const [list] = searchLists;

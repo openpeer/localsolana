@@ -13,7 +13,8 @@ interface CreateEscrowAccountProps {
     time:number,
     token:Token,
     seller:string,
-	instantEscrow: boolean
+	instantEscrow: boolean,
+	fromWallet:boolean
 
 }
 
@@ -22,7 +23,7 @@ const CreateEscrowAccount = ({ orderId,
     buyer,
     amount,
     time,
-    token,seller,instantEscrow}: CreateEscrowAccountProps) => {
+    token,seller,instantEscrow,fromWallet}: CreateEscrowAccountProps) => {
 	const { primaryWallet } = useDynamicContext();
 	const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessEscrowAccountDeploy({
 		orderId: orderId,
@@ -32,7 +33,9 @@ const CreateEscrowAccount = ({ orderId,
 		time: time,
 		tokenAddress: token.address,
 		tokenDecimal: token.decimals,
-		instantEscrow
+		instantEscrow,
+		isLocalSigningRequired :fromWallet,
+		fromWallet:fromWallet
 	});
 
 	// useTransactionFeedback({

@@ -10,6 +10,7 @@ export interface EscrowFundsParams {
 	instantEscrow: boolean;
 	sellerWaitingTime: number;
 	tradeID:string;
+	fromWallet:boolean;
 }
 
 export interface EscrowFundsButtonProps extends EscrowFundsParams {

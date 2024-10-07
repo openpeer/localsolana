@@ -24,6 +24,7 @@ const EscrowButton = ({
   instantEscrow,
   sellerWaitingTime,
   tradeID,
+  fromWallet
 }: EscrowFundsParams) => {
   const nativeToken = token.address === PublicKey.default.toBase58();
   const [approved, setApproved] = useState(instantEscrow);
@@ -32,11 +33,11 @@ const EscrowButton = ({
   const { data: sellerContract } = useContractRead(tradeID, "escrow", true);
   const { data: fee, loadingContract } = useContractRead(tradeID, "fee", true);
 
-  const totalAmount = (tokenAmount + fee) * 10 ** token.decimals;
 
   if (loadingContract || fee === undefined) return <></>;
 
-  const needsToDeploy = !instantEscrow && !sellerContract;
+  const needsToDeploy = !instantEscrow || !sellerContract;
+  console.log(needsToDeploy,sellerContract,instantEscrow);
 
   return (
     <span className="w-full">
@@ -47,11 +48,12 @@ const EscrowButton = ({
           token={token}
           tokenAmount={tokenAmount}
           uuid={uuid}
-          contract={"asd"}
+          contract={""}
           seller={seller}
           tradeID={tradeID}
           instantEscrow={instantEscrow}
           sellerWaitingTime={sellerWaitingTime}
+          fromWallet={fromWallet}
         />
       ) : (
         needsToDeploy && (
@@ -63,6 +65,7 @@ const EscrowButton = ({
             time={sellerWaitingTime}
             seller={seller}
             instantEscrow={instantEscrow}
+            fromWallet={fromWallet}
           />
         )
       )}

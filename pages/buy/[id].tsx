@@ -27,6 +27,7 @@ const BuyPage = ({ id }: { id: number }) => {
 			.then((res) => res.json())
 			.then((res)=> res.data)
 			.then((data) => {
+				console.log('list is ',data);
 				setOrder({
 					...order,
 					...{ list: data, listId: data.id }

@@ -75,7 +75,8 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 					Authorization: `Bearer ${getAuthToken()}`
 				}
 			});
-			const searchLists: List[] = await response.json();
+			const getResponse = await response.json();
+            const searchLists: List[] = getResponse.data;
 			updateLists(searchLists);
 		} catch (error) {
 			console.error(error);

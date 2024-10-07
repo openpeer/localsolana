@@ -1,13 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
 import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
-import {
-  isSolanaWallet,
-  SolanaWallet
-} from "@dynamic-labs/solana-core";
-import {
-  getAssociatedTokenAddress
-} from "@solana/spl-token";
+import { isSolanaWallet, SolanaWallet } from "@dynamic-labs/solana-core";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { CURRENT_NETWORK_URL } from "utils";
@@ -53,16 +48,16 @@ const useLocalSolana = () => {
   }, [primaryWallet]);
 
   const initialiseSolanaAccount = async (address: string) => {
-    const walletAddress =primaryWallet?.address;
+    const walletAddress = primaryWallet?.address;
     if (!program || !provider) {
       throw new Error("Program or provider is not initialized");
     }
-    
+
     if (!arbitrator || !feeRecepient || !feePayer) {
       throw new Error("Please set arbitrator and fee recepient in .env");
     }
 
-    if(!walletAddress){
+    if (!walletAddress) {
       throw new Error("Unable to access your wallet");
     }
     const tx = new Transaction().add(
@@ -73,10 +68,10 @@ const useLocalSolana = () => {
           new PublicKey(feeRecepient)
         )
         .accounts({
-          seller: new PublicKey(walletAddress),
+          seller: walletAddress,
           arbitrator: arbitrator,
           feeRecipient: feeRecepient,
-          feePayer: new PublicKey(feePayer), 
+          feePayer: new PublicKey(feePayer),
         })
         .instruction()
     );
@@ -88,14 +83,15 @@ const useLocalSolana = () => {
     if (!program) {
       return;
     }
-    const [escrowStatePda_, _escrowStateBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("escrow_state"), new PublicKey(address).toBuffer()],
-      program.programId
-    );
+    const [escrowStatePda_, _escrowStateBump] =
+      PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow_state"), new PublicKey(address).toBuffer()],
+        program.programId
+      );
     return escrowStatePda_;
   };
 
-  const getEscrowPDA =  (orderId: string) => {
+  const getEscrowPDA = (orderId: string) => {
     if (!program) {
       return;
     }
@@ -136,6 +132,7 @@ const useLocalSolana = () => {
     if (!program || !provider || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
+    console.log("Here buyer", buyer, "seller", seller);
     const tx = new Transaction().add(
       await program.methods
         .createEscrowSol(
@@ -155,6 +152,38 @@ const useLocalSolana = () => {
     return tx;
   };
 
+  const createEscrowSolBuyer = async (
+    orderId: string,
+    time: number,
+    amount: number,
+    buyer: string,
+    seller: string,
+    partner: string,
+    automaticEscrow: boolean
+  ) => {
+    if (!program || !provider || !feePayer) {
+      throw new Error("Program or provider is not initialized");
+    }
+    console.log("Here buyer", buyer, "seller", seller);
+    const tx = new Transaction().add(
+      await program.methods
+        .createEscrowSolBuyer(
+          orderId,
+          new anchor.BN(amount),
+          new anchor.BN(time),
+          automaticEscrow
+        )
+        .accounts({
+          buyer: new PublicKey(buyer),
+          seller: seller,
+          partner: partner,
+          feePayer: new PublicKey(feePayer),
+        })
+        .instruction()
+    );
+    return tx;
+  };
+
   const createEscrowToken = async (
     orderId: string,
     time: number,
@@ -163,18 +192,25 @@ const useLocalSolana = () => {
     seller: string,
     partner: string,
     token: string,
-    instantEscrow: boolean
+    instantEscrow: boolean,
+    fromWallet: boolean
   ) => {
     if (!program || !provider || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
     var escrow = await getEscrowPDA(orderId);
-    if (!escrow) {
+    var escrowState = await getEscrowStatePDA(seller);
+    if (!escrow || !escrowState) {
       return null;
     }
-    var escrowTokenAccount = await getAssociatedTokenAddress(
+    let escrowTokenAccount = await getAssociatedTokenAddress(
       new PublicKey(token),
       escrow,
+      true
+    );
+    let escrowStateTokenAccount = await getAssociatedTokenAddress(
+      new PublicKey(token),
+      escrowState,
       true
     );
 
@@ -184,20 +220,72 @@ const useLocalSolana = () => {
         new anchor.BN(amount),
         new anchor.BN(time),
         instantEscrow,
-        new PublicKey(token)
+        new PublicKey(token),
+        fromWallet
       )
       .accounts({
-        buyer: new PublicKey(buyer),
+        buyer: buyer,
         seller: new PublicKey(seller),
-        partner: new PublicKey(partner),
+        partner: partner,
         feePayer: new PublicKey(feePayer),
         escrowTokenAccount: new PublicKey(escrowTokenAccount),
+        escrowStateTokenAccount: escrowStateTokenAccount,
         mintAccount: new PublicKey(token),
       })
       .transaction();
     return tx;
   };
 
+  const createEscrowTokenBuyer = async (
+    orderId: string,
+    time: number,
+    amount: number,
+    buyer: string,
+    seller: string,
+    partner: string,
+    token: string,
+    instantEscrow: boolean,
+    fromWallet: boolean
+  ) => {
+    if (!program || !provider || !feePayer) {
+      throw new Error("Program or provider is not initialized");
+    }
+    var escrow = await getEscrowPDA(orderId);
+    var escrowState = await getEscrowStatePDA(seller);
+    if (!escrow || !escrowState) {
+      return null;
+    }
+    let escrowTokenAccount = await getAssociatedTokenAddress(
+      new PublicKey(token),
+      escrow,
+      true
+    );
+    let escrowStateTokenAccount = await getAssociatedTokenAddress(
+      new PublicKey(token),
+      escrowState,
+      true
+    );
+
+    const tx = await program.methods
+      .createEscrowTokenBuyer(
+        orderId,
+        new anchor.BN(amount),
+        new anchor.BN(time),
+        instantEscrow,
+        new PublicKey(token)
+      )
+      .accounts({
+        buyer: new PublicKey(buyer),
+        seller: seller,
+        partner: partner,
+        feePayer: new PublicKey(feePayer),
+        escrowTokenAccount: new PublicKey(escrowTokenAccount),
+        escrowStateTokenAccount: escrowStateTokenAccount,
+        mintAccount: new PublicKey(token),
+      })
+      .transaction();
+    return tx;
+  };
   const depositFundsToLocalSolana = async (
     amount: number,
     seller: PublicKey,
@@ -242,7 +330,8 @@ const useLocalSolana = () => {
     amount: number,
     seller: PublicKey,
     token: PublicKey,
-    orderID: string,decimals: number
+    orderID: string,
+    decimals: number
   ) => {
     if (!program || !provider || !feePayer) {
       throw new Error("Program or provider is not initialized");
@@ -251,26 +340,31 @@ const useLocalSolana = () => {
     if (!escrow) {
       throw new Error("Unable to get Escrow PDA");
     }
-    try{
-    const tx = new Transaction().add(
-      await program.methods
-        .depositToEscrow(orderID, new anchor.BN((amount * 10 ** decimals)), token, false)
-        .accounts({
-          seller: seller,
-          feePayer: new PublicKey(feePayer),
-          mintAccount: token != PublicKey.default ? token : null,
-          escrowTokenAccount:
-            token != PublicKey.default
-              ? await getAssociatedTokenAddress(token, escrow, true)
-              : null,
-        })
-        .instruction()
-    );
-    console.log('Got Transaction');
-    return tx;
-  }catch(err){
-    console.log('Error',err);
-  }
+    try {
+      const tx = new Transaction().add(
+        await program.methods
+          .depositToEscrow(
+            orderID,
+            new anchor.BN(amount * 10 ** decimals),
+            token,
+            false
+          )
+          .accounts({
+            seller: seller,
+            feePayer: new PublicKey(feePayer),
+            mintAccount: token != PublicKey.default ? token : null,
+            escrowTokenAccount:
+              token != PublicKey.default
+                ? await getAssociatedTokenAddress(token, escrow, true)
+                : null,
+          })
+          .instruction()
+      );
+      console.log("Got Transaction");
+      return tx;
+    } catch (err) {
+      console.log("Error", err);
+    }
   };
 
   const releaseFunds = async (
@@ -279,19 +373,37 @@ const useLocalSolana = () => {
     buyer: PublicKey,
     token: PublicKey
   ) => {
-    if (!program || !provider ||!feeRecepient || !feePayer) {
+    if (!program || !provider || !feeRecepient || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
+    let escrowPDA = await getEscrowPDA(orderId);
+
+    let escrowTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      escrowPDA!,
+      true
+    );
+    let feeTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      new PublicKey(feeRecepient),
+      true
+    );
+    let buyerTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      new PublicKey(buyer),
+      true
+    );
     const tx = await program.methods
       .releaseFunds(orderId)
       .accounts({
         seller: seller,
         buyer: buyer,
-        feeRecipient: new PublicKey(
-         feeRecepient
-        ),
+        feeRecipient: new PublicKey(feeRecepient),
         mintAccount: token,
         feePayer: new PublicKey(feePayer),
+        feeRecipientTokenAccount:feeTokenAccount,
+        escrowTokenAccount:escrowTokenAccount,
+        buyerTokenAccount:buyerTokenAccount
       })
       .transaction();
     return tx;
@@ -312,6 +424,8 @@ const useLocalSolana = () => {
     depositFundsToLocalSolana,
     depositFundsEscrow,
     releaseFunds,
+    createEscrowSolBuyer,
+    createEscrowTokenBuyer,
   };
 };
 
