@@ -61,7 +61,7 @@ const useGaslessEscrow = ({
 		}
 			setIsLoading(true);
 			console.log('Deposit Transaction');
-			const finalTx =await sendTransactionWithShyft(tx)
+			const finalTx =await sendTransactionWithShyft(tx,true)
 			if(finalTx !==undefined){
 				setIsLoading(false);
 				setIsSuccess(true);
