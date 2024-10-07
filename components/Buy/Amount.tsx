@@ -76,9 +76,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 
   const { errors, clearErrors, validate } = useFormErrors();
   //@ts-ignore
-  const banks = Array.isArray(list.payment_methods)
-    ? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id }))
-    : [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
+  const banks = Array.isArray(list.payment_methods)? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id })): [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
 
   const instantEscrow = list?.escrow_type === "instant";
 console.log('list is ',list.type,list.escrow_type);
