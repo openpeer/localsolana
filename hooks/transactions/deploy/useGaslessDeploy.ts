@@ -58,7 +58,7 @@ const useGaslessDeploy = () => {
         setIsSuccess(false);
       } else {
         console.log(`Status ${status}`);
-        updateData({ hash: result ?? undefined, escrowPDA: escrowStatePDA?.toBase58() ?? "" });
+        updateData({ hash: result ?? undefined, escrowPDA: escrowStatePDA?.toBase58() || "" });
         setIsLoading(false);
         setIsSuccess(true);
       }

@@ -35,11 +35,10 @@ const DeploySellerContract = ({
   const prevIsSuccessRef = useRef<boolean>(false);
 
   useEffect(() => {
-      if (isSuccess && !prevIsSuccessRef.current && (data?.escrowPDA!== undefined)) {
+      if (isSuccess && !prevIsSuccessRef.current && (data?.escrowPDA!='')) {
 		console.log('in use effect of DeploySellerContract',data);
           prevIsSuccessRef.current = true;
           setContractAddress(data?.escrowPDA);
-		  
       }
   }, [ isSuccess,data]);
 
