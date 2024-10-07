@@ -27,8 +27,6 @@ const MarkAsPaidButton = ({ order,updateOrder }: MarkAsPaidButtonParams) => {
 	const onPaymentDone = async() => {
 		if (!isConnected) return;
 		await marksAsPaid?.();
-		updateTrade();
-
 	};
 
 	// useTransactionFeedback({
