@@ -41,12 +41,12 @@ const MarkAsPaidButton = ({ order,updateOrder }: MarkAsPaidButtonParams) => {
 
 
 	useEffect(()=>{
-		if(isSuccess && !prevIsSuccessRef.current){
+		if(isSuccess && !prevIsSuccessRef.current && data){
 			prevIsSuccessRef.current = true;
             updateTrade();
 			
 		}
-	},[ isSuccess]);
+	},[ isSuccess,data]);
     const updateTrade = async () => {
 		const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
 			method: 'POST',

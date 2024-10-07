@@ -2,7 +2,7 @@ import StepLayout from 'components/Listing/StepLayout';
 import HeaderH3 from 'components/SectionHeading/h3';
 import Image from 'next/image';
 import React from 'react';
-import { useAccount } from 'hooks';
+import { useAccount, useUserProfile } from 'hooks';
 import { useBalance } from '@/hooks/transactions';
 
 import { ClockIcon } from '@heroicons/react/24/outline';
@@ -23,6 +23,7 @@ import { useContractRead } from '@/hooks/transactions/useContractRead';
 import { getStatusString } from '@/utils';
 import { BN } from '@coral-xyz/anchor';
 import Loading from '../Loading/Loading';
+import DeploySellerContract from './EscrowButton/DeploySellerContract';
 
 const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	const {
@@ -49,6 +50,11 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	const { data: escrowData,loadingContract } = useContractRead(
 		tradeId,
 		"escrow",
+		true
+	);
+	const { data: escrowState } = useContractRead(
+		address||'',
+		"escrowState",
 		true
 	);
 	const { balance, loadingBalance, error } = useBalance(seller.address,token.address,true);// Fetch wallet balance
@@ -83,11 +89,12 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 			progress: undefined
 		});
 	};
-console.log(loadingBalance,loadingContract,balance,status,selling,instantEscrow);
-	// if((!escrowData) || !balance){ 
-
-	// 	return <Loading/>
-	// }
+	const { user,updateContractAddress } = useUserProfile({});
+	const handleContractUpdate=async (contractAddress:string|undefined)=>{
+		if(contractAddress !== undefined){
+		await updateContractAddress(contractAddress);
+		}
+	  }
 	return (
 		<StepLayout>
 			<div className="my-0 md:my-8">
@@ -285,6 +292,7 @@ console.log(loadingBalance,loadingContract,balance,status,selling,instantEscrow)
 						<CancelOrderButton order={order} />
 					</span>
 					{status === 'created' && (selling || instantEscrow) && (
+						escrowState?
 						<EscrowButton
 							buyer={buyer.address}
 							token={token}
@@ -294,8 +302,8 @@ console.log(loadingBalance,loadingContract,balance,status,selling,instantEscrow)
 							instantEscrow={true}
 							seller={seller.address}
 							sellerWaitingTime={Number(paymentTimeLimit) * 60}
-							fromWallet={!instantEscrow}
-						/>
+							fromWallet={buyer.address!=address || !instantEscrow}
+						/>:<DeploySellerContract setContractAddress={handleContractUpdate}/>
 					)}
 					{status === 'escrowed' &&
 						(selling ? (
