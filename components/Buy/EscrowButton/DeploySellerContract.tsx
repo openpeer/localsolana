@@ -42,7 +42,6 @@ const DeploySellerContract = ({
       }
   }, [ isSuccess,data]);
 
- 
   return (
     <Button
       title={isLoading ? "Processing..." : isSuccess ? "Done" : label}
