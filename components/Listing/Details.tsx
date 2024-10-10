@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useState } from "react";
 import snakecaseKeys from "snakecase-keys";
 
-import { Token, User } from "models/types";
+import { FiatCurrency, Token, User } from "models/types";
 import Checkbox from "components/Checkbox/Checkbox";
 import dynamic from "next/dynamic";
 import Label from "../Label/Label";
@@ -58,7 +58,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
     if (isAuthenticated) {
       // need to add data inside the body
       const result = await fetch(
-        list.id ? `/api/lists/${list.id}` : "/api/createList",
+        list.id ? `/api/list_management/${list.id}` : "/api/createList",
         {
           method: list.id ? "PUT" : "POST",
           body: JSON.stringify(
@@ -71,6 +71,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 escrowType: escrowVal,
                 price: list.margin,
                 bank_id: 16,
+                priceSource: (list.currency as FiatCurrency)?.default_price_source
               },
               { deep: true }
             )

@@ -51,11 +51,12 @@ const useShyft = () => {
       }
       console.log('wallet details',primaryWallet);
       try {
-        if(!primaryWallet.connector.isEmbeddedWallet) {
-          if (!window.solana?.isConnected) {
-            await window.solana?.connect();
-        }
-        }
+        // if(!primaryWallet.connector.isEmbeddedWallet) {
+        //   console.log('Window is ',window.solana,'wallet is',primaryWallet.connector);
+        //   if (!window.solana?.isConnected) {
+        //     await window.solana?.connect();
+        // }
+        // }
         // signedTransaction = primaryWallet.connector.isEmbeddedWallet?await (
         //   await primaryWallet.getSigner()
         // ).signTransaction(transaction): await window.solana?.signTransaction(transaction).catch((error)=>{

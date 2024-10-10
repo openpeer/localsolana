@@ -1,20 +1,14 @@
 
-import { Token, User } from 'models/types';
+import { Token } from 'models/types';
 import { useQRCode } from 'next-qrcode';
-import { useEffect, useState } from 'react';
-//import { allChains } from 'models/networks';
+import { useState } from 'react';
 import ClipboardText from 'components/Buy/ClipboardText';
 import DeploySellerContract from 'components/Buy/EscrowButton/DeploySellerContract';
 import Input from 'components/Input/Input';
-//import ExplainerNotification from 'components/Notifications/ExplainerNotification';
 import DepositFunds from 'components/DepositButton';
-//import { constants } from 'ethers';
-//import { useNetwork, useSwitchNetwork } from 'wagmi';
-//import Network from 'components/Network/Network';
 import { useAccount, useUserProfile } from '@/hooks';
 import { BLOCK_EXPLORER, CURRENT_NETWORK } from '@/utils';
 import StepLayout from './StepLayout';
-import React from 'react';
 
 interface FundsEscrowProps {
 	token: Token;
