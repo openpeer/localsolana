@@ -18,7 +18,8 @@ interface StatusTimeLineParams {
 }
 
 const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
-	const { counterpart_replied: replied, resolved } = dispute;
+	// const { counterpart_replied: replied, resolved } = dispute;
+	let replied="Dispute Open",resolved="Closed";
 	const counterpart = isBuyer ? 'Seller' : 'Buyer';
 	//const { chain } = useNetwork();
 

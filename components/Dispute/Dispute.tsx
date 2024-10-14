@@ -6,6 +6,7 @@ import { Order } from 'models/types';
 import React from 'react';
 import { formatUnits } from 'viem';
 import { useAccount } from 'hooks';
+import { useContractRead } from '@/hooks/transactions/useContractRead';
 //import { useContractRead, useNetwork } from 'wagmi';
 
 interface DisputeParams {
@@ -16,6 +17,7 @@ const Dispute = ({ order }: DisputeParams) => {
 	const { address } = useAccount();
 	//const { chain } = useNetwork();
 	const escrowAddress = order?.escrow?.address;
+	
 	// const { data: paidForDispute }: { data: boolean | undefined } = useContractRead({
 	// 	address: escrowAddress,
 	// 	abi: OpenPeerEscrow,
@@ -25,12 +27,16 @@ const Dispute = ({ order }: DisputeParams) => {
 	// 	enabled: !!escrowAddress
 	// });
 
+	const { data: paidForDispute }: { data: boolean | undefined } = useContractRead(escrowAddress,'disputePayments',true);
+
 	// const { data: disputeFee }: { data: bigint | undefined } = useContractRead({
 	// 	address: escrowAddress,
 	// 	abi: OpenPeerEscrow,
 	// 	functionName: 'disputeFee',
 	// 	enabled: !!escrowAddress
 	// });
+
+	const { data: disputeFee }: { data: bigint | undefined } = useContractRead(escrowAddress,'disputeFee',true);
 
 	const { token_amount: tokenAmount, list, buyer, dispute, seller } = order;
 	const { token } = list;
@@ -55,14 +61,14 @@ const Dispute = ({ order }: DisputeParams) => {
 						</div>
 					</div>
 					<span>
-						{/* {resolved || (!!userDispute && paidForDispute) ? (
+						{resolved || !(!!userDispute && paidForDispute) ? (
 							<DisputeStatus address={address} order={order} />
 						) : (
-							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={fee} />
-						)} */}
+							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={20} />
+						)}
 					</span>
 				</div>
-				{/* <DisputeNotes fee={fee} /> */}
+				<DisputeNotes fee={20} />
 			</div>
 		</div>
 	);

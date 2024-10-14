@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/indent */
 // import { OpenPeerEscrow } from 'abis';
+import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import { Button, Modal } from 'components';
 import TransactionLink from 'components/TransactionLink';
 import {  useTransactionFeedback, useAccount } from 'hooks'; //useOpenDispute
@@ -67,11 +68,59 @@ const OpenDisputeButton = ({ order, outlined = true, title = 'Open a dispute' }:
 	// 	}
 	// }, [isSuccess, uuid]);
 
-	// useEffect(() => {
-	// 	if (disputeConfirmed) {
-	// 		onOpenDispute();
-	// 	}
-	// }, [disputeConfirmed]);
+	useEffect(() => {
+		const cancelOrder = async () => {
+			if (disputeConfirmed) {
+			  try {
+				const result = await fetch(`/api/updateOrder?id=${order.id}`, {
+				  method: 'POST',
+				  headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${getAuthToken()}`
+				  },
+				  body: JSON.stringify({
+					status:4
+				  })  // No need for an empty object here, unless there's data to send
+				});
+		
+				const savedOrder = await result.json();
+		
+				if (savedOrder.status === 200) {
+				  window.location.reload();
+				} else {
+				  toast.error('Error while opening an order', {
+					theme: 'dark',
+					position: 'top-right',
+					autoClose: 5000,
+					hideProgressBar: false,
+					closeOnClick: true,
+					pauseOnHover: true,
+					draggable: false,
+					progress: undefined
+				  });
+				}
+		
+				onOpenDispute();
+			  } catch (error) {
+				toast.error('An error occurred while canceling the order', {
+				  theme: 'dark',
+				  position: 'top-right',
+				  autoClose: 5000,
+				  hideProgressBar: false,
+				  closeOnClick: true,
+				  pauseOnHover: true,
+				  draggable: false,
+				  progress: undefined
+				});
+			  }
+			}
+		  };
+		
+		cancelOrder();
+		// if (disputeConfirmed) {
+		// 	onOpenDispute();
+		// }
+	}, [disputeConfirmed]);
 
 	// if (
 	// 	isFetching ||
@@ -93,7 +142,7 @@ const OpenDisputeButton = ({ order, outlined = true, title = 'Open a dispute' }:
 	const canOpenDispute = (isBuyer || isSeller) && parseInt('60', 10) === 1;
 
 	const onOpenDispute = () => {
-		if (!isConnected || !canOpenDispute) return;
+		// if (!isConnected || !canOpenDispute) return;
 
 		if (!disputeConfirmed) {
 			setModalOpen(true);
@@ -118,6 +167,7 @@ const OpenDisputeButton = ({ order, outlined = true, title = 'Open a dispute' }:
 
 	return (
 		<>
+		<Button title={title} onClick={onOpenDispute}/>
 			{/* <Button
 				title={
 					// (paidForDisputeResult.result as boolean)

@@ -27,7 +27,8 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 		payment_method: { bank },
 		list: { token, fiat_currency: currency }
 	} = order;
-	const { resolved, winner } = dispute!;
+	// const { resolved, winner } = dispute!;
+	let resolved=false,winner=true;
 
 	const isBuyer = address === buyer.address;
 	const tokenValue = `${tokenAmount} ${token.symbol}`;
@@ -61,7 +62,11 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 			</div>
 
 			<div className="py-8">
-				{/* <StatusTimeLine escrow={order.escrow!.address} dispute={dispute!} isBuyer={isBuyer} /> */}
+				<StatusTimeLine 
+					escrow={"Address"||order.escrow!.address} 
+					dispute={dispute!} 
+					isBuyer={isBuyer}
+				/>
 			</div>
 
 			<div>
