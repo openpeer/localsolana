@@ -63,15 +63,16 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 		}
 
 		// include not before paidForDispute
-		// if (uploads.length === 0) {
-		// 	error.uploads = 'Add some evidence';
-		// }
+		if (uploads.length === 0) {
+			error.uploads = 'Add some evidence';
+		}
 
 		return error;
 	};
 
 	const onContinue = async () => {
 		if (validate(resolver) && !paidForDispute) {
+			// console.log(uploads);
 		// include not before paidForDispute
 		// if (validate(resolver) && paidForDispute) {
 			const result = await fetch(`/api/orders/${order.id}/disputes`, {

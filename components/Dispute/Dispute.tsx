@@ -49,7 +49,7 @@ const Dispute = ({ order }: DisputeParams) => {
 
 	const { user_dispute: userDispute, resolved } = dispute || {};
 	//const fee = `${formatUnits(disputeFee, chain.nativeCurrency.decimals)} ${chain.nativeCurrency.symbol}`;
-	console.log("Hello World ", order,resolved , userDispute, paidForDispute);
+	// console.log("Hello World ", order,resolved , userDispute, paidForDispute);
 
 	return (
 		<div className="p-4 md:p-6 w-full m-auto mb-16">
