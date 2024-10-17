@@ -62,16 +62,19 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 			error.comments = 'Should be present';
 		}
 
-		if (uploads.length === 0) {
-			error.uploads = 'Add some evidence';
-		}
+		// include not before paidForDispute
+		// if (uploads.length === 0) {
+		// 	error.uploads = 'Add some evidence';
+		// }
 
 		return error;
 	};
 
 	const onContinue = async () => {
-		if (validate(resolver) && paidForDispute) {
-			const result = await fetch(`/api/orders/${uuid}/disputes`, {
+		if (validate(resolver) && !paidForDispute) {
+		// include not before paidForDispute
+		// if (validate(resolver) && paidForDispute) {
+			const result = await fetch(`/api/orders/${order.id}/disputes`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -81,6 +84,8 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 					snakecaseKeys(
 						{
 							comments,
+							winner_id: null,
+   							resolved: false,
 							files: uploads.map(({ key }) => key)
 						},
 						{ deep: true }
@@ -163,7 +168,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 					) : (
 						<ReleaseFundsButton order={order} outlined title="Cancel" dispute />
 					))}
-				{paidForDispute ? (
+				{!paidForDispute ? (
 					<Button title="Continue" onClick={onContinue} />
 				) : (
 					<OpenDisputeButton order={order} outlined={false} title="Open Dispute" />

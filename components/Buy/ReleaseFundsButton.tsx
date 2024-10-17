@@ -61,7 +61,6 @@ const ReleaseFundsButton = ({
 	useEffect(()=>{
 		if(isSuccess && data){
             updateTrade();
-			
 		}
 	},[ isSuccess]);
     const updateTrade = async () => {
@@ -73,6 +72,20 @@ const ReleaseFundsButton = ({
 				'Content-Type': 'application/json',
 			}
 		});
+
+		if(result.status===200){
+			await fetch(`/api/transaction`, {
+				method: 'POST',
+				body: JSON.stringify({
+					order_id:order.id,
+					tx_hash:data?.hash
+				}),
+				headers: {
+					Authorization: `Bearer ${getAuthToken()}`,
+					'Content-Type': 'application/json',
+				}
+			});
+		}
     };
 	return (
 		<>

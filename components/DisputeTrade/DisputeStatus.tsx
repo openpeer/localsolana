@@ -27,8 +27,8 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 		payment_method: { bank },
 		list: { token, fiat_currency: currency }
 	} = order;
-	// const { resolved, winner } = dispute!;
-	let resolved=false,winner=true;
+	const { resolved, winner } = dispute!;
+	// let resolved=false,winner=true;
 
 	const isBuyer = address === buyer.address;
 	const tokenValue = `${tokenAmount} ${token.symbol}`;
@@ -47,7 +47,7 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 							Time left <span>15m:20secs</span>
 						</div>
 					</div>
-				) : !!winner && winner.address === address ? (
+				) : !!winner && winner === address ? (
 					<div className="text-cyan-600">
 						<div className="font-bold">Dispute Ended</div>
 						You won the dispute. {tokenValue} and the fee has been credited to your account
