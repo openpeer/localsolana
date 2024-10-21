@@ -9,6 +9,7 @@ import Checkbox from "components/Checkbox/Checkbox";
 import dynamic from "next/dynamic";
 import Label from "../Label/Label";
 import Selector from "../Selector";
+import FriendlySelector from 'components/FriendlySelector';
 import { ListStepProps } from "./Listing.types";
 import StepLayout from "./StepLayout";
 import FundEscrow from "./FundEscrow";
@@ -21,6 +22,7 @@ import { PublicKey } from "@solana/web3.js";
 import Loading from "../Loading/Loading";
 import { useContractRead } from "@/hooks/transactions/useContractRead";
 import { watch } from "fs";
+import FriendlyTime from 'components/FriendlyTime';
 
 const QuillEditor = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -163,35 +165,17 @@ const Details = ({ list, updateList }: ListStepProps) => {
             <Label title="Deposit Time Limit" />
             <div className="mb-4">
               <span className="text-sm text-gray-600">
-                {depositTimeLimit > 0 ? (
-                  <div>
-                    Your order will be cancelled if{" "}
-                    {type === "SellList" ? "you" : "the seller"} dont deposit
-                    after {depositTimeLimit}{" "}
-                    {depositTimeLimit === 1 ? "minute" : "minutes"}.{" "}
-                    <strong>
-                      You can set this to 0 to disable this feature.
-                    </strong>
-                  </div>
-                ) : (
-                  <div>
-                    Your orders will not be cancelled automatically.{" "}
-                    <strong>
-                      You can set this to 0 to disable this feature.
-                    </strong>
-                  </div>
-                )}
+              <div>
+									Your order will be cancelled if {type === 'SellList' ? 'you' : 'the seller'} don't
+									deposit after <FriendlyTime timeInMinutes={Number(depositTimeLimit)} />.{' '}
+								</div>
               </span>
             </div>
-            <Selector
-              value={depositTimeLimit}
-              suffix={depositTimeLimit === 1 ? " min" : " mins"}
-              changeableAmount={1}
-              updateValue={(n) =>
-                updateList({ ...list, ...{ depositTimeLimit: n } })
-              }
-              decimals={0}
-            />
+            <FriendlySelector
+							value={depositTimeLimit}
+							updateValue={(n) => updateList({ ...list, depositTimeLimit: n })}
+							error={depositTimeLimit < 15 ? 'Minimum time is 15 mins' : undefined}
+						/>
           </>
         )}
 
@@ -202,26 +186,19 @@ const Details = ({ list, updateList }: ListStepProps) => {
               <div>
                 Your order can be cancelled if{" "}
                 {type === "SellList" ? "the buyer" : "you"} dont pay after{" "}
-                {paymentTimeLimit}{" "}
-                {paymentTimeLimit === 1 ? "minute" : "minutes"}.{" "}
-                <strong>Minimum 15 minutes. Maximum 24 hours.</strong>
+                <FriendlyTime timeInMinutes={Number(paymentTimeLimit)} />.{" "}
+                <strong>Minimum 15 minutes. Maximum 72 hours.</strong>
               </div>
             ) : (
               <div>Your orders will not be cancelled automatically. </div>
             )}
           </span>
         </div>
-        <Selector
-          value={paymentTimeLimit}
-          suffix={paymentTimeLimit === 1 ? " min" : " mins"}
-          changeableAmount={1}
-          updateValue={(n) =>
-            updateList({ ...list, ...{ paymentTimeLimit: n } })
-          }
-          decimals={0}
-          minValue={15}
-          maxValue={24 * 60}
-        />
+        <FriendlySelector
+					value={paymentTimeLimit}
+					updateValue={(n) => updateList({ ...list, paymentTimeLimit: n })}
+					error={paymentTimeLimit < 15 ? 'Minimum time is 15 mins' : undefined}
+				/>
 
         {/* <div className="mb-4">
           <Checkbox

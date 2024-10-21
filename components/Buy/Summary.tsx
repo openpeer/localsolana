@@ -14,6 +14,7 @@ import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/20/solid';
 import { useRouter } from 'next/navigation';
 import Talk from 'talkjs';
 import { talkJsAppId } from '@/utils/constants';
+import FriendlyTime from 'components/FriendlyTime';
 
 const SummaryBuy = ({ order }: { order: UIOrder }) => {
 	const route = useRouter();
@@ -250,7 +251,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 							<div className="w-full flex flex-row mb-4 space-x-2">
 								<div className="text-sm">Deposit Time Limit</div>
 								<div className="text-sm font-bold">
-									{depositTimeLimit} {depositTimeLimit === 1 ? 'minute' : 'minutes'}
+								<FriendlyTime timeInMinutes={Number(depositTimeLimit)} />
 								</div>
 							</div>
 						)
@@ -259,7 +260,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 						<div className="w-full flex flex-row mb-4 space-x-2">
 							<div className="text-sm">Payment Time Limit</div>
 							<div className="text-sm font-bold">
-								{paymentTimeLimit} {paymentTimeLimit === 1 ? 'minute' : 'minutes'}
+								<FriendlyTime timeInMinutes={Number(paymentTimeLimit)} />
 							</div>
 						</div>
 					)}
