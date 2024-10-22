@@ -95,7 +95,6 @@ const ListType = ({ updateList, list }: ListStepProps) => {
 			}
 		})
 		.then((res) => res.json())
-		.then((res) => res.data)
 		.then((data) => {
 			if (data.errors) {
 				setUser(null);

@@ -59,8 +59,8 @@ const HomePage = () => {
 			}
 		})
 			.then((res) => res.json())
-			.then((response: { data: List[]; meta: any }) => {
-				const { data, meta } = response;
+			.then((response) => {
+				const { data,meta }:{data:List[];meta:PaginationMeta} = response?.data;
 				setPaginationMeta(meta);
 				const toBuyers = data.filter((list) => list.type === 'SellList');
 				const toSellers = data.filter((list) => list.type === 'BuyList');
@@ -68,8 +68,8 @@ const HomePage = () => {
 				setBuySideLists(toBuyers);
 				setLists(toBuyers);
 				setLoading(false);
-				console.log(`SellList: ${toBuyers.toString()}`);
-				console.log(`BuyList: ${toSellers.toString()}`);
+				// console.log(`SellList: ${toBuyers.toString()}`);
+				// console.log(`BuyList: ${toSellers.toString()}`);
 			});
 	};
 

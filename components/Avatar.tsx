@@ -8,14 +8,11 @@ const Avatar = ({ user, className = 'h-8 w-8 md:h-10 md:w-10' }: { user: User; c
 	const { image_url: imageURL } = user;
 
 	let src;
-
-	if(imageURL){
-		src = imageURL;
-	}
 	// @ts-ignore
-	else if(user?.image && user.image!=="" && user.image!==null){
+	if(imageURL || (user?.image && user.image!=="" && user.image!==null)){
 		// @ts-ignore
-		src = `${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${user?.image}`;
+		let path=(imageURL)?imageURL:user.image;
+		src = `${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${path}`;
 	}else{
 		src =  profilePlaceholder; //user.address ? makeBlockie(user.address) :
 	}
