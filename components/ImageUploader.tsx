@@ -1,3 +1,4 @@
+import { User } from "@/models/types";
 import { S3Client, PutObjectCommand, PutObjectCommandOutput } from "@aws-sdk/client-s3";
 import React, { useEffect, useState } from 'react';
 
@@ -5,11 +6,12 @@ const MAX_FILE_SIZE = 1000000; // 1 MB
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
 
 interface ImageUploaderParams {
-	address: `0x${string}`;
-	onUploadFinished?: (data: PutObjectCommandOutput, imageName:string) => void;
+	user:User,
+	address: string;
+	onUploadFinished?: (data: PutObjectCommandOutput, image_url:string) => void;
 }
 
-const ImageUploader = ({ address, onUploadFinished }: ImageUploaderParams) => {
+const ImageUploader = ({user, address, onUploadFinished }: ImageUploaderParams) => {
 	const [file, setFile] = useState<File>();
 	const [error, setError] = useState('');
 	const [isUploading, setIsUploading] = useState(false);
@@ -38,6 +40,7 @@ const ImageUploader = ({ address, onUploadFinished }: ImageUploaderParams) => {
 			const formData = new FormData();
 			formData.append('address', address);
 			formData.append('file', file);
+			formData.append('user_existing_image_url',user.image_url!);
            
 			fetch('/api/s3/profiles', {
 				method: 'POST',
@@ -47,11 +50,11 @@ const ImageUploader = ({ address, onUploadFinished }: ImageUploaderParams) => {
 				}
 			})
 				.then((res) => res.json())
-				.then(({ data,imageName }) => {
+				.then(({ data,image_url }) => {
 					if (data.error) {
 						setError(data.error);
 					} else {
-						onUploadFinished?.(data,imageName);
+						onUploadFinished?.(data,image_url);
 					}
 				})
                 .catch((err)=>{

@@ -47,7 +47,8 @@ const Dispute = ({ order }: DisputeParams) => {
 	// 	return <Loading />;
 	// }
 
-	const { user_dispute: userDispute, resolved } = dispute || {};
+	// @ts-ignore
+	const { user_dispute: userDispute, resolved } = dispute[0] || {};
 	//const fee = `${formatUnits(disputeFee, chain.nativeCurrency.decimals)} ${chain.nativeCurrency.symbol}`;
 	// console.log("Hello World ", order,resolved , userDispute, paidForDispute);
 
@@ -63,7 +64,7 @@ const Dispute = ({ order }: DisputeParams) => {
 					</div>
 					<span>
 						{/* {resolved || (!!userDispute && paidForDispute) ? ( */}
-						{resolved || (!!userDispute && userDispute.length>0) ? (
+						{resolved || (!!userDispute) ? (
 							<DisputeStatus address={address} order={order} />
 						) : (
 							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={20} />

@@ -278,17 +278,17 @@ console.log('list is ',list.type,list.escrow_type);
     });
   }, [bank]);
 
-  const updateUserState=(data:any)=>{
-    setUser(()=>{
-      if(data.image){
-        return {
-          ...data,
-          image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
-        }
-      }
-      return {...data};
-    });
-  }
+  // const updateUserState=(data:any)=>{
+  //   setUser(()=>{
+  //     if(data.image){
+  //       return {
+  //         ...data,
+  //         image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
+  //       }
+  //     }
+  //     return {...data};
+  //   });
+  // }
 
   useEffect(() => {
     if (!address) return;
@@ -304,8 +304,8 @@ console.log('list is ',list.type,list.escrow_type);
         if (data.errors) {
           setUser(null);
         } else {
-          // setUser(data);
-          updateUserState(data);
+          setUser(data);
+          // updateUserState(data);
         }
       });
   }, [address]);

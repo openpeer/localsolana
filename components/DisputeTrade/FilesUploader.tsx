@@ -15,12 +15,13 @@ interface Upload {
 }
 
 interface FilesUploaderParams {
+	orderId: number,
 	address: string;
 	uuid: string;
 	onUploadFinished?: (data: Upload[]) => void;
 }
 
-const FilesUploader = ({ uuid, address, onUploadFinished }: FilesUploaderParams) => {
+const FilesUploader = ({ orderId,uuid, address, onUploadFinished }: FilesUploaderParams) => {
 	const [files, setFiles] = useState<File[]>([]);
 	const [error, setError] = useState<string>();
 	const [isUploading, setIsUploading] = useState(false);
@@ -68,6 +69,7 @@ const FilesUploader = ({ uuid, address, onUploadFinished }: FilesUploaderParams)
 			const formData = new FormData();
 			formData.append('uuid', uuid);
 			formData.append('address', address);
+			formData.append('orderId',orderId.toString());
 
 			files.forEach((file) => {
 				formData.append('files', file);

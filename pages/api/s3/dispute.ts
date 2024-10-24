@@ -66,20 +66,18 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<AWSSignedUrlPar
 
 			const uploads: Promise<any>[] = [];
 			const signedUrls: Upload[] = [];
-			const { uuid, address } = data.fields;
+			const { orderId, uuid, address } = data.fields;
 
 			for (const file of Object.values(data.files).flat()) {
 				const fileContent = fs.readFileSync(file.filepath);
 				// const key = `disputes/${uuid}/${address}/${file.originalFilename}`;
-				const key = `disputes/${address}/${file.originalFilename}`;
+				const key = `disputes/${orderId}/${address}/${file.originalFilename}`;
 
-				
 				const params = {
 					Bucket: process.env.AWS_IMAGES_BUCKET!,
 					Key: key,
 					Body: fileContent,
 				};
-
 
 				// Upload file to S3
 				const uploadCommand = new PutObjectCommand(params);

@@ -52,7 +52,7 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 							<p className="text-sm">Profile photo</p>
 							<p className="text-xs">We recommend an image of at least 400x400. Gifs work too 🙌</p>
 						</div>
-						<ImageUploader address={address} onUploadFinished={onUploadFinished} /> 
+						<ImageUploader user={user} address={address} onUploadFinished={onUploadFinished} /> 
 					</div>
 				</div>
 			</div>

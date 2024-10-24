@@ -32,17 +32,19 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 	const address  = primaryWallet?.address;
 
-	const updateUserState=(data:any)=>{
-		setUser(()=>{
-		  if(data.image){
-			return {
-			  ...data,
-			  image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
-			}
-		  }
-		  return {...data};
-		});
-	  }
+	// const updateUserState=(data:any)=>{
+	// 	setUser(()=>{
+	// 	  if(data.image_url){
+
+	// 		return {
+	// 		  ...data,
+	// 		  image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image_url}`
+	// 		}
+	// 	  }
+
+	// 	  return {...data};
+	// 	});
+	//   }
 
 	const fetchUserProfile = async () => {
 		if (!address) return;
@@ -58,7 +60,9 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 				if (data.errors) {
 					setUser(null);
 				} else {
-					updateUserState(data.data);
+					// updateUserState(data.data);
+					const updatedInfo = data.data;
+					setUser({...updatedInfo});
 					setContractAddress(data.data.contract_address); 
 				}
 			});
@@ -95,10 +99,12 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		const newUser = await result.json();
 
 		if (newUser.data.id) {
-			// setUser(newUser.data);
-			updateUserState(newUser.data);
-			if (!showNotification) return;
-			onUpdateProfile?.(newUser.data);
+			const updatedInfo = {...newUser.data};
+			setUser(updatedInfo);
+			// updateUserState(newUser.data);
+
+			// if (!showNotification) return;
+			onUpdateProfile?.(updatedInfo);
 		} else {
 			const foundErrors: ErrorObject = newUser.errors;
 			Object.entries(foundErrors).map(([fieldName, messages]) => {
@@ -113,7 +119,10 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	};
 
 	const onUploadFinished = async (data: PutObjectCommandOutput, imageName:string) => {
-		updateUserProfile({ ...user, image:imageName  } as User, false);
+		setErrors({});
+		const newUser = { ...user, image:imageName,image_url:imageName };
+		await updateUserProfile(newUser as User, true);
+		window.location.reload();
 	};
 
 	const updateProfile = () => {

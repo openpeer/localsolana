@@ -230,8 +230,8 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 				if (data.errors) {
 					setUser(null);
 				} else {
-					// setUser(data);
-					updateUserState(data.data);
+					setUser(data.data);
+					// updateUserState(data.data);
 				}
 			});
 	}, [address]);
