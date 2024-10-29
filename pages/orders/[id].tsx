@@ -95,14 +95,22 @@ const OrderPage = ({ id }: { id: string }) => {
     if (!order?.id) return <Loading />;
 
 	const { step, list, dispute } = order;
-    
-	if (!!dispute || order.status === 'dispute') {
+
+	if (order.status === 'dispute') {
 		return <Dispute order={order} />;
 	}
 
     const seller = order.seller || list.seller;
     const selling = seller.address === address;
     const chatAddress = selling ? order.buyer.address : seller.address;
+    if(seller.address !== address && order.buyer.address !== address && address!==process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS){
+        return (
+            <>
+                <Loading />
+                {/* <div>Not Authorized to acess this page</div> */}
+            </>
+        );
+    }
 
     return (
         <div className="pt-4 md:pt-6">

@@ -37,7 +37,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 	const { id:orderId,uuid, dispute, buyer } = order;
 	// @ts-ignore
 	const { user_dispute: userDispute, resolved } = dispute[0] || {};
-	console.log("Hello ",);
+
 	const { comments: userComment, dispute_files: files = [] } = userDispute || {};
 	const { address: connectedAddress } = useAccount();
 	const isBuyer = buyer.address === connectedAddress;

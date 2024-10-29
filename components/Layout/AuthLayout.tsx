@@ -21,7 +21,8 @@ import {
 	XMarkIcon,
 	WalletIcon,
 	ChatBubbleLeftIcon,
-	LockClosedIcon
+	LockClosedIcon,
+	QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 import { Manrope } from '@next/font/google';
 
@@ -76,6 +77,8 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 
 	if(primaryWallet?.address && (!addConversation)){
 		navigation.push({ name: 'My Conversations', href: '/conversation', icon: ChatBubbleLeftIcon });
+		if(process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS===primaryWallet?.address)
+			navigation.push({ name: 'Disputes', href: '/disputes', icon: QuestionMarkCircleIcon });
 	}
 	else if((primaryWallet && (!primaryWallet.address) || (!primaryWallet)) && addConversation){
 		navigation = navigation.filter(item => item.name !== 'My Conversations');

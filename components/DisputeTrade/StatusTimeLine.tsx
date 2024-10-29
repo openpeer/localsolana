@@ -18,7 +18,8 @@ interface StatusTimeLineParams {
 }
 
 const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
-	const { counterpart_replied: replied, resolved } = dispute;
+	// @ts-ignore
+	const { counterpart_replied: replied, resolved } = dispute?.[0]??{};
 	// let replied="Dispute Open",resolved="Closed";
 	const counterpart = isBuyer ? 'Seller' : 'Buyer';
 	//const { chain } = useNetwork();
@@ -50,8 +51,8 @@ const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
 			status: resolved || replied ? 'complete' : 'current'
 		},
 		{
-			name: 'Openpeer Arbitration',
-			description: `Openpeer ${resolved ? 'arbitraded' : 'is arbitrating'} the dispute`,
+			name: 'LocalSolana Arbitration',
+			description: `LocalSolana ${resolved ? 'arbitraded' : 'is arbitrating'} the dispute`,
 			status: resolved ? 'complete' : replied ? 'current' : 'upcoming'
 		}
 	];

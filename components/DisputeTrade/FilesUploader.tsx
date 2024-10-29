@@ -1,7 +1,6 @@
 import Loading from 'components/Loading/Loading';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-
 import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 
 const MAX_FILE_SIZE = 2000000; // 2 MB
@@ -15,13 +14,13 @@ interface Upload {
 }
 
 interface FilesUploaderParams {
-	orderId: number,
+	orderId: number;
 	address: string;
 	uuid: string;
 	onUploadFinished?: (data: Upload[]) => void;
 }
 
-const FilesUploader = ({ orderId,uuid, address, onUploadFinished }: FilesUploaderParams) => {
+const FilesUploader = ({ orderId, uuid, address, onUploadFinished }: FilesUploaderParams) => {
 	const [files, setFiles] = useState<File[]>([]);
 	const [error, setError] = useState<string>();
 	const [isUploading, setIsUploading] = useState(false);
@@ -57,19 +56,13 @@ const FilesUploader = ({ orderId,uuid, address, onUploadFinished }: FilesUploade
 		setIsUploading(false);
 	};
 
-	const handleFileChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
-		if (!target.files) return;
-
-		processFiles(Array.from(target.files));
-	};
-
 	useEffect(() => {
 		if (files.length) {
 			setIsUploading(true);
 			const formData = new FormData();
 			formData.append('uuid', uuid);
 			formData.append('address', address);
-			formData.append('orderId',orderId.toString());
+			formData.append('orderId', orderId.toString());
 
 			files.forEach((file) => {
 				formData.append('files', file);
@@ -95,7 +88,7 @@ const FilesUploader = ({ orderId,uuid, address, onUploadFinished }: FilesUploade
 	}, [files]);
 
 	return (
-		<label htmlFor="file-upload" className="bg-transparent relative cursor-pointer rounded-md font-medium">
+		<div className="bg-transparent relative cursor-pointer rounded-md font-medium">
 			<div
 				className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-cyan-600 bg-gray-100"
 				{...getRootProps()}
@@ -105,30 +98,28 @@ const FilesUploader = ({ orderId,uuid, address, onUploadFinished }: FilesUploade
 				) : (
 					<>
 						<CloudArrowUpIcon className="text-cyan-600 w-10" />
-						<>
-							<div className="flex text-sm text-gray-600">
-								<span className="text-cyan-600 underline hover:no-underline">Upload files</span>
-								<input
-									id="file-upload"
-									name="file-upload"
-									type="file"
-									className="sr-only"
-									multiple
-									onChange={handleFileChange}
-									disabled={isUploading}
-									{...getInputProps()}
-								/>
-								<p className="pl-1">or drag and drop {isDragActive && 'the files here'}</p>
-							</div>
-							<p className="text-xs text-gray-500 py-2">
-								Supported formats: JPEG, JPG, PNG, PDF. Maximum size 2MB
-							</p>
-						</>
+						<div className="flex text-sm text-gray-600">
+							<span className="text-cyan-600 underline hover:no-underline">Upload files</span>
+							<p className="pl-1">or drag and drop {isDragActive && 'the files here'}</p>
+						</div>
+						<p className="text-xs text-gray-500 py-2">
+							Supported formats: JPEG, JPG, PNG, PDF. Maximum size 2MB
+						</p>
+						{/* File input is now part of Dropzone */}
+						<input
+							id="file-upload"
+							name="file-upload"
+							type="file"
+							className="sr-only"
+							multiple
+							disabled={isUploading}
+							{...getInputProps()}
+						/>
 					</>
 				)}
 			</div>
 			{!!error && <p style={{ color: 'red' }}>{error}</p>}
-		</label>
+		</div>
 	);
 };
 

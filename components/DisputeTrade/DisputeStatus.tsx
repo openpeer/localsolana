@@ -9,13 +9,17 @@ import { smallWalletAddress } from 'utils';
 
 import { formatUnits } from 'viem';
 import StatusTimeLine from './StatusTimeLine';
+import ResolveDisputeButton from '../ResolveDisputeButton/ResolveDisputeButton';
 
 interface DisputeStatusParams {
 	order: Order;
 	address: string;
 }
 
+
+
 const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
+
 	const {
 		id,
 		token_amount: tokenAmount,
@@ -27,10 +31,17 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 		payment_method: { bank },
 		list: { token, fiat_currency: currency }
 	} = order;
-	const { resolved, winner } = dispute!;
+	
+	// const { resolved, winner } = dispute!;
+
+	// @ts-ignore
+	const { user_dispute: userDispute, resolved,winner } = dispute[0] || {};
+	// console.log(dispute);
 	// let resolved=false,winner=true;
 
 	const isBuyer = address === buyer.address;
+	const isSeller = address === seller.address;
+	
 	const tokenValue = `${tokenAmount} ${token.symbol}`;
 	const fiatValue = `${currency.symbol} ${Number(fiatAmount).toFixed(2)}`;
 	const counterpart = isBuyer ? 'seller' : 'buyer';
@@ -40,6 +51,10 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 	return (
 		<div>
 			<div className="flex flex-col border-b pb-4">
+				{
+				(isSeller || isBuyer )
+				?
+				<> 
 				{!resolved ? (
 					<div className="flex flex-row justify-between">
 						<div className="font-bold">Dispute Pending</div>
@@ -47,27 +62,52 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 							Time left <span>15m:20secs</span>
 						</div>
 					</div>
-				) : !!winner && winner === address ? (
+				) 
+				: !!winner && (winner === (isBuyer?buyer.id:seller.id)) ? (
 					<div className="text-cyan-600">
 						<div className="font-bold">Dispute Ended</div>
 						You won the dispute. {tokenValue} and the fee has been credited to your account
 					</div>
-				) : (
+				) 
+				: (
 					<div className="text-red-600">
 						<div className="font-bold">Dispute Ended</div>
 						Unfortunately, you lost the dispute. {tokenValue} has been credited back to the {counterpart}
 						&apos;s account
 					</div>
 				)}
+				</>
+				:
+				(process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS===address && resolved)
+				?
+				<div className="text-cyan-600">
+					<div className="font-bold">Dispute Ended</div>
+					{
+						!!winner 
+						&&
+						((+winner)=== (+buyer.id))
+						?
+							(buyer.name)?buyer.name:buyer.address
+						:
+							(seller.name)?seller.name:seller.address
+					}
+					{' '}
+					won the dispute. {tokenValue} and the fee has been credited to his/her account
+				</div>
+				:
+				<></>
+			}
 			</div>
 
-			<div className="py-8">
-				<StatusTimeLine 
-					escrow={"Address"||order.escrow!.address} 
-					dispute={dispute!} 
-					isBuyer={isBuyer}
-				/>
-			</div>
+			{
+				(isBuyer || isSeller)?
+				<div className="py-8">
+					{/* @ts-ignore */}
+					<StatusTimeLine escrow={order?.escrow?.address??"Address"} dispute={dispute!} isBuyer={isBuyer}/>
+				</div>
+				:
+				<></>
+			}
 
 			<div>
 				<Label title="Transaction Details" />
@@ -124,8 +164,37 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 					</div>
 				</div>
 			</div>
-
-			{!resolved && (
+			<div className="mt-8">
+			{
+				((!isSeller) && (!isBuyer))
+				?
+				<>
+					{
+						resolved
+						?
+							<>
+								<div className='mb-2'>Dispute is already resolved.</div>
+							</>
+						:
+						// @ts-ignore
+						(!!dispute && dispute.length>0)?
+							<>
+								<div className='mb-2'>Resolve Dispute</div>
+								<div className='flex flex-row justify-between'>
+									<ResolveDisputeButton order={order} title="Seller" outlined={false} user_address={seller.address}/>
+									<div className='p-2'></div>
+									<ResolveDisputeButton order={order} title="Buyer" outlined={false}  user_address={buyer.address}/>
+								</div>
+							</>
+						:
+						<>
+							<div className='mb-2'>Dispute reason not submitted yet.</div>
+						</>
+					}
+				</>
+				:
+				(!resolved) 
+				? 
 				<div className="mt-8">
 					{isBuyer ? (
 						<CancelOrderButton order={order} title="Close Dispute" outlined={false} />
@@ -133,7 +202,19 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 						<ReleaseFundsButton order={order} title="Close Dispute" dispute />
 					)}
 				</div>
-			)}
+				: 
+				<>Local Solana Arbitration resolved dispute.</>
+			}
+			</div>
+			{/* {(!resolved) && (
+				<div className="mt-8">
+					{isBuyer ? (
+						<CancelOrderButton order={order} title="Close Dispute" outlined={false} />
+					) : (
+						<ReleaseFundsButton order={order} title="Close Dispute" dispute />
+					)}
+				</div>
+			)} */}
 		</div>
 	);
 };

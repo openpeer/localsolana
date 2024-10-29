@@ -14,6 +14,7 @@ interface DisputeParams {
 }
 
 const Dispute = ({ order }: DisputeParams) => {
+
 	const { address } = useAccount();
 	//const { chain } = useNetwork();
 	const escrowAddress = order?.escrow?.address;
@@ -27,6 +28,7 @@ const Dispute = ({ order }: DisputeParams) => {
 	// 	enabled: !!escrowAddress
 	// });
 
+	// @ts-ignore
 	const { data: paidForDispute }: { data: boolean | undefined } = useContractRead(escrowAddress,'disputePayments',true);
 
 	// const { data: disputeFee }: { data: bigint | undefined } = useContractRead({
@@ -36,6 +38,7 @@ const Dispute = ({ order }: DisputeParams) => {
 	// 	enabled: !!escrowAddress
 	// });
 
+	// @ts-ignore
 	const { data: disputeFee }: { data: bigint | undefined } = useContractRead(escrowAddress,'disputeFee',true);
 
 	const { token_amount: tokenAmount, list, buyer, dispute, seller } = order;
@@ -64,14 +67,17 @@ const Dispute = ({ order }: DisputeParams) => {
 					</div>
 					<span>
 						{/* {resolved || (!!userDispute && paidForDispute) ? ( */}
-						{resolved || (!!userDispute) ? (
+						{resolved || (!!userDispute) || (address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS) ? (
+							// @ts-ignore
 							<DisputeStatus address={address} order={order} />
 						) : (
+							// @ts-ignore
 							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={20} />
 						)}
 					</span>
 				</div>
-				<DisputeNotes fee={20} />
+				 {/* @ts-ignore */}
+				<DisputeNotes fee={20} address={address} order={order}/>
 			</div>
 		</div>
 	);

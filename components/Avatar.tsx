@@ -2,7 +2,7 @@
 import { User } from 'models/types';
 import Image from 'next/image';
 import React from 'react';
-import profilePlaceholder from 'public/profile_placeholder.png'
+import profilePlaceholder from 'public/ooui_user-avatar.svg'
 
 const Avatar = ({ user, className = 'h-8 w-8 md:h-10 md:w-10' }: { user: User; className?: string }) => {
 	const { image_url: imageURL } = user;
