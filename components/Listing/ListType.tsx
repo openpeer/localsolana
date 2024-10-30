@@ -74,6 +74,18 @@ const ListType = ({ updateList, list }: ListStepProps) => {
 		});
 	}, [type, escrowType]);
 
+	const updateUserState=(data:any)=>{
+		setUser(()=>{
+		  if(data.image){
+			return {
+			  ...data,
+			  image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
+			}
+		  }
+		  return {...data};
+		});
+	  }
+
 	useEffect(() => {
 		if (!address) return;
 		// const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -82,14 +94,15 @@ const ListType = ({ updateList, list }: ListStepProps) => {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
 		})
-			.then((res) => res.json())
-			.then((data) => {
-				if (data.errors) {
-					setUser(null);
-				} else {
-					setUser(data.data);
-				}
-			});
+		.then((res) => res.json())
+		.then((data) => {
+			if (data.errors) {
+				setUser(null);
+			} else {
+				// setUser(data.data);
+				updateUserState(data.data);
+			}
+		});
 	}, [address]);
 
 	if (!user?.email) {

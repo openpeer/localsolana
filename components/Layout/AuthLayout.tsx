@@ -21,7 +21,8 @@ import {
 	XMarkIcon,
 	WalletIcon,
 	ChatBubbleLeftIcon,
-	LockClosedIcon
+	LockClosedIcon,
+	QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 import { Manrope } from '@next/font/google';
 
@@ -76,6 +77,8 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 
 	if(primaryWallet?.address && (!addConversation)){
 		navigation.push({ name: 'My Conversations', href: '/conversation', icon: ChatBubbleLeftIcon });
+		if(process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS===primaryWallet?.address)
+			navigation.push({ name: 'Disputes', href: '/disputes', icon: QuestionMarkCircleIcon });
 	}
 	else if((primaryWallet && (!primaryWallet.address) || (!primaryWallet)) && addConversation){
 		navigation = navigation.filter(item => item.name !== 'My Conversations');
@@ -204,20 +207,34 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 	const { primaryWallet } = useDynamicContext();
 	const authenticated = disableAuthentication || primaryWallet?.isAuthenticated;
 
-	
+
+	const updateUserState=(data:any)=>{
+		setUser(()=>{
+		  if(data.image){
+			return {
+			  ...data,
+			  image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
+			}
+		  }
+		  return {...data};
+		});
+	  }
+
 	useEffect(() => {
 		if (!address) {
 			setUser(null);
 			return;
 		}
 
+		// working accurately for image
 		minkeApi.get(`/api/user_profiles/${address}`)
 			.then((res) => res.data)
 			.then((data) => {
 				if (data.errors) {
 					setUser(null);
 				} else {
-					setUser(data);
+					setUser(data.data);
+					// updateUserState(data.data);
 				}
 			});
 	}, [address]);

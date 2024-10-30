@@ -11,12 +11,16 @@ import { BuyStepProps } from './Buy.types';
 import OrderResume from './OrderResume';
 
 const Completed = ({ order }: BuyStepProps) => {
-	const { list, token_amount: tokenAmount, buyer, seller } = order;
+	const { list, token_amount: tokenAmount, buyer, seller, dispute } = order;
 	const { token } = list!;
 	const { address } = useAccount();
 	const selling = seller.address === address;
-
+	// @ts-ignore
+	const {winner, resolved}=dispute?.[0]||{};
 	const tokenValue = `${tokenAmount} ${token.symbol}`;
+
+	// console.log(resolved, winner, buyer.id, ((+winner)===(+buyer?.id)), address,buyer.address, (address===buyer.address));
+
 	return (
 		<>
 			<StepLayout>
@@ -27,13 +31,57 @@ const Completed = ({ order }: BuyStepProps) => {
 							<HeaderH2 title="Purchase Complete" />
 						</span>
 						<p className="text-base">
-							{selling
-								? `You have successfully sold ${tokenValue} to ${
-										buyer?.name || smallWalletAddress(buyer?.address)
-								  }.`
-								: `You have successfully purchased ${tokenValue} from ${
-										seller?.name || smallWalletAddress(seller.address)
-								  }.`}
+							{/* Case when dispute is raised and resolved */}
+							{
+								resolved && 
+								address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS && 
+								(									
+									`LocalSolana Arbitrator declared ${((+winner)===(+buyer?.id))?
+										buyer?.name ?? smallWalletAddress(buyer.address)
+										:
+										seller?.name ?? smallWalletAddress(seller.address)
+									} as winner.`
+								)
+							}
+
+							{/* Case when dispute is raised and resolved */}
+							{
+								resolved && 
+								address===buyer.address && 
+								(									
+									`LocalSolana Arbitrator declared ${((+winner)===(+buyer?.id))?
+										'You'
+										:
+										seller?.name ?? smallWalletAddress(seller.address)
+									} as winner.`
+								)
+							}
+
+							{/* Case when dispute is raised and resolved */}
+							{
+								resolved && 
+								address===seller.address && 
+								(									
+									`LocalSolana Arbitrator declare chose ${((+winner)===(+seller?.id))?
+										'You'
+										:
+										buyer?.name ?? smallWalletAddress(buyer.address)
+									} as winner.`
+								)
+							}
+
+							{/* Case when there is no dispute */}
+							{!resolved &&
+								(
+								selling
+									? `You have successfully sold ${tokenValue} to ${
+											buyer?.name || smallWalletAddress(buyer?.address)
+									}.`
+									: `You have successfully purchased ${tokenValue} from ${
+											seller?.name || smallWalletAddress(seller.address)
+									}.`
+								) 
+							}
 						</p>
 					</div>
 

@@ -2,12 +2,13 @@ import { Button, ListsTable, Loading, Pagination, Switcher } from 'components';
 import Filters from 'components/Buy/Filters';
 import { usePagination } from 'hooks';
 import { SearchFilters } from 'models/search';
-import { List } from 'models/types';
+import { List, Dispute } from 'models/types';
 import { GetServerSideProps } from 'next';
 import React, { useEffect, useState } from 'react';
 
 import { AdjustmentsVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
+import ListsTableDispute from '@/components/ListsTableDispute';
 
 interface PaginationMeta {
 	current_page: number;
@@ -15,10 +16,11 @@ interface PaginationMeta {
 	total_count: number;
 }
 
-const HomePage = () => {
-	const [buySideLists, setBuySideLists] = useState<List[]>([]);
-	const [sellSideLists, setSellSideLists] = useState<List[]>([]);
+const Disputes = () => {
+	// const [buySideLists, setBuySideLists] = useState<List[]>([]);
+	// const [sellSideLists, setSellSideLists] = useState<List[]>([]);
 	const [lists, setLists] = useState<List[]>([]);
+    const [disputeLists, setDisputeLists] = useState<Dispute[]>([]);
 	const [isLoading, setLoading] = useState(false);
 	const [type, setType] = useState<string>('Buy');
 	const [paginationMeta, setPaginationMeta] = useState<PaginationMeta>();
@@ -52,22 +54,24 @@ const HomePage = () => {
 			}, {} as { [key: string]: string });
 
 		const searchParams = new URLSearchParams(search);
-		fetch(`/api/getLists?${searchParams.toString()}`, {
-				headers: {
-					Authorization: `Bearer ${getAuthToken()}`
-				}
-			})
-				.then((res) => res.json())
-				.then((response) => {
-					const { data,meta }:{data:List[];meta:PaginationMeta} = response?.data;
-					setPaginationMeta(meta);
-					const toBuyers = data.filter((list) => list.type === 'SellList');
-					const toSellers = data.filter((list) => list.type === 'BuyList');
-					setSellSideLists(toSellers);
-					setBuySideLists(toBuyers);
-					setLists(toBuyers);
-					setLoading(false);
-				});
+		fetch(`/api/getDisputes?${searchParams.toString()}`, {
+			headers: {
+				Authorization: `Bearer ${getAuthToken()}`
+			}
+		})
+        .then((res) => res.json())
+        .then((response) => {
+            const data=response?.data;
+            setDisputeLists(data);
+            // const { data,meta }:{data:any;meta:PaginationMeta} = response?.data;
+            // setPaginationMeta(meta);
+            // const toBuyers = data.filter((list) => list.type === 'SellList');
+            // const toSellers = data.filter((list) => list.type === 'BuyList');
+            // setSellSideLists(toSellers);
+            // setBuySideLists(toBuyers);
+            // setLists(toBuyers);
+            setLoading(false);
+        });
 	};
 
 	useEffect(() => {
@@ -79,15 +83,15 @@ const HomePage = () => {
 		performSearch(page);
 	}, [page]);
 
-	useEffect(() => {
-		if (type === 'Buy') {
-			setLists(buySideLists);
-		} else {
-			setLists(sellSideLists);
-		}
-	}, [type, buySideLists, sellSideLists]);
+	// useEffect(() => {
+	// 	if (type === 'Buy') {
+	// 		setLists(buySideLists);
+	// 	} else {
+	// 		setLists(sellSideLists);
+	// 	}
+	// }, [type, buySideLists, sellSideLists]);
 
-	if (!lists) return <p>No lists data</p>;
+	if (!disputeLists) return <p>No lists data</p>;
 
 	const handleToggleFilters = () => {
 		setShowFilters(!showFilters);
@@ -98,25 +102,29 @@ const HomePage = () => {
 			<div className="mx-auto px-4 sm:px-6 md:px-8">
 				<div className="flex flex-row items-center justify-between relative">
 					<div className="lg:mt-6">
-						<Switcher leftLabel="Buy" rightLabel="Sell" selected={type} onToggle={setType} />
+						{/* <Switcher leftLabel="Buy" rightLabel="Sell" selected={type} onToggle={setType} /> */}
 					</div>
-					<div className="flex items-center lg:hidden lg:justify-end" onClick={handleToggleFilters}>
-						<AdjustmentsVerticalIcon
-							width={24}
-							height={24}
-							className="text-gray-600 hover:cursor-pointer"
-						/>
-						<span className="text-gray-600 hover:cursor-pointer ml-2">Filters</span>
-					</div>
-					<div className="flex lg:justify-end hidden lg:block">
-						<Filters
-							onFilterUpdate={setFilters}
-							needToReset={needToReset}
-							setNeedToReset={setNeedToReset}
-						/>
+					<div className='hidden'>
+						<div className="flex items-center lg:hidden lg:justify-end" onClick={handleToggleFilters}>
+							<AdjustmentsVerticalIcon
+								width={24}
+								height={24}
+								className="text-gray-600 hover:cursor-pointer"
+							/>
+							<span className="text-gray-600 hover:cursor-pointer ml-2">Filters</span>
+						</div>
+						<div className="flex lg:justify-end hidden lg:block">
+							<Filters
+								onFilterUpdate={setFilters}
+								needToReset={needToReset}
+								setNeedToReset={setNeedToReset}
+							/>
+						</div>
 					</div>
 				</div>
 				{showFilters && (
+					<div className='hidden'>
+
 					<div className="lg:my-8 lg:hidden">
 						<Filters
 							onFilterUpdate={setFilters}
@@ -124,12 +132,14 @@ const HomePage = () => {
 							setNeedToReset={setNeedToReset}
 						/>
 					</div>
+					</div>
+
 				)}
 				{isLoading ? (
 					<Loading />
-				) : lists.length > 0 ? (
+				) : disputeLists.length > 0 ? (
 					<div className="py-4">
-						<ListsTable lists={lists} hideLowAmounts />
+						<ListsTableDispute disputeLists={disputeLists} hideLowAmounts />
 						{!!lists.length && !!paginationMeta && paginationMeta.total_pages > 1 && (
 							<Pagination
 								length={lists.length}
@@ -163,9 +173,9 @@ const HomePage = () => {
 
 export const getServerSideProps: GetServerSideProps = async () => ({
 	props: {
-		title: 'Trade P2P',
-		disableAuthentication: true
+		title: 'Disputes',
+		disableAuthentication: false
 	}
 });
 
-export default HomePage;
+export default Disputes;

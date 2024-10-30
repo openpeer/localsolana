@@ -95,7 +95,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 	});
 
 	const cancelIsNotAvailable = ['cancelled', 'closed'].includes(order.status);
-	const simpleCancel: boolean = true;//!order.tradeID && order.status === 'created'; // no need to talk to the blockchain
+	const simpleCancel: boolean = !order.trade_id && order.status === 'created'; 
 
 	const onCancelOrder = () => {
 		if (cancelIsNotAvailable) return;

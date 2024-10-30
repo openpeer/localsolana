@@ -9,7 +9,7 @@ import { useFormErrors, useAccount } from 'hooks';
 import { Errors } from 'models/errors';
 import { Order } from 'models/types';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import snakecaseKeys from 'snakecase-keys';
 
 import { DocumentIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -30,14 +30,22 @@ interface DisputeFormParams {
 	fee: string;
 }
 
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+
+
 const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams) => {
-	const { uuid, dispute, buyer } = order;
-	const { user_dispute: userDispute, resolved } = dispute || {};
+	const { id:orderId,uuid, dispute, buyer } = order;
+	// @ts-ignore
+	const { user_dispute: userDispute, resolved } = dispute[0] || {};
+
 	const { comments: userComment, dispute_files: files = [] } = userDispute || {};
 	const { address: connectedAddress } = useAccount();
 	const isBuyer = buyer.address === connectedAddress;
 
 	const [comments, setComments] = useState(userComment || '');
+	const [ crossList, setCrossList ] = useState<string[]>([]);
+
+	// @ts-ignore
 	const orderUploads: Upload[] = files.map((file) => ({
 		signedURL: file.upload_url,
 		key: file.key,
@@ -62,6 +70,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 			error.comments = 'Should be present';
 		}
 
+		// include not before paidForDispute
 		if (uploads.length === 0) {
 			error.uploads = 'Add some evidence';
 		}
@@ -70,8 +79,12 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 	};
 
 	const onContinue = async () => {
+		
 		if (validate(resolver) && paidForDispute) {
-			const result = await fetch(`/api/orders/${uuid}/disputes`, {
+			// console.log(uploads);
+		// include not before paidForDispute
+		// if (validate(resolver) && paidForDispute) {
+			const result = await fetch(`/api/orders/${order.id}/disputes`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -81,15 +94,67 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 					snakecaseKeys(
 						{
 							comments,
-							files: uploads.map(({ key }) => key)
+							winner_id: null,
+   							resolved: false,
+							files: uploads.map(({ key }) => key.replace(`disputes/${order.id}/`,''))
 						},
 						{ deep: true }
 					)
 				)
 			});
 			await result.json();
+			window.location.reload();
 		}
 	};
+
+	const removeFile = async(keyToRemove:string,filename:string)=>{
+		setCrossList((prev) => {
+			const newArr = [...prev, keyToRemove]; // Adding a new item
+			return newArr;
+		  });
+		const formData = new FormData();
+		formData.append('filename', filename);
+		formData.append('orderId', orderId.toString());
+		formData.append('case', '1');
+	
+		if(connectedAddress) formData.append('address',connectedAddress.toString());
+
+		fetch('/api/s3/removedispute', {
+			method: 'POST',
+			body: formData,
+			headers: {
+				Accept: ALLOWED_FILE_TYPES.join(', ')
+			}
+		})
+		.then((res) => res.json())
+		.then(({ data }) => {
+			if (data.error) {
+				// setError(data.error);
+			}else{
+				setUploads((prev:Upload[])=>{
+					const newState = prev.filter((upload) => upload.key !== keyToRemove);
+  					return newState;
+				});
+			}
+		});
+	}
+
+	useEffect(()=>{
+		if(!!userDispute === false){
+			const formData = new FormData();
+			formData.append('orderId', orderId.toString());
+			formData.append('case', '2');
+			if(connectedAddress) formData.append('address',connectedAddress.toString());
+			fetch('/api/s3/removedispute', {
+				method: 'POST',
+				body: formData,
+				// headers: {
+				// 	Accept: ALLOWED_FILE_TYPES.join(', ')
+				// }
+			})
+		}
+	},[userDispute]);
+
 
 	return (
 		<>
@@ -108,14 +173,18 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 				<Label title="Upload proof" />
 				{uploads.length < 5 && (
 					<div className="mb-8">
-						<FilesUploader uuid={uuid} address={address} onUploadFinished={onUploadFinished} />
+						<FilesUploader orderId={orderId} uuid={uuid} address={address} onUploadFinished={onUploadFinished} />
 						{!!errors.uploads && <p className="mt-2 text-sm text-red-600">{errors.uploads}</p>}
 					</div>
 				)}
 				{uploads.length > 0 && (
 					<div className="w-full flex flex-col md:flex-row space-x-2">
-						{uploads.map(({ key, signedURL, filename }) => {
+						{uploads.map(({ key, signedURL, filename },index) => {
+							const checkCrossList = crossList.includes(key);
 							const fileType = key.split('.').pop()?.toLowerCase();
+
+							if(checkCrossList) return <></>
+
 							return (
 								<div key={key} className="w-full md:w-1/3 mb-4 items-center justify-center relative">
 									<div className="bg-gray-200 flex w-full h-full items-center justify-center rounded">
@@ -141,6 +210,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 										<button
 											type="button"
 											className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-cyan-600 ring-2 ring-white flex items-center justify-center cursor-pointer"
+											onClick={()=>removeFile(key,filename)}
 										>
 											<XMarkIcon className="w-8 h-8 text-white" />
 										</button>

@@ -1337,14 +1337,6 @@
         {
           "name": "fee_bps",
           "type": "u64"
-        },
-        {
-          "name": "dispute_fee",
-          "type": "u64"
-        },
-        {
-          "name": "fee_discount_nft",
-          "type": "pubkey"
         }
       ]
     },
@@ -1418,35 +1410,6 @@
       ],
       "accounts": [
         {
-          "name": "escrow_state",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119,
-                  95,
-                  115,
-                  116,
-                  97,
-                  116,
-                  101
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "payer"
-              }
-            ]
-          }
-        },
-        {
           "name": "escrow",
           "writable": true,
           "pda": {
@@ -1471,6 +1434,12 @@
         },
         {
           "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_payer",
+          "writable": true,
           "signer": true
         },
         {
@@ -1589,6 +1558,27 @@
           "name": "fee_payer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Associated Token Program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System Program (needed to create token accounts)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar (for rent exemption)"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -1665,6 +1655,7 @@
         },
         {
           "name": "arbitrator",
+          "writable": true,
           "signer": true
         },
         {
@@ -1676,12 +1667,61 @@
           "writable": true
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "name": "fee_recipient",
+          "writable": true
+        },
+        {
+          "name": "fee_recipient_token_account",
+          "writable": true,
+          "optional": true
         },
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "mint_account"
+        },
+        {
+          "name": "escrow_token_account",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "buyer_token_account",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "seller_token_account",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "fee_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "Associated Token Program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System Program (needed to create token accounts)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar (for rent exemption)"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -2046,6 +2086,16 @@
       "code": 6016,
       "name": "AccountError",
       "msg": "You missed to pass one important account"
+    },
+    {
+      "code": 6017,
+      "name": "Disputed",
+      "msg": "This order is disputed. You can't release funds."
+    },
+    {
+      "code": 6018,
+      "name": "InvalidArbitrator",
+      "msg": "You're not a valid arbitrator."
     }
   ],
   "types": [
@@ -2200,18 +2250,6 @@
           },
           {
             "name": "fee_recipient",
-            "type": "pubkey"
-          },
-          {
-            "name": "fee_discount_nft",
-            "type": "pubkey"
-          },
-          {
-            "name": "dispute_fee",
-            "type": "u64"
-          },
-          {
-            "name": "deployer",
             "type": "pubkey"
           }
         ]

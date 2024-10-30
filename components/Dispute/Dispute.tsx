@@ -6,6 +6,7 @@ import { Order } from 'models/types';
 import React from 'react';
 import { formatUnits } from 'viem';
 import { useAccount } from 'hooks';
+import { useContractRead } from '@/hooks/transactions/useContractRead';
 //import { useContractRead, useNetwork } from 'wagmi';
 
 interface DisputeParams {
@@ -13,36 +14,22 @@ interface DisputeParams {
 }
 
 const Dispute = ({ order }: DisputeParams) => {
+
 	const { address } = useAccount();
-	//const { chain } = useNetwork();
-	const escrowAddress = order?.escrow?.address;
-	// const { data: paidForDispute }: { data: boolean | undefined } = useContractRead({
-	// 	address: escrowAddress,
-	// 	abi: OpenPeerEscrow,
-	// 	functionName: 'disputePayments',
-	// 	args: [order.trade_id, address],
-	// 	watch: true,
-	// 	enabled: !!escrowAddress
-	// });
-
-	// const { data: disputeFee }: { data: bigint | undefined } = useContractRead({
-	// 	address: escrowAddress,
-	// 	abi: OpenPeerEscrow,
-	// 	functionName: 'disputeFee',
-	// 	enabled: !!escrowAddress
-	// });
-
+	const escrowAddress = order?.trade_id;
 	const { token_amount: tokenAmount, list, buyer, dispute, seller } = order;
 	const { token } = list;
 	const isSeller = address === seller.address;
 	const isBuyer = address === buyer.address;
+	const { data: escrowData, loadingContract } = useContractRead(
+		escrowAddress,
+		"escrow",
+		true
+	  );
 
-	// if ((!isSeller && !isBuyer) || paidForDispute === undefined || chain === undefined || disputeFee === undefined) {
-	// 	return <Loading />;
-	// }
-
-	const { user_dispute: userDispute, resolved } = dispute || {};
-	//const fee = `${formatUnits(disputeFee, chain.nativeCurrency.decimals)} ${chain.nativeCurrency.symbol}`;
+	const paidForDispute = escrowData?.dispute == true && (isBuyer?escrowData?.buyerPaidDispute:escrowData?.sellerPaidDispute);
+	// @ts-ignore
+	const { user_dispute: userDispute, resolved } = dispute[0] || {};
 
 	return (
 		<div className="p-4 md:p-6 w-full m-auto mb-16">
@@ -55,14 +42,18 @@ const Dispute = ({ order }: DisputeParams) => {
 						</div>
 					</div>
 					<span>
-						{/* {resolved || (!!userDispute && paidForDispute) ? (
+						{/* {resolved || (!!userDispute && paidForDispute) ? ( */}
+						{resolved || (!!userDispute) || (address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS) ? (
+							// @ts-ignore
 							<DisputeStatus address={address} order={order} />
 						) : (
-							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={fee} />
-						)} */}
+							// @ts-ignore
+							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={0.005} />
+						)}
 					</span>
 				</div>
-				{/* <DisputeNotes fee={fee} /> */}
+				 {/* @ts-ignore */}
+				<DisputeNotes fee={0.005} address={address} order={order}/>
 			</div>
 		</div>
 	);

@@ -22,8 +22,12 @@ const OrderResume = ({ order, showRating = false }: OrderResumeParams) => {
 		id,
 		created_at: createdAt,
 		seller,
-		payment_method: { bank }
+		payment_method: { bank },
+		dispute
 	} = order;
+	// @ts-ignore
+	const {resolved, winner}=dispute?.[0]||{};
+	
 	const { token, fiat_currency: currency } = list!;
 	const { address } = useAccount();
 	const selling = seller.address === address;
@@ -68,7 +72,14 @@ const OrderResume = ({ order, showRating = false }: OrderResumeParams) => {
 					<ClipboardText itemValue={String(Number(id) * 10000)} />
 				</span>
 			</div>
-			{showRating && false && (
+			{
+				resolved && 
+					<div className="flex flex-row justify-between mb-4">
+						<span className="text-neutral-500">LocalSolana arbitrator resolved dispute corresponding to this particular order.</span>
+					</div>
+			}
+			
+			{/* {showRating && false && ( */}
 				<>
 					<div className="border-bottom border border-color-gray-200 mb-4" />
 					<div className="flex flex-row items-center justify-between">
@@ -105,7 +116,7 @@ const OrderResume = ({ order, showRating = false }: OrderResumeParams) => {
 						</span>
 					</div>
 				</>
-			)}
+			{/* )} */}
 		</div>
 	);
 };

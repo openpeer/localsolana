@@ -95,8 +95,8 @@ const OrderPage = ({ id }: { id: string }) => {
     if (!order?.id) return <Loading />;
 
 	const { step, list, dispute } = order;
-
-	if (!!dispute || order.status === 'dispute') {
+    
+	if (order.status === 'dispute') {
 		return <Dispute order={order} />;
 	}
 

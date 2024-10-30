@@ -1,5 +1,6 @@
 import { getAuthToken, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 //import { S3 } from 'aws-sdk';
+import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
 import { Errors } from 'models/errors';
 import { User } from 'models/types';
 import { useEffect, useState } from 'react';
@@ -31,9 +32,22 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 	const address  = primaryWallet?.address;
 
+	const updateUserState=(data:any)=>{
+		setUser(()=>{
+		  if(data.image){
+			return {
+			  ...data,
+			  image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
+			}
+		  }
+		  return {...data};
+		});
+	  }
+
 	const fetchUserProfile = async () => {
 		if (!address) return;
 
+		// working accurately for image
 		minkeApi.get(`/api/user_profiles/${address}`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
@@ -44,8 +58,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 				if (data.errors) {
 					setUser(null);
 				} else {
-					setUser(data.data);
-					console.log('Here in fetch Profile',data.data);
+					updateUserState(data.data);
 					setContractAddress(data.data.contract_address); 
 				}
 			});
@@ -69,6 +82,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 	}, [user]);
 
 	const updateUserProfile = async (profile: User, showNotification = true) => {
+		// working accurately for image
 		const result = await fetch(`/api/user_profiles/${address}`, {
 			method: 'POST',
 			body: JSON.stringify(profile),
@@ -81,7 +95,8 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		const newUser = await result.json();
 
 		if (newUser.data.id) {
-			setUser(newUser.data);
+			// setUser(newUser.data);
+			updateUserState(newUser.data);
 			if (!showNotification) return;
 			onUpdateProfile?.(newUser.data);
 		} else {
@@ -97,9 +112,9 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		}
 	};
 
-	// const onUploadFinished = async ({ Key: image }: S3.ManagedUpload.SendData) => {
-	// 	updateUserProfile({ ...user, ...{ image } } as User, false);
-	// };
+	const onUploadFinished = async (data: PutObjectCommandOutput, imageName:string) => {
+		updateUserProfile({ ...user, image:imageName  } as User, false);
+	};
 
 	const updateProfile = () => {
 		console.log('Here in update profile',user,contractAddress);
@@ -116,7 +131,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 	return {
 		user,
-		//onUploadFinished,
+		onUploadFinished,
 		updateProfile,
 		errors,
 		username,
