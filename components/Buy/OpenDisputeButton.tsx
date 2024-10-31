@@ -137,7 +137,7 @@ const OpenDisputeButton = ({
           if(updateFormDetails && res){
             setDisputeOpen(true);
           }
-          if(status!=='dispute'){
+          if(status!=='dispute' && res){
             updateOrderStatus();
           }
         })

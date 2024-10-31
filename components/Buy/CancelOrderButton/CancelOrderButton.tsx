@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import BlockchainCancelButton from './BlockchainCancelButton';
 import CancelReasons from './CancelReasons';
+import { useContractRead } from '@/hooks/transactions/useContractRead';
 
 interface CancelOrderButtonParams {
 	order: Order;
@@ -27,6 +28,11 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 
 	const [modalOpen, setModalOpen] = useState(false);
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);
+	const { data: escrowData, loadingContract } = useContractRead(
+		order.trade_id,
+		"escrow",
+		true
+	  );
 
 	const cancelOrder = async () => {
 
@@ -63,7 +69,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 	}
 
 	const cancelIsNotAvailable = ['cancelled', 'closed'].includes(order.status);
-	const simpleCancel: boolean = !order.trade_id && order.status === 'created'; 
+	const simpleCancel: boolean = (!escrowData || escrowData==null) && order.status === 'created'; 
 
 	const onCancelOrder = () => {
 		if (cancelIsNotAvailable) return;
