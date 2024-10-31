@@ -44,6 +44,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 
 	const [comments, setComments] = useState(userComment || '');
 	const [ crossList, setCrossList ] = useState<string[]>([]);
+	const [ disputeOpened, setDisputeOpen ] = useState<boolean>(false);
 
 	// @ts-ignore
 	const orderUploads: Upload[] = files.map((file) => ({
@@ -78,8 +79,11 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 		return error;
 	};
 
-	const onContinue = async () => {
-		if (validate(resolver) && !paidForDispute) {
+	const onContinue = async (statusUpdated:boolean=false) => {
+		console.log("Inside Called continue. 1",validate(resolver),paidForDispute);
+		if (validate(resolver) && (paidForDispute||statusUpdated)) {
+		console.log("Inside Called continue. 2",validate(resolver),paidForDispute);
+
 			// console.log(uploads);
 		// include not before paidForDispute
 		// if (validate(resolver) && paidForDispute) {
@@ -153,6 +157,13 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 			})
 		}
 	},[userDispute]);
+
+	useEffect(()=>{
+		if(disputeOpened){
+			onContinue(true);	
+		}
+		console.log("Called continue.");
+	},[disputeOpened]);
 
 
 	return (
@@ -232,10 +243,10 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 					) : (
 						<ReleaseFundsButton order={order} outlined title="Cancel" dispute />
 					))}
-				{!paidForDispute ? (
-					<Button title="Continue" onClick={onContinue} />
+				{paidForDispute ? (
+					<Button title="Continue" onClick={()=>onContinue()} />
 				) : (
-					<OpenDisputeButton order={order} outlined={false} title="Open Dispute" />
+						<OpenDisputeButton order={order} outlined={false} title="Open Dispute" disabledProp={Object.keys(resolver()).length?true:false} updateFormDetails={true} setDisputeOpen={setDisputeOpen}/>
 				)}
 			</div>
 		</>

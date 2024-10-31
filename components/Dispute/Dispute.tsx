@@ -16,44 +16,20 @@ interface DisputeParams {
 const Dispute = ({ order }: DisputeParams) => {
 
 	const { address } = useAccount();
-	//const { chain } = useNetwork();
-	const escrowAddress = order?.escrow?.address;
-	
-	// const { data: paidForDispute }: { data: boolean | undefined } = useContractRead({
-	// 	address: escrowAddress,
-	// 	abi: OpenPeerEscrow,
-	// 	functionName: 'disputePayments',
-	// 	args: [order.trade_id, address],
-	// 	watch: true,
-	// 	enabled: !!escrowAddress
-	// });
-
-	// @ts-ignore
-	const { data: paidForDispute }: { data: boolean | undefined } = useContractRead(escrowAddress,'disputePayments',true);
-
-	// const { data: disputeFee }: { data: bigint | undefined } = useContractRead({
-	// 	address: escrowAddress,
-	// 	abi: OpenPeerEscrow,
-	// 	functionName: 'disputeFee',
-	// 	enabled: !!escrowAddress
-	// });
-
-	// @ts-ignore
-	const { data: disputeFee }: { data: bigint | undefined } = useContractRead(escrowAddress,'disputeFee',true);
-
+	const escrowAddress = order?.trade_id;
 	const { token_amount: tokenAmount, list, buyer, dispute, seller } = order;
 	const { token } = list;
 	const isSeller = address === seller.address;
 	const isBuyer = address === buyer.address;
+	const { data: escrowData, loadingContract } = useContractRead(
+		escrowAddress,
+		"escrow",
+		true
+	  );
 
-	// if ((!isSeller && !isBuyer) || paidForDispute === undefined || chain === undefined || disputeFee === undefined) {
-	// 	return <Loading />;
-	// }
-
+	const paidForDispute = escrowData?.dispute == true && (isBuyer?escrowData?.buyerPaidDispute:escrowData?.sellerPaidDispute);
 	// @ts-ignore
 	const { user_dispute: userDispute, resolved } = dispute[0] || {};
-	//const fee = `${formatUnits(disputeFee, chain.nativeCurrency.decimals)} ${chain.nativeCurrency.symbol}`;
-	// console.log("Hello World ", order,resolved , userDispute, paidForDispute);
 
 	return (
 		<div className="p-4 md:p-6 w-full m-auto mb-16">
@@ -72,12 +48,12 @@ const Dispute = ({ order }: DisputeParams) => {
 							<DisputeStatus address={address} order={order} />
 						) : (
 							// @ts-ignore
-							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={20} />
+							<DisputeForm address={address} order={order} paidForDispute={paidForDispute} fee={0.005} />
 						)}
 					</span>
 				</div>
 				 {/* @ts-ignore */}
-				<DisputeNotes fee={20} address={address} order={order}/>
+				<DisputeNotes fee={0.005} address={address} order={order}/>
 			</div>
 		</div>
 	);

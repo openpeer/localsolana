@@ -1343,14 +1343,6 @@ export type LocalSolanaMigrate = {
         {
           "name": "feeBps",
           "type": "u64"
-        },
-        {
-          "name": "disputeFee",
-          "type": "u64"
-        },
-        {
-          "name": "feeDiscountNft",
-          "type": "pubkey"
         }
       ]
     },
@@ -1424,35 +1416,6 @@ export type LocalSolanaMigrate = {
       ],
       "accounts": [
         {
-          "name": "escrowState",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119,
-                  95,
-                  115,
-                  116,
-                  97,
-                  116,
-                  101
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "payer"
-              }
-            ]
-          }
-        },
-        {
           "name": "escrow",
           "writable": true,
           "pda": {
@@ -1477,6 +1440,12 @@ export type LocalSolanaMigrate = {
         },
         {
           "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "feePayer",
+          "writable": true,
           "signer": true
         },
         {
@@ -1595,6 +1564,27 @@ export type LocalSolanaMigrate = {
           "name": "feePayer",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "associatedTokenProgram",
+          "docs": [
+            "Associated Token Program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System Program (needed to create token accounts)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar (for rent exemption)"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -1671,6 +1661,7 @@ export type LocalSolanaMigrate = {
         },
         {
           "name": "arbitrator",
+          "writable": true,
           "signer": true
         },
         {
@@ -1682,12 +1673,61 @@ export type LocalSolanaMigrate = {
           "writable": true
         },
         {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
+          "name": "feeRecipient",
+          "writable": true
+        },
+        {
+          "name": "feeRecipientTokenAccount",
+          "writable": true,
+          "optional": true
         },
         {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "mintAccount"
+        },
+        {
+          "name": "escrowTokenAccount",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "buyerTokenAccount",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "sellerTokenAccount",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "feePayer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "associatedTokenProgram",
+          "docs": [
+            "Associated Token Program for creating token accounts"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System Program (needed to create token accounts)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "docs": [
+            "Rent sysvar (for rent exemption)"
+          ],
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -2052,6 +2092,16 @@ export type LocalSolanaMigrate = {
       "code": 6016,
       "name": "accountError",
       "msg": "You missed to pass one important account"
+    },
+    {
+      "code": 6017,
+      "name": "disputed",
+      "msg": "This order is disputed. You can't release funds."
+    },
+    {
+      "code": 6018,
+      "name": "invalidArbitrator",
+      "msg": "You're not a valid arbitrator."
     }
   ],
   "types": [
@@ -2206,18 +2256,6 @@ export type LocalSolanaMigrate = {
           },
           {
             "name": "feeRecipient",
-            "type": "pubkey"
-          },
-          {
-            "name": "feeDiscountNft",
-            "type": "pubkey"
-          },
-          {
-            "name": "disputeFee",
-            "type": "u64"
-          },
-          {
-            "name": "deployer",
             "type": "pubkey"
           }
         ]

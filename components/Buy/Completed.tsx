@@ -36,7 +36,7 @@ const Completed = ({ order }: BuyStepProps) => {
 								resolved && 
 								address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS && 
 								(									
-									`LocalSolana Arbitrator declare chose ${((+winner)===(+buyer?.id))?
+									`LocalSolana Arbitrator declared ${((+winner)===(+buyer?.id))?
 										buyer?.name ?? smallWalletAddress(buyer.address)
 										:
 										seller?.name ?? smallWalletAddress(seller.address)
@@ -49,7 +49,7 @@ const Completed = ({ order }: BuyStepProps) => {
 								resolved && 
 								address===buyer.address && 
 								(									
-									`LocalSolana Arbitrator declare chose ${((+winner)===(+buyer?.id))?
+									`LocalSolana Arbitrator declared ${((+winner)===(+buyer?.id))?
 										'You'
 										:
 										seller?.name ?? smallWalletAddress(seller.address)
@@ -62,7 +62,7 @@ const Completed = ({ order }: BuyStepProps) => {
 								resolved && 
 								address===seller.address && 
 								(									
-									`LocalSolana Arbitrator declare chose ${((+winner)===(+seller?.id))?
+									`LocalSolana Arbitrator declared ${((+winner)===(+seller?.id))?
 										'You'
 										:
 										buyer?.name ?? smallWalletAddress(buyer.address)

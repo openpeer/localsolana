@@ -9,7 +9,7 @@ import { smallWalletAddress } from 'utils';
 
 import { formatUnits } from 'viem';
 import StatusTimeLine from './StatusTimeLine';
-import ResolveDisputeButton from '../ResolveDisputeButton/ResolveDisputeButton';
+import ResolveDisputeButton from '../ResolveDisputeButton';
 
 interface DisputeStatusParams {
 	order: Order;
@@ -179,7 +179,8 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 						// @ts-ignore
 						(!!dispute && dispute.length>0)?
 							<>
-								<div className='mb-2'>Resolve Dispute</div>
+								<div className='mb-2 text-center'>
+									<div>Who is the Winner?</div></div>
 								<div className='flex flex-row justify-between'>
 									<ResolveDisputeButton order={order} title="Seller" outlined={false} user_address={seller.address}/>
 									<div className='p-2'></div>

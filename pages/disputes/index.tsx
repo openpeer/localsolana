@@ -91,7 +91,7 @@ const Disputes = () => {
 	// 	}
 	// }, [type, buySideLists, sellSideLists]);
 
-	if (!lists) return <p>No lists data</p>;
+	if (!disputeLists) return <p>No lists data</p>;
 
 	const handleToggleFilters = () => {
 		setShowFilters(!showFilters);

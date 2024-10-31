@@ -1,4 +1,3 @@
-
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { countries } from 'models/countries';
 import { List, Dispute } from 'models/types';
@@ -107,6 +106,18 @@ const ListsTableDispute = ({ disputeLists }: ListsTableProps) => {
 						scope="col"
 						className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
 					>
+						Seller
+					</th>
+					<th
+						scope="col"
+						className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
+					>
+						Buyer
+					</th>
+					<th
+						scope="col"
+						className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
+					>
 						Resolved
 					</th>
 					<th
@@ -126,7 +137,7 @@ const ListsTableDispute = ({ disputeLists }: ListsTableProps) => {
 			<tbody className="divide-y divide-gray-200 bg-white">
 				{disputeLists.map((dispute) => {
                     // @ts-ignore
-					const { id,order_id,resolved,winner_id,} = dispute;
+					const { id,order_id,resolved,winner_id,buyerInformation,sellerInformation} = dispute;
 					
 					// const banks = type === 'BuyList' ? list.bank : paymentMethods?.map((pm) => pm.bank);
 					// const { address: sellerAddress, name } = seller;
@@ -205,6 +216,18 @@ const ListsTableDispute = ({ disputeLists }: ListsTableProps) => {
 														<span className="pr-2 text-sm">Order Id</span>
                                                         {order_id}
 													</div>
+													<div className="flex flex-row items-center">
+														<span className="pr-2 text-sm">Seller </span>
+														{sellerInformation.name??sellerInformation.address}
+														{` ( ${sellerInformation.id} ) `}
+
+													</div>
+													<div className="flex flex-row items-center">
+														<span className="pr-2 text-sm">Buyer</span>
+                                                        {buyerInformation.name??buyerInformation.address}
+														{` ( ${buyerInformation.id} ) `}
+
+													</div>
                                                     <div className="flex flex-row items-center">
 														<span className="pr-2 text-sm">Resolved</span>
                                                         {resolved?"Yes":"No"}
@@ -218,9 +241,25 @@ const ListsTableDispute = ({ disputeLists }: ListsTableProps) => {
 										</div>
 									</div>
 									<div className="lg:hidden pb-3 pt-5">
-                                        <Link href={`/orders/${order_id}`}>
+                                        <Link href={`/${resolved?'disputes':'orders'}/${order_id}`}>
                                             <Button title={"Continue"} />
                                         </Link>
+									</div>
+								</div>
+							</td>
+							<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
+								<div className="flex flex-col">
+									<div className="flex flex-row mb-2 space-x-2 items-center">
+										{sellerInformation.name??sellerInformation.address}
+										{` ( ${sellerInformation.id} ) `}
+									</div>
+								</div>
+							</td>
+							<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
+								<div className="flex flex-col">
+									<div className="flex flex-row mb-2 space-x-2 items-center">
+										{buyerInformation.name??buyerInformation.address}
+										{` ( ${buyerInformation.id} ) `}
 									</div>
 								</div>
 							</td>
@@ -244,7 +283,7 @@ const ListsTableDispute = ({ disputeLists }: ListsTableProps) => {
 							</td>
 							
 							<td className="hidden text-right py-4 pr-4 lg:table-cell">
-                                <Link href={`/orders/${order_id}`}>
+                                <Link href={`/${resolved?'disputes':'orders'}/${order_id}`}>
                                     <Button title={"Continue"} />
                                 </Link>
 							</td>

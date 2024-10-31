@@ -34,7 +34,6 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
     }
       const publicKey = method =="escrowState"?escrowStateAddress:new PublicKey(contractAddress);
       try {
-       
         if (!connection) {
           setError("Connection  not found");
           setLoading(false);

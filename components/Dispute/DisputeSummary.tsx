@@ -42,7 +42,7 @@ const DisputeViewForAdmin=({ order, address, userDisputeResponses }: DisputeView
 			<div className="flex flex-col border-b pb-4">
 				{!resolved ? (
 					<div className="flex flex-row justify-between">
-						<div className="font-bold">Dispute Pending</div>
+						<div className="font-bold">Dispute Details</div>
 						<div className="text-cyan-600 hidden">
 							Time left <span>15m:20secs</span>
 						</div>
@@ -146,7 +146,7 @@ const DisputeViewForAdmin=({ order, address, userDisputeResponses }: DisputeView
 }
 
 
-const DisputeNotes = ({ fee, address, order }: { fee: string, address:string, order:Order })=>{
+const DisputeSummary = ({ fee, address, order }: { fee: string, address:string, order:Order })=>{
 	const [userDisputeResponses, setUserDisputeResponses] = useState({});
 	useEffect(()=>{
 		if(address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS){
@@ -162,21 +162,17 @@ const DisputeNotes = ({ fee, address, order }: { fee: string, address:string, or
 		
 		if(!Object.keys(userDisputeResponses).length) return <></>
 
-		return <DisputeViewForAdmin order={order} address={address} userDisputeResponses={userDisputeResponses}/>
+		return (
+		    <div className="w-full mt-16 md:mt-0 md:w-1/2 md:border-l-2 md:border-gray-200 md:pl-8">
+                <DisputeViewForAdmin order={order} address={address} userDisputeResponses={userDisputeResponses}/>
+            </div>
+        );
 
 	}
 
 	return (
-		<div className="w-full mt-16 md:mt-0 md:w-1/2 md:border-l-2 md:border-gray-200 md:pl-8">
-		<h3 className="text-xl pb-4">Points to note about Disputing Trade</h3>
-		<ol className="list-decimal text-gray-500 pl-4 space-y-4">
-			<li>Kindly state the reason you are requesting for this dispute.</li>
-			<li>Upload proof of transaction.</li>
-			<li>Comment and proof will be sent to both parties of the transaction.</li>
-			<li>Note that deceitful and baseless claim can result to permanent banning of your account.</li>
-			<li>When disputing the transaction each party will have to pay a small dispute fee of {fee} SOL.</li>
-		</ol>
-		</div>
+		<>
+		</>
 	)
 };
-export default DisputeNotes;
+export default DisputeSummary;

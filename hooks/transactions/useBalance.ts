@@ -50,7 +50,8 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
     }
 
     
-  }, [walletAddress]);
+  }, [walletAddress,connection]);
+  // console.log("Here is my balance",balance, loadingBalance, error);
 
   return { balance, loadingBalance, error };
 };

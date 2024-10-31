@@ -53,24 +53,21 @@ const HomePage = () => {
 
 		const searchParams = new URLSearchParams(search);
 		fetch(`/api/getLists?${searchParams.toString()}`, {
-		// fetch(`/api/getLists`, {
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`
-			}
-		})
-			.then((res) => res.json())
-			.then((response) => {
-				const { data,meta }:{data:List[];meta:PaginationMeta} = response?.data;
-				setPaginationMeta(meta);
-				const toBuyers = data.filter((list) => list.type === 'SellList');
-				const toSellers = data.filter((list) => list.type === 'BuyList');
-				setSellSideLists(toSellers);
-				setBuySideLists(toBuyers);
-				setLists(toBuyers);
-				setLoading(false);
-				// console.log(`SellList: ${toBuyers.toString()}`);
-				// console.log(`BuyList: ${toSellers.toString()}`);
-			});
+				headers: {
+					Authorization: `Bearer ${getAuthToken()}`
+				}
+			})
+				.then((res) => res.json())
+				.then((response) => {
+					const { data,meta }:{data:List[];meta:PaginationMeta} = response?.data;
+					setPaginationMeta(meta);
+					const toBuyers = data.filter((list) => list.type === 'SellList');
+					const toSellers = data.filter((list) => list.type === 'BuyList');
+					setSellSideLists(toSellers);
+					setBuySideLists(toBuyers);
+					setLists(toBuyers);
+					setLoading(false);
+				});
 	};
 
 	useEffect(() => {

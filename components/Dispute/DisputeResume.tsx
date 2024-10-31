@@ -2,18 +2,17 @@ import Button from 'components/Button/Button';
 import { useAccount } from 'hooks';
 import { Order } from 'models/types';
 import React from 'react';
-
+import ClipboardText from '../Buy/ClipboardText';
 import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline';
 
 import { formatUnits } from 'viem';
-import ClipboardText from './ClipboardText';
 
 interface OrderResumeParams {
 	order: Order;
 	showRating?: boolean;
 }
 
-const OrderResume = ({ order, showRating = false }: OrderResumeParams) => {
+const DisputeResume = ({ order, showRating = false }: OrderResumeParams) => {
 	const {
 		list,
 		token_amount: tokenAmount,
@@ -71,54 +70,9 @@ const OrderResume = ({ order, showRating = false }: OrderResumeParams) => {
 				<span className="flex flex-row justify-between">
 					<ClipboardText itemValue={String(Number(id) * 10000)} />
 				</span>
-			</div>
-			{
-				resolved && 
-					<div className="flex flex-row justify-between mb-4">
-						<span className="text-neutral-500">LocalSolana arbitrator resolved dispute corresponding to this particular order.</span>
-					</div>
-			}
-			
-			{showRating && false && (
-				<>
-					<div className="border-bottom border border-color-gray-200 mb-4" />
-					<div className="flex flex-row items-center justify-between">
-						<span className="text-neutral-500">Rate {selling ? 'buyer' : 'seller'}</span>
-						<span className="w-1/2">
-							<div className="flex flex-col flex-col-reverse md:flex-row items-center">
-								<span className="w-full md:pr-8">
-									<Button
-										title={
-											<>
-												<div className="flex flex-row items-center justify-center">
-													<HandThumbUpIcon className="w-6" />
-													<span className="ml-2">Good</span>
-												</div>
-											</>
-										}
-										outlined
-									/>
-								</span>
-								<span className="w-full">
-									<Button
-										title={
-											<>
-												<div className="flex flex-row items-center justify-center">
-													<HandThumbDownIcon className="w-6" />
-													<span className="ml-2">Bad</span>
-												</div>
-											</>
-										}
-										outlined
-									/>
-								</span>
-							</div>
-						</span>
-					</div>
-				</>
-			 )} 
+			</div>			
 		</div>
 	);
 };
 
-export default OrderResume;
+export default DisputeResume;

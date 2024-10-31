@@ -64,8 +64,6 @@ const useLocalSolana = () => {
       await program.methods
         .initialize(
           new anchor.BN(100),
-          new anchor.BN(1000000),
-          new PublicKey(feeRecepient)
         )
         .accounts({
           seller: walletAddress,
@@ -409,6 +407,73 @@ const useLocalSolana = () => {
     return tx;
   };
 
+  const openDispute = async (
+    orderId: string,
+    payer: PublicKey,
+  ) => {
+    if (!program || !provider) {
+      throw new Error("Program or provider is not initialized");
+    }
+    const tx = await program.methods
+      .openDispute(orderId)
+      .accounts({
+       payer:payer,
+       feePayer:feePayer
+      })
+      .transaction();
+    return tx;
+  };
+
+  const resolveDispute = async (
+    orderId: string,
+    seller: PublicKey,
+    buyer: PublicKey,
+    winner:PublicKey,
+    token: PublicKey
+  ) => {
+    if (!program || !provider || !feeRecepient || !feePayer || !arbitrator) {
+      throw new Error("Program or provider is not initialized");
+    }
+    let escrowPDA = await getEscrowPDA(orderId);
+
+    let escrowTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      escrowPDA!,
+      true
+    );
+    let feeTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      new PublicKey(feeRecepient),
+      true
+    );
+    let buyerTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      new PublicKey(buyer),
+      true
+    );
+    let sellerTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      new PublicKey(seller),
+      true
+    );
+    const tx = await program.methods
+      .resolveDispute(orderId,winner)
+      .accounts({
+        arbitrator:new PublicKey(arbitrator),
+        seller: seller,
+        buyer: buyer,
+        feeRecipient: new PublicKey(feeRecepient),
+        mintAccount: token,
+        feePayer: new PublicKey(feePayer),
+        feeRecipientTokenAccount:feeTokenAccount,
+        escrowTokenAccount:escrowTokenAccount,
+        buyerTokenAccount:buyerTokenAccount,
+        sellerTokenAccount:sellerTokenAccount
+      })
+      .transaction();
+    return tx;
+  };
+
   return {
     program,
     provider,
@@ -425,7 +490,7 @@ const useLocalSolana = () => {
     depositFundsEscrow,
     releaseFunds,
     createEscrowSolBuyer,
-    createEscrowTokenBuyer,
+    createEscrowTokenBuyer,openDispute,resolveDispute
   };
 };
 
