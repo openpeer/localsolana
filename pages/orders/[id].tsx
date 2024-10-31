@@ -50,7 +50,7 @@ const OrderPage = ({ id }: { id: string }) => {
         };
 
         fetchOrder();
-    }, [id, token]);
+    }, [id, token, order?.status]);
 
     console.log('Socket',socketRef);
     useEffect(() => {
