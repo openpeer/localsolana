@@ -46,7 +46,6 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 
 	const [comments, setComments] = useState(userComment || '');
 	const [ crossList, setCrossList ] = useState<string[]>([]);
-	const [ disputeOpened, setDisputeOpen ] = useState<boolean>(false);
 
 	// @ts-ignore
 	const orderUploads: Upload[] = files.map((file) => ({
@@ -161,14 +160,6 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 		}
 	},[userDispute]);
 
-	useEffect(()=>{
-		if(disputeOpened){
-			onContinue(true);	
-		}
-		console.log("Called continue.");
-	},[disputeOpened]);
-
-
 	return (
 		<>
 			<div>
@@ -249,7 +240,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 				{paidForDispute ? (
 					<Button title="Continue" onClick={()=>onContinue()} />
 				) : (
-						<OpenDisputeButton order={order} outlined={false} title="Open Dispute" disabledProp={Object.keys(resolver()).length?true:false} updateFormDetails={true} setDisputeOpen={setDisputeOpen}/>
+						<OpenDisputeButton order={order} outlined={false} title="Open Dispute" disabledProp={Object.keys(resolver()).length?true:false} updateFormDetails={true} onContinue={onContinue}/>
 				)}
 			</div>
 		</>

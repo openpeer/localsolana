@@ -19,7 +19,7 @@ interface OpenDisputeButtonParams {
   title?: string;
   disabledProp?: boolean,
   updateFormDetails?: boolean,
-  setDisputeOpen?: any
+  onContinue?: (statusUpdated?: boolean) => Promise<void>;
 }
 
 const OpenDisputeButton = ({
@@ -28,7 +28,7 @@ const OpenDisputeButton = ({
   title = "Open a dispute",
   disabledProp = false,
   updateFormDetails = false,
-  setDisputeOpen
+  onContinue
 }: OpenDisputeButtonParams) => {
   const {
     buyer,
@@ -135,7 +135,9 @@ const OpenDisputeButton = ({
       const result=opensDispute?.();
       result?.then((res)=>{
           if(updateFormDetails && res){
-            setDisputeOpen(true);
+            // @ts-ignore
+            onContinue(true);
+            // setDisputeOpen(true);
           }
           if(status!=='dispute' && res){
             updateOrderStatus();
