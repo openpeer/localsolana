@@ -43,9 +43,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 			const savedOrder = await result.json();
 	
 			if (savedOrder.status === 200) {
-				//if (status !== 'cancelled') {
 					window.location.reload();
-				//}
 			} else {
 				toast.error('Error cancelling the order', {
 					theme: 'dark',
@@ -60,40 +58,6 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 			}
 	}
 
-	const { signMessage } = useConfirmationSignMessage({
-		onSuccess: async () => {
-			
-			const result = await fetch(`/api/orders/${id}/cancel`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${getAuthToken()}`
-				},
-				body: JSON.stringify({
-					cancellation,
-					other_reason: otherReason && otherReason !== '' ? otherReason : undefined
-				})
-			});
-			const savedOrder = await result.json();
-			if (savedOrder.uuid) {
-				if (status !== 'cancelled') {
-					window.location.reload();
-				}
-			} else {
-				toast.error('Error cancelling the order', {
-					theme: 'dark',
-					position: 'top-right',
-					autoClose: 5000,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: false,
-					progress: undefined
-				});
-			}
-		},
-	});
-
 	const cancelIsNotAvailable = ['cancelled', 'closed'].includes(order.status);
 	const simpleCancel: boolean = !order.trade_id && order.status === 'created'; 
 
@@ -106,8 +70,6 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 		}
 
 		if (simpleCancel) {
-			//signMessage({ message });
-			console.log(`Aa gya cancel krn order`);
 			cancelOrder();
 		}
 	};

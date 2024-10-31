@@ -51,7 +51,7 @@ const OpenDisputeButton = ({
   const { balance, loadingBalance, error } = useBalance(
     isBuyer?buyer.address:seller.address,
     token.address,
-    true
+    false
   );
 
   const { isLoading, isSuccess, opensDispute, data } = useOpenDispute({

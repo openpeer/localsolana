@@ -407,6 +407,41 @@ const useLocalSolana = () => {
     return tx;
   };
 
+  const cancelOrderOnChain = async (
+    orderId: string,
+    cancelledBy: PublicKey,
+    seller:PublicKey,
+    token:PublicKey
+  ) => {
+    if (!program || !provider || !feeRecepient || !feePayer || !arbitrator) {
+      throw new Error("Program or provider is not initialized");
+    }
+    let escrowPDA = await getEscrowPDA(orderId);
+    let escrowStatePDA = await getEscrowStatePDA(seller.toBase58());
+
+    let escrowTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      escrowPDA!,
+      true
+    );
+    let escrowStateTokenAccount = token==PublicKey.default?null:await getAssociatedTokenAddress(
+      token,
+      escrowStatePDA!,
+      true
+    );
+   
+    const tx = await program.methods
+      .buyerCancel(orderId)
+      .accounts({
+       seller:cancelledBy,
+       feePayer:feePayer,
+       escrowStateTokenAccount:escrowStateTokenAccount,
+       escrowTokenAccount:escrowTokenAccount
+      })
+      .transaction();
+    return tx;
+  };
+
   const openDispute = async (
     orderId: string,
     payer: PublicKey,
@@ -490,7 +525,7 @@ const useLocalSolana = () => {
     depositFundsEscrow,
     releaseFunds,
     createEscrowSolBuyer,
-    createEscrowTokenBuyer,openDispute,resolveDispute
+    createEscrowTokenBuyer,openDispute,resolveDispute,cancelOrderOnChain
   };
 };
 

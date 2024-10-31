@@ -83,6 +83,21 @@ export type LocalSolanaMigrate = {
           "signer": true
         },
         {
+          "name": "feePayer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrowTokenAccount",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "escrowStateTokenAccount",
+          "writable": true,
+          "optional": true
+        },
+        {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
@@ -1742,87 +1757,6 @@ export type LocalSolanaMigrate = {
       ]
     },
     {
-      "name": "sellerCancel",
-      "discriminator": [
-        32,
-        135,
-        125,
-        225,
-        9,
-        49,
-        24,
-        176
-      ],
-      "accounts": [
-        {
-          "name": "escrowState",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119,
-                  95,
-                  115,
-                  116,
-                  97,
-                  116,
-                  101
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "seller"
-              }
-            ]
-          }
-        },
-        {
-          "name": "escrow",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "arg",
-                "path": "orderId"
-              }
-            ]
-          }
-        },
-        {
-          "name": "seller",
-          "signer": true
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": [
-        {
-          "name": "orderId",
-          "type": "string"
-        }
-      ]
-    },
-    {
       "name": "withdrawBalance",
       "discriminator": [
         140,
@@ -2102,6 +2036,11 @@ export type LocalSolanaMigrate = {
       "code": 6018,
       "name": "invalidArbitrator",
       "msg": "You're not a valid arbitrator."
+    },
+    {
+      "code": 6019,
+      "name": "invalidAuthority",
+      "msg": "You're not a seller or buyer for this order."
     }
   ],
   "types": [

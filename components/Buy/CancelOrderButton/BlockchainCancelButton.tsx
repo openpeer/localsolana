@@ -2,14 +2,18 @@ import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 //import { OpenPeerEscrow } from 'abis';
 import { Button, Modal } from 'components';
 import TransactionLink from 'components/TransactionLink';
-import { useCancelReasons, useAccount } from 'hooks';
+import { useCancelReasons, useAccount, useTransactionFeedback } from 'hooks';
 //import { useEscrowCancel } from 'hooks/transactions';
 import { Order } from 'models/types';
 import React, { useEffect, useState } from 'react';
 import { parseUnits } from 'viem';
-//import { useContractRead } from 'wagmi';
 
 import CancelReasons from './CancelReasons';
+import { useContractRead } from '@/hooks/transactions/useContractRead';
+import { BN } from '@coral-xyz/anchor';
+import useEscrowCancel from '@/hooks/transactions/cancel/useEscrowCancel';
+import useGaslessEscrowCancel from '@/hooks/transactions/cancel/useGaslessEscrowCancel';
+import { toast } from 'react-toastify';
 
 interface BlockchainCancelButtonParams {
 	order: Order;
@@ -26,28 +30,27 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 	const [modalOpen, setModalOpen] = useState(false);
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);
 
-	// const { data: escrowData, isFetching: isFetchingEscrowData } = useContractRead({
-	// 	address: escrow?.address,
-	// 	abi: OpenPeerEscrow,
-	// 	functionName: 'escrows',
-	// 	args: [tradeId]
-	// });
+	const { data: escrowData, loadingContract } = useContractRead(
+		tradeId,
+		"escrow",
+		true
+	  );
+	const { isLoading, isSuccess, cancelOrder, data, isFetching } = useGaslessEscrowCancel({
+		isBuyer:isBuyer,
+		orderID:order.id.toString(),
+		buyer:buyer.address,
+		token:token,
+		contract:tradeId,
+		seller:seller.address,
+		amount:tokenAmount
+	});
 
-	// const { isLoading, isSuccess, cancelOrder, data, isFetching } = useEscrowCancel({
-	// 	contract: escrow!.address,
-	// 	orderID: uuid,
-	// 	buyer: buyer.address,
-	// 	token,
-	// 	amount: parseUnits(String(tokenAmount), token.decimals),
-	// 	isBuyer
-	// });
-
-	// useTransactionFeedback({
-	// 	hash: data?.hash,
-	// 	isSuccess,
-	// 	Link: <TransactionLink hash={data?.hash} />,
-	// 	description: 'Cancelled the order'
-	// });
+	useTransactionFeedback({
+		hash: data?.hash,
+		isSuccess,
+		Link: <TransactionLink hash={data?.hash} />,
+		description: 'Cancelled the order'
+	});
 
 	useEffect(() => {
 		if (cancelConfirmed) {
@@ -55,34 +58,52 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 		}
 	}, [cancelConfirmed]);
 
-	// useEffect(() => {
-	// 	const saveCancellationReasons = async () => {
-	// 		await fetch(`/api/orders/${uuid}/cancel`, {
-	// 			method: 'PUT',
-	// 			headers: {
-	// 				'Content-Type': 'application/json',
-	// 				Authorization: `Bearer ${getAuthToken()}`
-	// 			},
-	// 			body: JSON.stringify({
-	// 				cancellation,
-	// 				other_reason: otherReason && otherReason !== '' ? otherReason : undefined
-	// 			})
-	// 		});
-	// 	};
+	useEffect(() => {
+		const saveCancellationReasons = async () => {
 
-	// 	if (isSuccess) {
-	// 		saveCancellationReasons();
-	// 	}
-	// }, [isSuccess]);
+			const result = await fetch(`/api/orders/${order.id}/cancel`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${getAuthToken()}`
+				},
+				body: JSON.stringify({
+					cancellation,
+					other_reason: otherReason && otherReason !== '' ? otherReason : undefined
+				})
+			});
+			const savedOrder = await result.json();
+	
+			if (savedOrder.status === 200) {
+					window.location.reload();
+			} else {
+				toast.error('Error cancelling the order', {
+					theme: 'dark',
+					position: 'top-right',
+					autoClose: 5000,
+					hideProgressBar: false,
+					closeOnClick: true,
+					pauseOnHover: true,
+					draggable: false,
+					progress: undefined
+				});
+			}
+	}
+		if (isSuccess) {
+			saveCancellationReasons();
+		}
+	}, [isSuccess]);
 
-	// if (isFetchingEscrowData) {
-	// 	return <p>Loading...</p>;
-	// }
+	if (loadingContract) {
+		return <p>Loading...</p>;
+	}
 
-	//const [, sellerCanCancelAfter] = escrowData as [boolean, bigint];
+	const sellerCanCancelAfter = ((escrowData?.sellerCanCancelAfter?? new BN(0)) as BN).toNumber();
+
+
+	const sellerCanCancelAfterSeconds = parseInt(sellerCanCancelAfter.toString(), 10);
 
 	const now = Date.now() / 1000;
-	const sellerCanCancelAfterSeconds = 10;//parseInt(sellerCanCancelAfter.toString(), 10);
 	const sellerCantCancel = isSeller && (sellerCanCancelAfterSeconds <= 1 || sellerCanCancelAfterSeconds > now);
 
 	const onBlockchainCancel = () => {
@@ -93,12 +114,12 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 			return;
 		}
 
-		//cancelOrder?.();
+		cancelOrder?.();
 	};
 
 	return (
 		<>
-			{/* <Button
+			<Button
 				title={
 					sellerCantCancel ? 'You cannot cancel' : isLoading ? 'Processing...' : isSuccess ? 'Done' : title
 				}
@@ -106,7 +127,7 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 				disabled={isSuccess || sellerCantCancel || sellerCantCancel || isFetching}
 				onClick={onBlockchainCancel}
 				outlined={outlined}
-			/> */}
+			/>
 			<>
 				<Modal
 					actionButtonTitle="Yes, confirm"
