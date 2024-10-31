@@ -5,12 +5,14 @@ import { Errors } from 'models/errors';
 import { User } from 'models/types';
 import { useEffect, useState } from 'react';
 import { minkeApi } from '../pages/api/utils/utils';
+import { useRouter } from 'next/router';
 
 interface ErrorObject {
 	[fieldName: string]: string[];
 }
 
 const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) => void }) => {
+	const router=useRouter();
 	const [user, setUser] = useState<User | null>();
 	const [username, setUsername] = useState<string>();
 	const [email, setEmail] = useState<string>();
@@ -122,7 +124,8 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		setErrors({});
 		const newUser = { ...user, image:imageName,image_url:imageName };
 		await updateUserProfile(newUser as User, true);
-		window.location.reload();
+		// window.location.reload();
+		router.reload();
 	};
 
 	const updateProfile = () => {

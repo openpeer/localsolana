@@ -4,7 +4,7 @@ import { useCancelReasons, useConfirmationSignMessage, useAccount } from 'hooks'
 import { Order } from 'models/types';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-
+import { useRouter } from 'next/router';
 import BlockchainCancelButton from './BlockchainCancelButton';
 import CancelReasons from './CancelReasons';
 
@@ -15,6 +15,7 @@ interface CancelOrderButtonParams {
 }
 
 const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: CancelOrderButtonParams) => {
+	const router=useRouter();
 	const { seller, buyer, uuid, status,id } = order;
 
 	const { address } = useAccount();
@@ -44,7 +45,8 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 	
 			if (savedOrder.status === 200) {
 				//if (status !== 'cancelled') {
-					window.location.reload();
+					// window.location.reload();
+					router.reload();
 				//}
 			} else {
 				toast.error('Error cancelling the order', {
@@ -77,7 +79,8 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 			const savedOrder = await result.json();
 			if (savedOrder.uuid) {
 				if (status !== 'cancelled') {
-					window.location.reload();
+					// window.location.reload();
+					router.reload();
 				}
 			} else {
 				toast.error('Error cancelling the order', {
