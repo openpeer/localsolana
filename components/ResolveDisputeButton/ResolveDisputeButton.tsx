@@ -4,6 +4,7 @@ import { useCancelReasons, useConfirmationSignMessage, useAccount } from 'hooks'
 import { Order } from 'models/types';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useRouter } from 'next/router';
 
 interface ResolveDisputeButtonParams {
 	order: Order;
@@ -13,6 +14,7 @@ interface ResolveDisputeButtonParams {
 }
 
 const ResolveDisputeButton = ({ order, outlined = true, title = 'Resolve Dispute', user_address }: ResolveDisputeButtonParams) => {
+	const router=useRouter();
 	const { seller, buyer, uuid, status,id } = order;
 
 	const { address } = useAccount();
@@ -54,7 +56,8 @@ const ResolveDisputeButton = ({ order, outlined = true, title = 'Resolve Dispute
 	
 			if (jsonData.status === 200) {
 				if (jsonData?.data?.resolved) {
-					window.location.reload();
+					// window.location.reload();
+					router.reload();
 				}
 			} else {
 				toast.error('Error cancelling the order', {
@@ -87,7 +90,8 @@ const ResolveDisputeButton = ({ order, outlined = true, title = 'Resolve Dispute
 			const savedOrder = await result.json();
 			if (savedOrder.uuid) {
 				if (status !== 'cancelled') {
-					window.location.reload();
+					router.reload();
+					// window.location.reload();
 				}
 			} else {
 				toast.error('Error cancelling the order', {

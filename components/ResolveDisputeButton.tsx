@@ -11,6 +11,7 @@ import { Order } from "models/types";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import TransactionLink from "./TransactionLink";
+import { useRouter } from "next/router";
 import { list } from "postcss";
 
 interface ResolveDisputeButtonParams {
@@ -26,6 +27,7 @@ const ResolveDisputeButton = ({
   title = "Resolve Dispute",
   user_address,
 }: ResolveDisputeButtonParams) => {
+  const router=useRouter();
   const { seller, buyer, uuid, status, id } = order;
 
   const { address } = useAccount();
@@ -79,7 +81,8 @@ const ResolveDisputeButton = ({
 
     if (jsonData.status === 200) {
       if (jsonData?.data?.resolved) {
-        window.location.replace(`/disputes/${order?.id}`);
+        // window.location.replace(`/disputes/${order?.id}`);
+        router.push(`/disputes/${order?.id}`);
       }
     } else {
       toast.error("Error cancelling the order", {
@@ -119,7 +122,7 @@ const ResolveDisputeButton = ({
       const savedOrder = await result.json();
       if (savedOrder.uuid) {
         if (status !== "cancelled") {
-          window.location.reload();
+          router.reload();
         }
       } else {
         toast.error("Error cancelling the order", {

@@ -86,7 +86,8 @@ const OpenDisputeButton = ({
 				'Content-Type': 'application/json',
 			}
 		});
-    window.location.reload();
+    // window.location.reload();
+    router.reload();
   }
 
   

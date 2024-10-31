@@ -11,6 +11,7 @@ import { Order } from 'models/types';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import snakecaseKeys from 'snakecase-keys';
+import { useRouter } from 'next/router';
 
 import { DocumentIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
@@ -34,6 +35,7 @@ const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
 
 const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams) => {
+	const router=useRouter();
 	const { id:orderId,uuid, dispute, buyer } = order;
 	// @ts-ignore
 	const { user_dispute: userDispute, resolved } = dispute[0] || {};
@@ -106,7 +108,8 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 				)
 			});
 			await result.json();
-			window.location.reload();
+			// window.location.reload();
+			router.reload();
 		}
 	};
 
