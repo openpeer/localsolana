@@ -56,7 +56,6 @@
     "sharp": "^0.33.5",
     "snakecase-keys": "^8.0.1",
     "socket.io-client": "^4.7.5",
-    "tailwindcss": "3.3.3",
     "talkjs": "^0.30.0",
     "typescript": "5.1.6"
   },
@@ -72,9 +71,12 @@
     "autoprefixer": "^10.4.13",
     "eslint-config-airbnb": "^19.0.2",
     "eslint-config-airbnb-typescript": "^16.1.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-react": "^7.27.1",
     "eslint-plugin-react-hooks": "^4.3.0",
-    "postcss": "^8.4.19"
+    "postcss": "^8.4.19",
+    "prettier": "^3.3.3",
+    "tailwindcss": "3.3.3"
   }
 }

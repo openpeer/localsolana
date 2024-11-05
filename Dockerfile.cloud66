@@ -12,14 +12,23 @@ RUN apt-get update -y \
 # Add the trailing slash to the destination
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 RUN npm cache clean --force
+
+# Install dependencies including development dependencies
 RUN \
 if [ -f yarn.lock ]; then yarn --frozen-lockfile install; \
-elif [ -f package-lock.json ]; then npm ci; \
+elif [ -f package-lock.json ]; then npm ci --include=dev; \
 elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
 else yarn install; \
 fi
 
+# Explicitly install postcss and autoprefixer
+RUN npm install -D postcss@8.4.28 autoprefixer@10.4.15 tailwindcss@3.3.3
+
 COPY . .
+
+# Ensure postcss.config.js exists and has correct content
+RUN echo 'module.exports = {plugins: {tailwindcss: {},autoprefixer: {},}}' > postcss.config.js
+
 RUN \
 if grep -q "\"build\":" package.json; then \
 if [ -f yarn.lock ]; then yarn run build; \
