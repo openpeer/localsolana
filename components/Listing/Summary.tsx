@@ -8,6 +8,8 @@ import React, { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
 import coins from './post-ad.png';
 import { UIList } from './Listing.types';
+import FriendlyTime from 'components/FriendlyTime';
+
 
 interface SummaryProps {
 	list: UIList;
@@ -145,7 +147,7 @@ const Summary = ({ list }: SummaryProps) => {
 							<li className="w-full flex flex-row justify-between mb-4">
 								<div>Deposit Time Limit</div>
 								<div className="font-bold">
-									{depositTimeLimit} {depositTimeLimit === 1 ? 'minute' : 'minutes'}{' '}
+								<FriendlyTime timeInMinutes={Number(depositTimeLimit)} />{' '}
 								</div>
 							</li>
 						)
@@ -154,7 +156,7 @@ const Summary = ({ list }: SummaryProps) => {
 						<li className="w-full flex flex-row justify-between mb-4">
 							<div>Payment Time Limit</div>
 							<div className="font-bold">
-								{paymentTimeLimit} {paymentTimeLimit === 1 ? 'minute' : 'minutes'}{' '}
+							<FriendlyTime timeInMinutes={Number(paymentTimeLimit)} />{' '}
 							</div>
 						</li>
 					)}

@@ -19,6 +19,8 @@ import Flag from './Flag/Flag';
 import Token from './Token/Token';
 //import IdVerificationNeeded from './IdVerificationNeeded';
 //import Network from './Network/Network';
+import FriendlyTime from './FriendlyTime';
+
 
 interface ListsTableProps {
 	lists: List[];
@@ -290,7 +292,8 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 														Payment time limit
 													</span>
 													<span className="pr-2 text-[11px] text-black">
-														{paymentTimeLimit} {paymentTimeLimit === 1 ? 'min' : 'mins'}
+														<ClockIcon width={16} height={16} />
+														<FriendlyTime timeInMinutes={Number(paymentTimeLimit)} />
 													</span>
 												</div>
 											)}
@@ -371,7 +374,8 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 									<div className="flex flex-row items-center space-x-2">
 										<ClockIcon width={16} height={16} />
 										<span>
-											{paymentTimeLimit} {paymentTimeLimit === 1 ? 'min' : 'mins'}
+										<FriendlyTime timeInMinutes={Number(paymentTimeLimit)} />
+
 										</span>
 									</div>
 								)}
