@@ -1,12 +1,20 @@
-import ChatProvider from '@/providers/ChatProvider'
-import React from 'react'
+import React from 'react';
+import TalkProvider from '@/providers/TalkProvider';
+import { Inbox } from '@talkjs/react';
 
-function conversation() {
+function ConversationPage() {
+
   return (
-    <div>
-      <ChatProvider/>
-    </div>
-  )
+    <TalkProvider>
+      <div className="my-5 w-full h-screen">
+        <Inbox
+          className="w-full h-5/6"
+          showChatHeader={true}
+          theme="default"
+        />
+      </div>
+    </TalkProvider>
+  );
 }
 
-export default conversation
+export default ConversationPage;

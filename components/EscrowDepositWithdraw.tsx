@@ -100,7 +100,7 @@ const EscrowDepositWithdraw = ({
 							{type} {token.name} {deposit ? 'into' : 'from'} your{' '}
 							<a
 								//href={`${chain?.blockExplorers.etherscan.url}/address/${contract}`}
-								className="text-cyan-600"
+								className="text-purple-900"
 								target="_blank"
 								rel="noreferrer"
 							>

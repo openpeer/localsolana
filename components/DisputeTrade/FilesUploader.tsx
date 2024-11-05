@@ -90,16 +90,16 @@ const FilesUploader = ({ orderId, uuid, address, onUploadFinished }: FilesUpload
 	return (
 		<div className="bg-transparent relative cursor-pointer rounded-md font-medium">
 			<div
-				className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-cyan-600 bg-gray-100"
+				className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-purple-900 bg-gray-100"
 				{...getRootProps()}
 			>
 				{isUploading ? (
 					<Loading big={false} message="Uploading..." />
 				) : (
 					<>
-						<CloudArrowUpIcon className="text-cyan-600 w-10" />
+						<CloudArrowUpIcon className="text-purple-900 w-10" />
 						<div className="flex text-sm text-gray-600">
-							<span className="text-cyan-600 underline hover:no-underline">Upload files</span>
+							<span className="text-purple-900 underline hover:no-underline">Upload files</span>
 							<p className="pl-1">or drag and drop {isDragActive && 'the files here'}</p>
 						</div>
 						<p className="text-xs text-gray-500 py-2">

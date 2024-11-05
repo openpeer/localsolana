@@ -118,7 +118,7 @@ const Summary = ({ list }: SummaryProps) => {
 					{paymentMethods.length > 0 && (
 						<li className="w-full flex flex-col md:flex-row justify-between mb-4">
 							<div>Payment Methods</div>
-							<div className="w-full md:w-2/4 flex flex-col bg-gray-50 border-cyan-200 rounded p-4">
+							<div className="w-full md:w-2/4 flex flex-col bg-gray-50 border-purple-900 rounded p-4">
 								{paymentMethods.map(
 									(pm) =>
 										pm.bank && (

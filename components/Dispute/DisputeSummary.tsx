@@ -43,7 +43,7 @@ const DisputeViewForAdmin=({ order, address, userDisputeResponses }: DisputeView
 				{!resolved ? (
 					<div className="flex flex-row justify-between">
 						<div className="font-bold">Dispute Details</div>
-						<div className="text-cyan-600 hidden">
+						<div className="text-purple-900 hidden">
 							Time left <span>15m:20secs</span>
 						</div>
 					</div>
@@ -51,7 +51,7 @@ const DisputeViewForAdmin=({ order, address, userDisputeResponses }: DisputeView
 				:
 				// @ts-ignore 
 				!!winner && winner === address ? (
-					<div className="text-cyan-600">
+					<div className="text-purple-900">
 						<div className="font-bold">Dispute Ended</div>
 						You won the dispute. {tokenValue} and the fee has been credited to your account
 					</div>

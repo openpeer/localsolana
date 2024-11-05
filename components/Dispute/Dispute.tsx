@@ -35,7 +35,7 @@ const Dispute = ({ order }: DisputeParams) => {
 		<div className="p-4 md:p-6 w-full m-auto mb-16">
 			<div className="p-8 bg-white rounded-lg border border-slate-200 w-full flex flex-col md:flex-row md:gap-x-10">
 				<div className="w-full md:w-1/2">
-					<div className="flex flex-row pb-1 mb-4 text-cyan-600 text-xl">
+					<div className="flex flex-row pb-1 mb-4 text-purple-900 text-xl">
 						<Token token={token} size={24} />
 						<div className="pl-2">
 							{isBuyer ? 'Buy' : 'Sell'} {tokenAmount} {token.symbol}

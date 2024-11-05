@@ -72,7 +72,7 @@ const ModalWindow = ({
 											<div className="mx-auto flex h-12 w-12 items-center justify-center">
 												{icon}
 												<QuestionMarkCircleIcon
-													className="h-12 w-12 text-cyan-600"
+													className="h-12 w-12 text-purple-900"
 													aria-hidden="true"
 												/>
 											</div>

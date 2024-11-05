@@ -197,7 +197,7 @@ const OrdersTable = ({ orders }: OrdersTableProps) => {
 																<CheckBadgeIcon
 																	width="18"
 																	height="18"
-																	className="text-cyan-600"
+																	className="text-purple-900"
 																/>
 															</div>
 														)}

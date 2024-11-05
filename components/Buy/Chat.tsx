@@ -1,90 +1,88 @@
-// import React, { useCallback, useEffect, useState } from 'react';
-// import Talk from 'talkjs';
-// import { Session, Chatbox } from '@talkjs/react';
+'use client';
 
-// // Define the type for user information
-// interface User {
-//   id: string;
-//   name: string;
-//   email: string;
-//   photoUrl: string;
-//   welcomeMessage?: string;
-// }
+import React, { useCallback, useState, useEffect } from 'react';
+import Talk from 'talkjs';
+import { Chatbox } from '@talkjs/react';
+import Button from 'components/Button/Button';
+import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import { useAccount } from '@/hooks';
 
-// const Chat: React.FC = () => {
-//   const [currentUser, setCurrentUser] = useState<User | null>(null); // State for the logged-in user
-//   const [conversationId, setConversationId] = useState<string | null>(null); // State for the conversation ID
+interface UserDetails {
+	id: string;
+	name: string;
+	email?: string;
+	photoUrl?: string;
+}
 
-//   // Assuming this user data is coming from Dynamic.xyz or your authentication system
-//   useEffect(() => {
-//     // Replace this with real data fetching logic (e.g., from Dynamic.xyz)
-//     const fetchCurrentUser = async () => {
-//       // Fetch the current user from Dynamic.xyz or another auth provider
-//       const user = {
-//         id: 'dynamic-user-id',
-//         name: 'Logged-in User',
-//         email: 'user@example.com',
-//         photoUrl: 'https://example.com/user-avatar.jpg',
-//         welcomeMessage: 'Hi there!',
-//       };
+interface ChatParams {
+	address: `${string}`;
+	label: 'buyer' | 'seller';
+}
 
-//       setCurrentUser(user);
-//     };
+const Chat = ({ address, label }: ChatParams) => {
+	const { address: currentUserAddress,isAuthenticated } = useAccount();
+	const [showChat, setShowChat] = useState(false);
+	const [otherId, setOtherId] = useState<string | null>(null);
 
-//     fetchCurrentUser();
-//   }, []);
+	useEffect(() => {
+		const fetchOtherId = async () => {
+			if (!address || !isAuthenticated) return;
 
-//   // Sync the current user (logged-in user) with Talk.js
-//   const syncUser = useCallback(() => {
-//     if (!currentUser) return null;
+			try {
+				const response = await axios.get(`/api/user_profiles/${address}`);
+                // console.log("Here ",response.data);
+				setOtherId(response.data.data);
+			} catch (error) {
+				console.error('Error fetching user ID:', error);
+			}
+		};
 
-//     return new Talk.User({
-//       id: currentUser.id,
-//       name: currentUser.name,
-//       email: currentUser.email,
-//       photoUrl: currentUser.photoUrl,
-//       welcomeMessage: currentUser.welcomeMessage,
-//     });
-//   }, [currentUser]);
+		fetchOtherId();
+	}, [address, isAuthenticated]);
 
-//   // Sync conversation between current user and another user
-//   const syncConversation = useCallback((session: Talk.Session) => {
-//     if (!currentUser) return null; // Ensure that the current user is loaded
+	const syncConversation = useCallback(
+		(session: Talk.Session) => {
+			const otherUser = new Talk.User(otherId!);
+			const conversationId = Talk.oneOnOneId(session.me, otherUser);
+			const conversation = session.getOrCreateConversation(conversationId);
+			conversation.setParticipant(session.me);
+			conversation.setParticipant(otherUser);
+			return conversation;
+		},
+		[otherId]
+	);
 
-//     const conversation = session.getOrCreateConversation('new_conversation');
+	const handleOpenChat = () => {
+		setShowChat(true);
+	};
 
-//     const other = new Talk.User({
-//       id: 'frank',
-//       name: 'Frank',
-//       email: 'frank@example.com',
-//       photoUrl: 'https://talkjs.com/new-web/avatar-8.jpg',
-//       welcomeMessage: 'Hey, how can I help?',
-//     });
+    // console.log('Info to show ',isAuthenticated, currentUserAddress, otherId);
+	if (!isAuthenticated || !currentUserAddress || !otherId) {
+		return null;
+	}
 
-//     conversation.setParticipant(session.me);
-//     conversation.setParticipant(other);
+	return (
+		<>
+			<Button
+				onClick={handleOpenChat}
+				title={
+					<span className="flex flex-row items-center justify-center">
+						<span className="mr-2">Chat with {label}</span>
+						<ChatBubbleLeftEllipsisIcon className="w-8" />
+					</span>
+				}
+				outlined
+			/>
+			{showChat && otherId && (
+				<Chatbox
+					syncConversation={syncConversation}
+					className="mb-4"
+					style={{ height: '500px', width: '100%' }}
+				/>
+			)}
+		</>
+	);
+};
 
-//     setConversationId(conversation.id); // Set the conversation ID
-
-//     return conversation;
-//   }, [currentUser]);
-
-//   // Display chatbox only when user data is available
-//   if (!currentUser) {
-//     return <p>Loading chat...</p>;
-//   }
-// if(syncUser()!=null)
-//   return (
-    
-//     <Session appId="YOUR_TALKJS_APP_ID" syncUser={syncUser()}>
-//       {conversationId && (
-//         <Chatbox
-//           conversationId={conversationId}
-//           style={{ width: '100%', height: '500px' }}
-//         />
-//       )}
-//     </Session>
-//   );
-// };
-
-// export default Chat;
+export default Chat;

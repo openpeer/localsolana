@@ -166,7 +166,7 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 				<div
 					key={pm.id}
 					className={`${
-						pm.id === paymentMethod?.id ? 'border-2 border-cyan-600' : 'border-2 border-slate-200'
+						pm.id === paymentMethod?.id ? 'border-2 border-purple-900' : 'border-2 border-slate-200'
 					} w-full flex flex-col bg-gray-100 mt-8 py-4 p-8 rounded-md cursor-pointer`}
 					onClick={() => setPaymentMethod(pm)}
 				>

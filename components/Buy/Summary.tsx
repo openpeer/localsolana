@@ -5,18 +5,18 @@ import Link from 'next/link';
 import React from 'react';
 import { smallWalletAddress } from 'utils';
 import { useAccount } from 'hooks';
-
 import { ChartBarSquareIcon, StarIcon } from '@heroicons/react/24/outline';
-
 import { UIOrder } from './Buy.types';
-import Button from '../Button/Button';
-import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/20/solid';
-import { useRouter } from 'next/navigation';
-import Talk from 'talkjs';
-import { talkJsAppId } from '@/utils/constants';
+import Chat from './Chat';
+import Loading from '../Loading/Loading';
 
-const SummaryBuy = ({ order }: { order: UIOrder }) => {
-	const route = useRouter();
+
+const SummaryBuy = ({ order }: { order: UIOrder }) => {	
+
+	const { address } = useAccount();
+
+	if(!address) return <Loading/>
+	
 	const {
 		list,
 		price,
@@ -39,7 +39,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 		payment_methods: paymentMethods
 	} = list!;
 
-	const { address } = useAccount();
+	
 	const seller = order.seller || list.seller;
 	const selling = seller.address === address;
 	const chatAddress = selling ? buyer.address : seller.address;
@@ -50,81 +50,9 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 	const paymentTimeLimit = order.payment_time_limit || list.payment_time_limit;
 	const instantEscrow = escrowType === 'instant';
 
-    // const [inboxVisible, setInboxVisible] = useState(false);
-    // const talkjsContainer = useRef<HTMLDivElement>(null); // Use `useRef` instead of `createRef`
-
-	const userType = (address:string)=>{
-		if(order.buyer?.address && order.buyer.address===address){
-			return {
-				id: address,
-				name: order.buyer?.name||order.buyer.address,
-				email: (order.buyer?.email && order.buyer.email)?order.buyer.email:order.buyer.address,
-				photo: 'https://source.unsplash.com/random/200x200?person',
-				role:"default"
-			};
-		}
-		else if(order.seller?.address && order.seller.address===address){
-			return {
-				id: address,
-				name: order.seller?.name||order.seller.address,
-				email: (order.seller?.email && order.seller.email)?order.seller.email:order.seller.address,
-				photo: 'https://source.unsplash.com/random/200x200?person',
-				role:"default"
-			};
-		}
-		else if(list.seller?.address && list.seller.address===address){
-			return {
-				id: address,
-				name: list.seller?.name||list.seller.address,
-				email: (list.seller?.email && list.seller.email)?list.seller.email:list.seller.address,
-				photo: 'https://source.unsplash.com/random/200x200?person',
-				role:"default"
-			};
-		}
-
-		return {
-			id: address,
-			name: list.seller.name||list.seller.address,
-			email: (list.seller?.email && list.seller.email)?list.seller.email:list.seller.address,
-			photo: 'https://source.unsplash.com/random/200x200?person',
-			role:"default"
-		};
-	}
 	
-	const createNewConversation = async()=>{
-		if (!address) return; // Avoid running if the user is not logged in
 
-        const currentUser = userType(address);
-
-        await Talk.ready.then(() => {
-            const me = new Talk.User({
-                id: currentUser.id,
-                name: currentUser.name,
-                email: currentUser.email,
-                photoUrl: currentUser.photo,
-				role:"default"
-            });
-			//@ts-ignore
-            if (!window.talkSession) {
-				//@ts-ignore
-                window.talkSession = new Talk.Session({
-                    appId: talkJsAppId, // Replace with your actual app ID
-                    me: me,
-                });
-            }
-
-			let otherUser = new Talk.User(userType(chatAddress));
-
-			const myConversation = (address<chatAddress)?address+chatAddress:chatAddress+address;
-			//@ts-ignore
-			let conversation1 = window.talkSession.getOrCreateConversation(myConversation);
-			
-			conversation1.setParticipant(me);
-      		conversation1.setParticipant(otherUser);
-			conversation1.sendMessage("Hi....");
-			route.push('/conversation');
-        });
-	}
+	
 
 	return (
 		<div className="hidden lg:contents">
@@ -286,34 +214,7 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 						transfer. Thanks for trading with me.
 					</p>
 				</div>
-				
-				<Button
-					title={
-						<span className="flex flex-row items-center justify-center">
-							<span className="mr-2">Chat with {selling ? 'buyer' : 'seller'}</span>
-							<ChatBubbleLeftEllipsisIcon className="w-8" />
-						</span>
-					}
-					outlined
-					onClick={createNewConversation}
-				/>
-
-			{/* <div
-                style={{
-                    width: '100%',
-                    height: '500px',
-                    position: 'fixed',
-                    zIndex: 2000,
-                    right: '20px',
-                    bottom: inboxVisible ? '100px' : '-1000px', // Slide out of view when hidden
-                    maxWidth: '400px',
-                    maxHeight: '500px',
-                    transition: 'bottom 0.5s ease-in-out', // Smooth slide-in/out
-                    visibility: inboxVisible ? 'visible' : 'hidden', // Hide when not visible
-                }}
-                ref={talkjsContainer}
-            /> */}
-				{/* {!!chatAddress && <Chat address={chatAddress} label={selling ? 'buyer' : 'seller'} />} */}
+				{!!chatAddress && <Chat address={chatAddress} label={selling ? 'buyer' : 'seller'} />}
 				<div className="bg-[#FEFAF5] text-[#E37A00] p-4 rounded">
 					<p className="text-sm font-bold mb-2">Disclaimer</p>
 					<p className="text-sm">

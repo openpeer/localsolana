@@ -71,13 +71,13 @@ const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
 								<>
 									{stepIdx !== steps.length - 1 ? (
 										<div
-											className="absolute top-4 left-3 -ml-px mt-0.5 h-full w-0.5 bg-cyan-600"
+											className="absolute top-4 left-3 -ml-px mt-0.5 h-full w-0.5 bg-purple-900"
 											aria-hidden="true"
 										/>
 									) : null}
 									<div className="group relative flex items-start">
 										<span className="flex h-9 items-center">
-											<span className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-600 group-hover:bg-cyan-800">
+											<span className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full bg-purple-900 group-hover:bg-purple-900">
 												<CheckIcon className="h-4 w-4 text-white" aria-hidden="true" />
 											</span>
 										</span>
@@ -100,12 +100,12 @@ const StatusTimeLine = ({ escrow, dispute, isBuyer }: StatusTimeLineParams) => {
 									) : null}
 									<div className="group relative flex items-start" aria-current="step">
 										<span className="flex h-9 items-center" aria-hidden="true">
-											<span className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-cyan-600 bg-white">
-												<span className="h-2 w-2 rounded-full bg-cyan-600" />
+											<span className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-purple-900 bg-white">
+												<span className="h-2 w-2 rounded-full bg-purple-900" />
 											</span>
 										</span>
 										<span className="ml-4 flex min-w-0 flex-col">
-											<span className="text-sm font-medium text-cyan-600">{step.name}</span>
+											<span className="text-sm font-medium text-purple-900">{step.name}</span>
 											<span className="text-sm text-gray-500">{step.description}</span>
 										</span>
 									</div>
