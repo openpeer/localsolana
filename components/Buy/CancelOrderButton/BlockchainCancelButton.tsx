@@ -105,7 +105,7 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 
 	const now = Date.now() / 1000;
 	const sellerCantCancel = isSeller && (sellerCanCancelAfterSeconds <= 1 || sellerCanCancelAfterSeconds > now);
-
+	console.log('Seller cannot cancel',sellerCanCancelAfterSeconds,now)
 	const onBlockchainCancel = () => {
 		if (!isConnected || sellerCantCancel) return;
 

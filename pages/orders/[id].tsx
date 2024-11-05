@@ -94,24 +94,23 @@ const OrderPage = ({ id }: { id: string }) => {
 
     if (!order?.id) return <Loading />;
 
-	const { step, list, dispute } = order;
-    
-	if (order.status === 'dispute') {
-		return <Dispute order={order} />;
-	}
-
+    const { step, list, dispute } = order;
     const seller = order.seller || list.seller;
     const selling = seller.address === address;
     const chatAddress = selling ? order.buyer.address : seller.address;
-    if(seller.address !== address && order.buyer.address !== address && address!==process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS){
+    if(seller.address !== address && order.buyer.address !== address){
         return (
             <>
-                <Loading />
-                {/* <div>Not Authorized to acess this page</div> */}
+               <div className="flex items-center justify-center h-screen">
+					Only Seller or buyer of this order is allowed to see the details
+				</div>
             </>
         );
     }
 
+	if ( order.status === 'dispute') {
+		return <Dispute order={order} />;
+	}
     return (
         <div className="pt-4 md:pt-6">
             <div className="w-full flex flex-row px-4 sm:px-6 md:px-8 mb-16">

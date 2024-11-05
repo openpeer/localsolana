@@ -25,6 +25,7 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 	const isBuyer = buyer.address === address;
 	const isSeller = seller.address === address;
 	const message = `Cancel order ${uuid}`;
+	console.log('is Buyer',isBuyer,isSeller);
 
 	const [modalOpen, setModalOpen] = useState(false);
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);

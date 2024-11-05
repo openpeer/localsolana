@@ -61,8 +61,10 @@ const DisputePage = ({ id }: { id: string }) => {
     if(address!==process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS){
         return (
             <>
-                <Loading />
-                {/* <div>Not Authorized to acess this page</div> */}
+                {/* <Loading /> */}
+                <div className="flex items-center justify-center h-screen">
+					Not Authorized to access this page
+				</div>
             </>
         );
     }

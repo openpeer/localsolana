@@ -1,6 +1,6 @@
 import { Button, ListsTable, Loading, Pagination, Switcher } from 'components';
 import Filters from 'components/Buy/Filters';
-import { usePagination } from 'hooks';
+import { useAccount, usePagination } from 'hooks';
 import { SearchFilters } from 'models/search';
 import { List, Dispute } from 'models/types';
 import { GetServerSideProps } from 'next';
@@ -17,8 +17,6 @@ interface PaginationMeta {
 }
 
 const Disputes = () => {
-	// const [buySideLists, setBuySideLists] = useState<List[]>([]);
-	// const [sellSideLists, setSellSideLists] = useState<List[]>([]);
 	const [lists, setLists] = useState<List[]>([]);
     const [disputeLists, setDisputeLists] = useState<Dispute[]>([]);
 	const [isLoading, setLoading] = useState(false);
@@ -27,6 +25,7 @@ const Disputes = () => {
 	const [filters, setFilters] = useState<SearchFilters>({} as SearchFilters);
 	const [showFilters, setShowFilters] = useState(false);
 	const [needToReset, setNeedToReset] = useState(false);
+	const {address}=useAccount();
 
 	const { page, onNextPage, onPrevPage, resetPage } = usePagination();
 
@@ -83,15 +82,18 @@ const Disputes = () => {
 		performSearch(page);
 	}, [page]);
 
-	// useEffect(() => {
-	// 	if (type === 'Buy') {
-	// 		setLists(buySideLists);
-	// 	} else {
-	// 		setLists(sellSideLists);
-	// 	}
-	// }, [type, buySideLists, sellSideLists]);
+
 
 	if (!disputeLists) return <p>No lists data</p>;
+	if(!address || address!==process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS){
+        return (
+			<>
+				<div className="flex items-center justify-center h-screen">
+					Not Authorized to access this page
+				</div>
+			</>
+        );
+    }
 
 	const handleToggleFilters = () => {
 		setShowFilters(!showFilters);

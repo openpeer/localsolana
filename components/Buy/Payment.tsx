@@ -75,6 +75,7 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 			? sellerCanCancelAfterSeconds * 1000
 			: 0;
 	const paymentTimeLeft = timeLimitForPayment > 0 ? timeLimitForPayment - new Date().getTime() : 0;
+	console.log('payment time left:',escrowData,tradeId,instantEscrow,status);
 
 	const handleCopyToClipboard = (text: string) => {
 		navigator.clipboard.writeText(text);
