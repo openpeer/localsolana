@@ -29,12 +29,12 @@ const Steps = ({ currentStep, onStepClick, stepsCount }: StepsProps) => (
 					>
 						<>
 							<div className="w-full absolute inset-0 flex items-center" aria-hidden="true">
-								<div className={`h-0.5 w-full ${pastStep ? 'bg-cyan-600' : 'bg-gray-200'}`} />
+								<div className={`h-0.5 w-full ${pastStep ? 'bg-purple-900' : 'bg-gray-200'}`} />
 							</div>
 							<button
 								type="button"
-								className={`${pastStep && 'group bg-cyan-600 hover:bg-cyan-800 text-white'} ${
-									actualStep && 'border-2 border-cyan-600 bg-white text-cyan-600'
+								className={`${pastStep && 'group bg-purple-900 hover:bg-purple-900 text-white'} ${
+									actualStep && 'border-2 border-purple-900 bg-white text-purple-900'
 								} ${
 									futureStep &&
 									' border-2 border-gray-300 bg-white hover:border-gray-400 text-gray-400'

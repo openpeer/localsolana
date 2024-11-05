@@ -233,10 +233,10 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 											precision={2}
 											renderer={({ hours, minutes, seconds, completed }) => {
 												if (completed) {
-													return <span className="text-cyan-600">Time is up!</span>;
+													return <span className="text-purple-900">Time is up!</span>;
 												}
 												return (
-													<span className="text-cyan-600">
+													<span className="text-purple-900">
 														{hours > 0 ? `${hours}h:` : ''}
 														{minutes}m:{seconds}secs
 													</span>

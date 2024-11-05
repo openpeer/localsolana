@@ -1,6 +1,6 @@
 import { Button, ListsTable, Loading, Pagination, Switcher } from 'components';
 import Filters from 'components/Buy/Filters';
-import { usePagination } from 'hooks';
+import { useAccount, usePagination } from 'hooks';
 import { SearchFilters } from 'models/search';
 import { List, Dispute } from 'models/types';
 import { GetServerSideProps } from 'next';
@@ -17,6 +17,10 @@ interface PaginationMeta {
 }
 
 const Disputes = () => {
+
+	const {address}=useAccount();
+	if(!address || process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS!==address)return <Loading/>;
+
 	// const [buySideLists, setBuySideLists] = useState<List[]>([]);
 	// const [sellSideLists, setSellSideLists] = useState<List[]>([]);
 	const [lists, setLists] = useState<List[]>([]);

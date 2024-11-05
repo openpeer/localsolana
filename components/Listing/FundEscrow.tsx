@@ -60,7 +60,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 								Deposit {token.name} into your{' '}
 								<a
 									href={`${BLOCK_EXPLORER[0]}/address/${sellerContract}?cluster=${CURRENT_NETWORK}`}
-									className="text-cyan-600"
+									className="text-purple-900"
 									target="_blank"
 									rel="noreferrer"
 								>

@@ -34,7 +34,7 @@ const Metric = ({
 		</div>
 		<div>
 			<div className="bg-gray-50 p-4 rounded-full">
-				<Icon className="h-5 w-5 z-50 text-cyan-600" aria-hidden="true" />
+				<Icon className="h-5 w-5 z-50 text-purple-900" aria-hidden="true" />
 			</div>
 		</div>
 	</div>

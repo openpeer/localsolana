@@ -186,7 +186,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 							key={pm.id}
 							className={`${
 								paymentMethods.findIndex((m) => m === pm) >= 0
-									? 'border-2 border-cyan-600'
+									? 'border-2 border-purple-900'
 									: 'border-2 border-slate-200'
 							} w-full flex flex-col bg-gray-100 mt-8 py-4 p-8 rounded-md cursor-pointer`}
 							onClick={() => togglePaymentMethod(pm)}

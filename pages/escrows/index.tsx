@@ -33,7 +33,7 @@ const ContractTable = ({
 			<div className="flex flex-col md:flex-row md:items-center md:space-x-1 break-all">
 				<a
 					href={`https://explorer.solana.com/address/${contract.address}?cluster=${CURRENT_NETWORK}`}
-					className="text-cyan-600"
+					className="text-purple-900"
 					target="_blank"
 					rel="noreferrer"
 				>
@@ -320,7 +320,7 @@ const MyEscrows = () => {
 										title={
 											<a
 												href={`${chainInUse?.blockExplorers?.etherscan?.url}/address/${c.address}`}
-												className="text-cyan-600 flex flex-row items-center space-x-2"
+												className="text-purple-900 flex flex-row items-center space-x-2"
 												target="_blank"
 												rel="noreferrer"
 											>

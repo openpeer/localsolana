@@ -58,13 +58,13 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 				{!resolved ? (
 					<div className="flex flex-row justify-between">
 						<div className="font-bold">Dispute Pending</div>
-						<div className="text-cyan-600 hidden">
+						<div className="text-purple-900 hidden">
 							Time left <span>15m:20secs</span>
 						</div>
 					</div>
 				) 
 				: !!winner && (winner === (isBuyer?buyer.id:seller.id)) ? (
-					<div className="text-cyan-600">
+					<div className="text-purple-900">
 						<div className="font-bold">Dispute Ended</div>
 						You won the dispute. {tokenValue} and the fee has been credited to your account
 					</div>
@@ -80,7 +80,7 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 				:
 				(process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS===address && resolved)
 				?
-				<div className="text-cyan-600">
+				<div className="text-purple-900">
 					<div className="font-bold">Dispute Ended</div>
 					{
 						!!winner 

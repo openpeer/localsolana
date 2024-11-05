@@ -58,11 +58,10 @@ const DisputePage = ({ id }: { id: string }) => {
 		return <Dispute order={order} />;
 	}
 
-    if(address!==process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS){
+    if(!address || address!==process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS){
         return (
             <>
                 <Loading />
-                {/* <div>Not Authorized to acess this page</div> */}
             </>
         );
     }

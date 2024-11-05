@@ -8,9 +8,8 @@ import Head from 'app/head';
 import { MessageContextProvider } from '@/contexts/MessageContext';
 //import SolanaWalletProvider from '@/providers/SolanaWalletProvider';
 import { TransactionFeedbackProvider } from '@/contexts/TransactionFeedContext';
-import ChatProvider from '@/providers/ChatProvider';
 import IntercomWidget from '../IntercomWidget';
-import { useUserProfile } from '@/hooks';
+import TalkProvider from '@/providers/TalkProvider';
 
 
 const AuthLayout = dynamic(() => import('./AuthLayout'), { ssr: false });
@@ -47,10 +46,11 @@ const App = ({ Component, pageProps,router}: AppProps) => {
         {simpleLayout ? (
           <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
         ) : (
-          // <ChatProvider>
-          //   <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
-          // </ChatProvider>
-            <AuthLayout pageProps={pageProps} Component={Component} router={router}/>            
+          
+          <TalkProvider>
+            <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
+          </TalkProvider>
+            // <AuthLayout pageProps={pageProps} Component={Component} router={router}/>            
         )}
         <IntercomWidget/>
         </MessageContextProvider>

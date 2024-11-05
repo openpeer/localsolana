@@ -203,7 +203,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 									<div className="bg-gray-200 flex w-full h-full items-center justify-center rounded">
 										{fileType === 'pdf' ? (
 											<div className="flex flex-col items-center relative">
-												<DocumentIcon className="text-cyan-600 w-10" />
+												<DocumentIcon className="text-puple-900 w-10" />
 												<p className="text-xs text-gray-600 break-all p-2">{filename}</p>
 											</div>
 										) : ['jpg', 'jpeg', 'png', 'gif'].includes(fileType!) ? (
@@ -222,7 +222,7 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 										)}
 										<button
 											type="button"
-											className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-cyan-600 ring-2 ring-white flex items-center justify-center cursor-pointer"
+											className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-purple-600 ring-2 ring-white flex items-center justify-center cursor-pointer"
 											onClick={()=>removeFile(key,filename)}
 										>
 											<XMarkIcon className="w-8 h-8 text-white" />
