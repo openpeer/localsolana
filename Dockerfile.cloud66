@@ -1,0 +1,30 @@
+FROM node:18
+
+ARG NODE_ENV="$NODE_ENV"
+ENV NEXT_TELEMETRY_DISABLED 1
+WORKDIR /app
+
+RUN apt-get update -y \
+&& apt-get upgrade -y \
+&& apt-get install curl zip libvips-dev libvips-tools -y \
+&& rm -rf /var/lib/apt
+
+# Add the trailing slash to the destination
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+RUN npm cache clean --force
+RUN \
+if [ -f yarn.lock ]; then yarn --frozen-lockfile install; \
+elif [ -f package-lock.json ]; then npm ci; \
+elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+else yarn install; \
+fi
+
+COPY . .
+RUN \
+if grep -q "\"build\":" package.json; then \
+if [ -f yarn.lock ]; then yarn run build; \
+elif [ -f package-lock.json ]; then npm run build; \
+elif [ -f pnpm-lock.yaml ]; then pnpm run build; \
+else yarn run build; \
+fi ; \
+fi
