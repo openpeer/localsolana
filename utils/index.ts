@@ -43,8 +43,8 @@ export const listToMessage = (list: UIList): string => {
 };
 
 
-  export const CURRENT_NETWORK = Network.Devnet; // Change this to MAINNET or LOCALNET as needed
-  export const CURRENT_NETWORK_URL = 'https://api.devnet.solana.com';
+  export const CURRENT_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK || Network.Devnet; // Change this to MAINNET or LOCALNET as needed
+  export const CURRENT_NETWORK_URL = process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.devnet.solana.com';
   export const BLOCK_EXPLORER = ['https://explorer.solana.com/'];
 
 const ORDER_STATUS_MAPPING: { [key: number]: string } = {
