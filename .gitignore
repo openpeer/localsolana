@@ -38,4 +38,3 @@ next-env.d.ts
 .prettierignore
 .env
 .next
-.vscode/settings.json
