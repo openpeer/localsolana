@@ -9,6 +9,10 @@ interface ButtonProps {
 	link?: boolean;
 	disabled?: boolean;
 	processing?: boolean;
+	xyz?: boolean;
+	// New props for TelegramSection
+	className?: string;
+	customBgColor?: string;
 }
 
 const Button = ({
@@ -19,13 +23,18 @@ const Button = ({
 	rounded = false,
 	link = false,
 	disabled = false,
-	processing = false
+	processing = false,
+	xyz = false,
+	className = '',
+	customBgColor
 }: ButtonProps) => (
 	<button
 		type="button"
 		className={
 			minimal
 				? 'text-xl font-bold w-8'
+				: xyz
+				? 'text-xl text-red-600'
 				: outlined
 				? 'w-full px-2 py-3 rounded border border-purple-900 text-base text-purple-900 my-4'
 				: processing
