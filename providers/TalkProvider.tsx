@@ -9,6 +9,7 @@ import { useDynamicContext, getAuthToken } from '@dynamic-labs/sdk-react-core';
 import axios from 'axios';
 import { isEqual } from 'lodash';
 import { useAccount } from '@/hooks';
+import profilePlaceholder from 'public/ooui_user-avatar.svg'
 
 const TALKJS_APP_ID = process.env.NEXT_PUBLIC_TALKJS_APP_ID!;
 
@@ -356,7 +357,7 @@ const TalkProvider = ({ children }: TalkProviderProps): JSX.Element => {
 				id: state.userDetails.id,
 				name: state.userDetails.name || state.userDetails.unique_identifier || state.userDetails.id,
 				email: normalizedEmail,
-				photoUrl: state.userDetails.image_url,
+				//photoUrl:  profilePlaceholder,
 				role: 'default'
 			});
 

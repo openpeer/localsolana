@@ -24,7 +24,7 @@ const App = ({ Component, pageProps,router}: AppProps) => {
 
 		<DynamicContextProvider
         settings={{
-          environmentId: "61e5473a-281c-4dbc-89d6-5d1a3061d835",
+          environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID || '',
           walletConnectors: [SolanaWalletConnectors],
           initialAuthenticationMode:"connect-and-sign",
           siweStatement: "Welcome to Local Solana. ",
