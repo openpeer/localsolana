@@ -154,7 +154,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
       onProceed={onProceed}
       buttonText={
         !needToDeployOrFund
-          ? "Sign and Finish"
+          ? "Post Ad"
           : needToDeploy
           ? "Deploy Escrow Account"
           : "Deposit in the Escrow Account"
