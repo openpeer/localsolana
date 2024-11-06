@@ -25,7 +25,7 @@ RUN npm ci
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn run build
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["yarn", "start"]
