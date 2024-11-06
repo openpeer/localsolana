@@ -11,13 +11,10 @@ RUN apt-get update -y \
 
 COPY . /app
 
-RUN yarn install
-
-COPY  yarn.lock* ./
-RUN yarn --frozen-lockfile;
+# Remove existing node_modules and .next directories and install dependencies
+RUN rm -rf node_modules .next && yarn install --frozen-lockfile
 
 COPY . .
-RUN yarn clean
 RUN yarn build
 
 # Start the application
