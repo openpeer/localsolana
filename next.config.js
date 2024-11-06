@@ -41,7 +41,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-		appDir: true
+		// appDir: true
 	},
 	typescript: {
 		// !! WARN !!
