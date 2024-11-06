@@ -1,7 +1,7 @@
 FROM node:18
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 WORKDIR /app
 
@@ -27,5 +27,6 @@ COPY . .
 # Build the application
 RUN yarn run build
 
+ENV NODE_ENV=production
 # Start the application
 CMD ["yarn", "start"]
