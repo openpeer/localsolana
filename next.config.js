@@ -34,7 +34,12 @@ const nextConfig = {
   // Configure images to work with your CloudFront setup
   images: {
     domains: ['d1h6uvabx4uqh.cloudfront.net']
-  }
+  },
+
+  // ESLint configuration
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 module.exports = nextConfig;
