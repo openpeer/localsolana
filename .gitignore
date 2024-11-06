@@ -42,4 +42,3 @@ next-env.d.ts
 .next
 .vscode
 /.vscode/
-package-lock.json
