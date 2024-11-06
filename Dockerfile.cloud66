@@ -17,4 +17,8 @@ COPY  yarn.lock* ./
 RUN yarn --frozen-lockfile;
 
 COPY . .
+RUN yarn clean
 RUN yarn build
+
+# Start the application
+CMD ["yarn", "start"]
