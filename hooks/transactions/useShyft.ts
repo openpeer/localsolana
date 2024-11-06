@@ -36,7 +36,7 @@ const useShyft = () => {
   useEffect(() => {
     const initializeShyft = async () => {
       const shyftInstance = new ShyftSdk({
-        apiKey: 'kQyqadJtuKQUFcBt',
+        apiKey: process.env.NEXT_PUBLIC_SHYFT_API_KEY || '',
         network: getShyftNetwork(CURRENT_NETWORK), // Convert string to Network enum
       });
       setShyft(shyftInstance);

@@ -37,6 +37,7 @@
 		"react/jsx-props-no-spreading": "off",
 		"react/require-default-props": "off",
 		"react/jsx-no-bind": "off",
+		"react-hooks/exhaustive-deps": "off",
 
 		// Disable other rules
 		"import/no-extraneous-dependencies": "off",
