@@ -1,32 +1,25 @@
 FROM node:18
 
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=development
-
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV development
 
-# Install system dependencies
-RUN apt-get update -y && \
-    apt-get upgrade -y && \
-    apt-get install curl zip libvips-dev libvips-tools -y && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y \
+&& apt-get upgrade -y \
+&& apt-get install curl zip libvips-dev libvips-tools -y \
+&& rm -rf /var/lib/apt
 
-# Copy package management files
-COPY package*.json ./
-COPY tsconfig*.json ./
-COPY postcss.config.js ./
-COPY tailwind.config.ts ./
-COPY next.config.js ./
+COPY . /app
 
-# Install dependencies
 RUN yarn install
 
-# Copy the rest of the application
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+  else yarn install; \
+  fi
+
 COPY . .
-
-# Build the application
 RUN yarn build
-
-ENV NODE_ENV=production
-# Start the application
-CMD ["yarn", "start"]
