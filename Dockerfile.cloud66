@@ -1,42 +1,41 @@
 FROM node:18
 
-ARG NODE_ENV="$NODE_ENV"
-ENV NEXT_TELEMETRY_DISABLED 1
+# Cloud66 will inject environment variables, so we don't need to set them here
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
 WORKDIR /app
 
-RUN apt-get update -y \
-&& apt-get upgrade -y \
-&& apt-get install curl zip libvips-dev libvips-tools -y \
-&& rm -rf /var/lib/apt
+# Install system dependencies
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install curl zip libvips-dev libvips-tools -y && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install critical dependencies globally
-RUN npm install -g autoprefixer postcss tailwindcss
+# Copy package management files
+COPY package*.json ./
+COPY tsconfig*.json ./
+COPY postcss.config.js ./
+COPY tailwind.config.ts ./
+COPY next.config.js ./
 
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+# Clear npm cache and install dependencies
 RUN npm cache clean --force
 
-# Install dependencies with dev dependencies
-RUN \
-if [ -f yarn.lock ]; then yarn --frozen-lockfile install; \
-elif [ -f package-lock.json ]; then npm ci --include=dev && npm install autoprefixer postcss tailwindcss; \
-elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-else yarn install; \
-fi
+# Install dependencies including dev dependencies
+RUN npm ci --include=dev && \
+    npm install --save-dev \
+    autoprefixer@10.4.13 \
+    postcss@8.4.19 \
+    tailwindcss@3.3.3 \
+    @tailwindcss/forms@0.5.8 \
+    typescript@5.1.6
 
-# Create necessary config files
-RUN echo 'module.exports={plugins:{tailwindcss:{},autoprefixer:{}}}' > postcss.config.js
-RUN echo 'module.exports={content:["./pages/**/*.{js,ts,jsx,tsx}","./components/**/*.{js,ts,jsx,tsx}"],theme:{extend:{}},plugins:[]}' > tailwind.config.js
-
+# Copy the rest of the application
 COPY . .
 
-# Force install these packages again at the project level
-RUN npm install --save-dev autoprefixer@10.4.15 postcss@8.4.28 tailwindcss@3.3.3
+# Build the application
+RUN npm run build
 
-RUN \
-if grep -q "\"build\":" package.json; then \
-if [ -f yarn.lock ]; then yarn run build; \
-elif [ -f package-lock.json ]; then npm run build; \
-elif [ -f pnpm-lock.yaml ]; then pnpm run build; \
-else yarn run build; \
-fi ; \
-fi
+# Start the application
+CMD ["npm", "start"]
