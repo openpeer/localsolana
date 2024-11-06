@@ -59,8 +59,7 @@ let navigation = [
 	{ name: 'My Trades', href: '/orders', icon: ShoppingBagIcon },
 	// { name: 'Airdrop', href: '/airdrop', icon: AirdropIcon },
 	// { name: 'Wallet', href: '/wallet', icon: WalletIcon },
-	{ name: 'My Escrows', href: '/escrows', icon: LockClosedIcon },
-	{ name: 'Support', href: undefined, icon: ChatBubbleLeftIcon }
+	{ name: 'My Escrows', href: '/escrows', icon: LockClosedIcon }
 ];
 
 const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick?: () => void }) => {
