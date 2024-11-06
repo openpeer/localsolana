@@ -19,13 +19,13 @@ COPY tailwind.config.ts ./
 COPY next.config.js ./
 
 # Install dependencies
-RUN npm ci
+RUN yarn install
 
 # Copy the rest of the application
 COPY . .
 
 # Build the application
-RUN yarn run build
+RUN yarn build
 
 ENV NODE_ENV=production
 # Start the application
