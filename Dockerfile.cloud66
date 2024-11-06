@@ -13,13 +13,8 @@ COPY . /app
 
 RUN yarn install
 
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-  else yarn install; \
-  fi
+COPY  yarn.lock* ./
+RUN yarn --frozen-lockfile;
 
 COPY . .
 RUN yarn build
