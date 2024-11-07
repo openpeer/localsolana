@@ -60,6 +60,10 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 	const [localErrors, setLocalErrors] = useState<Errors>({});
 
 	useEffect(() => {
+
+		console.log('useEffect triggered');
+		console.log('user:', user);
+
 		if (user) {
 			const newState = {
 				username: user.name || '',
@@ -94,13 +98,17 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 	}, [user]);
 
 	useEffect(() => {
+		console.log('Errors updated:', errors);
+
 		// Update localErrors when errors from useUserProfile change
 		setLocalErrors(errors);
 	}, [errors]);
 
 	const handleFieldChange = useCallback(
 		(field: string, value: string) => {
+			console.log(`handleFieldChange called for field: ${field}, value: ${value}`);
 			if (user && user[field as keyof User] === value) {
+				console.log(`No change detected for field: ${field}`);
 				return;
 			}
 
@@ -157,9 +165,11 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 	}, []);
 
 	if (user === undefined) {
+		console.log('User is undefined, showing Loading component');
 		return <Loading />;
 	}
 	if (user === null || id !== address) {
+		console.log('User is null or id does not match address, showing ErrorPage component');
 		return <ErrorPage statusCode={404} />;
 	}
 

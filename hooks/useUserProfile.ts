@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 // import { minkeApi } from '../pages/api/utils/utils';
 import { useRouter } from 'next/router';
 import { isEqual, debounce, DebouncedFunc } from 'lodash';
+import { UserResponse, UserData } from 'models/apiResponse';
 
 // interface ErrorObject {
 // 	[fieldName: string]: string[];
@@ -69,14 +70,19 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 				setUser(null);
 				return;
 			}
-			const data = await res.json();
-			if (data.errors) {
-				setUser(null);
+			const data: UserResponse = await res.json();
+			if (!data.data) {
+					setUser(null);
 			} else {
-				updateUserState(data);
-				setPreviousProfile(data);
-				setContractAddress(data.data.contract_address);
-				// console.log('User profile fetched:', data);
+					// Convert UserData to User
+					const userData: User = {
+							...data.data,
+							id: parseInt(data.data.id, 10), // Convert id to number
+					};
+					updateUserState(userData);
+					setPreviousProfile(userData);
+					setContractAddress(userData.contract_address);
+					// console.log('User profile fetched:', data);
 			}
 		} catch (error) {
 			console.error('Error fetching user profile:', error);
@@ -197,12 +203,12 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 					}
 				});
 
-				const responseData = await result.json();
+				const responseData: UserResponse = await result.json();
 
 				if (!result.ok) {
 					if (result.status === 422) {
 						// This is a validation error (e.g., username already taken)
-						const errorMessage = responseData.data?.message || 'Validation error occurred';
+						const errorMessage = responseData.message || 'Validation error occurred';
 						setErrors((prevErrors) => ({
 							...prevErrors,
 							name: errorMessage
@@ -211,16 +217,21 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 						throw new Error(errorMessage);
 					} else {
 						// For other types of errors, throw an error to be caught below
-						throw new Error(responseData.data?.message || 'An error occurred while updating the profile');
+						throw new Error(responseData.message || 'An error occurred while updating the profile');
 					}
 				}
 
 				// Check if responseData contains the updated user data
 				if (responseData.data) {
-					updateUserState(responseData.data);
-					setPreviousProfile(responseData.data);
+					// Convert UserData to User
+					const updatedUser: User = {
+						...responseData.data,
+						id: parseInt(responseData.data.id, 10), // Convert id to number
+					};
+					updateUserState(updatedUser);
+					setPreviousProfile(updatedUser);
 					if (showNotification) {
-						onUpdateProfile?.(responseData.data);
+						onUpdateProfile?.(updatedUser);
 					}
 					// console.log('User profile updated:', responseData.data);
 				} else {
@@ -286,7 +297,6 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 		await fetchUserProfile();
 	}, [updateUserProfile, fetchUserProfile, getAuthToken]);
 
-// mmm S3 thing
 const onUploadFinished = useCallback(
   async (data: PutObjectCommandOutput, imageName: string) => {
     setErrors({});
@@ -311,11 +321,16 @@ const onUploadFinished = useCallback(
 				const errorData = await res.json();
 				throw new Error(errorData.message || 'Failed to fetch user profile');
 			}
-			const data = await res.json();
-			updateUserState(data);
-			setPreviousProfile(data);
+			const data: UserResponse = await res.json();
+			// Convert UserData to User
+			const userData: User = {
+				...data.data,
+				id: parseInt(data.data.id, 10), // Convert id to number
+			};
+			updateUserState(userData);
+			setPreviousProfile(userData);
 			// console.log('User profile refreshed:', data);
-			return { success: true, user: data };
+			return { success: true, user: data.data };
 		} catch (error) {
 			console.error('Error refreshing user profile:', error);
 			return {
@@ -330,7 +345,7 @@ const onUploadFinished = useCallback(
 		setErrors({}); // Clear any existing errors
 		const updatedUser = { ...user, contract_address: contractAddress }; // Update contract address in user object
 		updateUserProfile(updatedUser as User); // Call updateUserProfile with the updated user
-	};
+};
 	
 
 	return useMemo(
