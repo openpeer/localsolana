@@ -56,7 +56,7 @@ const useShyft = () => {
       throw new Error("Fee payer is not set in env");
     }
     const connection = new Connection(CURRENT_NETWORK_URL);
-    const recentBlockhash = await shyft.connection.getLatestBlockhash();
+    const recentBlockhash = await connection.getLatestBlockhash();
     transaction.recentBlockhash = recentBlockhash.blockhash;
     transaction.feePayer = new PublicKey(feePayer);
     let signedTransaction;
