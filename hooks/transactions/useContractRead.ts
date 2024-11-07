@@ -10,7 +10,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
   const [loadingContract, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { provider, program, connection,getEscrowStatePDA } = useLocalSolana();
-  const {getAccountInfo,shyft} = useShyft();
+  const {getAccountInfo} = useShyft();
 
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
       setLoading(false);
       return;
     }
-      const publicKey = method =="escrowState"?escrowStateAddress?.toBase58():contractAddress;
+      const publicKey = method =="escrowState"?escrowStateAddress:new PublicKey(contractAddress);
       try {
         if (!connection) {
           setError("Connection  not found");
@@ -42,7 +42,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
           return;
         }
 
-        const accountInfo = await getAccountInfo(publicKey!);
+        const accountInfo = await connection.getAccountInfo(publicKey!);
         const accountBuffer = accountInfo?.data;
 
         if (!accountBuffer) {
@@ -125,7 +125,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
         return;
       }
       // Subscribe to account changes by watching for account changes
-    const subscriptionId = shyft?.connection?.onAccountChange(publicKey, (updatedAccountInfo) => {
+    const subscriptionId = connection?.onAccountChange(publicKey, (updatedAccountInfo) => {
       const accountBuffer = updatedAccountInfo?.data;
       if (!accountBuffer) {
         setError("Unable to retrieve account information");
