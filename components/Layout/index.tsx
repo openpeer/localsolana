@@ -47,12 +47,12 @@ const App = ({ Component, pageProps,router}: AppProps) => {
           <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
         ) : (
           
-          <TalkProvider>
+          // <TalkProvider>
             <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
-          </TalkProvider>
+          // </TalkProvider>
             // <AuthLayout pageProps={pageProps} Component={Component} router={router}/>            
         )}
-        <IntercomWidget/>
+        {/* <IntercomWidget/> */}
         </MessageContextProvider>
         </TransactionFeedbackProvider>
       </DynamicContextProvider>
