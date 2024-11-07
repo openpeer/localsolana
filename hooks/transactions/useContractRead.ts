@@ -3,12 +3,14 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import useLocalSolana from "./useLocalSolana";
 import { BN } from "@coral-xyz/anchor";
 import useAccount from "../useAccount";
+import useShyft from "./useShyft";
 
 export const useContractRead = (contractAddress: string, method: string,watch? : boolean) => {
   const [data, setData] = useState<any>(null);
   const [loadingContract, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { provider, program, connection,getEscrowStatePDA } = useLocalSolana();
+  const {getAccountInfo,shyft} = useShyft();
 
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
       setLoading(false);
       return;
     }
-      const publicKey = method =="escrowState"?escrowStateAddress:new PublicKey(contractAddress);
+      const publicKey = method =="escrowState"?escrowStateAddress?.toBase58():contractAddress;
       try {
         if (!connection) {
           setError("Connection  not found");
@@ -40,7 +42,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
           return;
         }
 
-        const accountInfo = await connection.getAccountInfo(publicKey!);
+        const accountInfo = await getAccountInfo(publicKey!);
         const accountBuffer = accountInfo?.data;
 
         if (!accountBuffer) {
@@ -123,7 +125,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
         return;
       }
       // Subscribe to account changes by watching for account changes
-    const subscriptionId = connection?.onAccountChange(publicKey, (updatedAccountInfo) => {
+    const subscriptionId = shyft?.connection?.onAccountChange(publicKey, (updatedAccountInfo) => {
       const accountBuffer = updatedAccountInfo?.data;
       if (!accountBuffer) {
         setError("Unable to retrieve account information");
