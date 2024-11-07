@@ -10,7 +10,7 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
   const [loadingBalance, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const {connection,} = useLocalSolana();
-  const {getTokenBalance} = useShyft();
+  const {getTokenBalance,getWalletBalance} = useShyft();
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -25,11 +25,11 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
             return
         }
         if(tokenAddress == PublicKey.default.toBase58()){
-        const balance = await connection.getBalance(publicKey);
-        setBalance(balance / 1e9); // Convert lamports to SOL
+        const balance = await getWalletBalance(walletAddress);
+        setBalance(balance); // Convert lamports to SOL
       }else{
         const balance = await getTokenBalance(walletAddress,tokenAddress);
-        setBalance(balance); 
+        setBalance(balance);
       }
       } catch (err: any) {
         setError(err.message);
@@ -43,7 +43,7 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
     }
     if(watch){
       // Polling at the specified interval
-    const intervalId = setInterval(fetchBalance, 5000);
+    const intervalId = setInterval(fetchBalance, 10000);
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);

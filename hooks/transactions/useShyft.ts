@@ -148,7 +148,9 @@ const useShyft = () => {
   };
 
   const getAccountInfo = async (address: string) => {
+    console.log("Shyft",shyft);
     if (!shyft) return null;
+    
     const accountInfo = await shyft.connection.getAccountInfo(
       new PublicKey(address)
     );

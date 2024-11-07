@@ -172,7 +172,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	});
 	
 	const listPaymentMethods = [...existing, ...newPaymentMethods];
-
+	console.log('Payment methods list',listPaymentMethods);
 	return (
 		<StepLayout
 			onProceed={paymentMethodCreation === undefined && paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id).length > 0 ? onProceed : undefined}
