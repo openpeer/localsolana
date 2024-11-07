@@ -17,7 +17,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
       setError(null);
       var escrowStateAddress;
       if(method =="escrowState"){
-        escrowStateAddress = await getEscrowStatePDA(contractAddress);
+        escrowStateAddress = getEscrowStatePDA(contractAddress);
         console.log('LocalSolana Account',escrowStateAddress?.toBase58());
       if(!escrowStateAddress){
         setData(null);
