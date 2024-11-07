@@ -35,8 +35,12 @@ const useShyft = () => {
 
   useEffect(() => {
     const initializeShyft = async () => {
+      const apiKey = process.env.NEXT_PUBLIC_SHYFT_API_KEY ;
+      if(!apiKey){
+        throw new Error("Error Initialising signer");
+      }
       const shyftInstance = new ShyftSdk({
-        apiKey: process.env.NEXT_PUBLIC_SHYFT_API_KEY || '',
+        apiKey: apiKey,
         network: getShyftNetwork(CURRENT_NETWORK), // Convert string to Network enum
       });
       setShyft(shyftInstance);
