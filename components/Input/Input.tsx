@@ -3,12 +3,13 @@ import { NumericFormat, OnValueChange } from 'react-number-format';
 import Tooltip from 'components/Tooltip';
 
 export interface InputProps {
-	label: string;
+	label?: string;
 	addOn?: JSX.Element | string;
 	id: string;
 	value?: number | string | undefined;
 	onChange?: (value: string) => void | undefined;
 	onChangeNumber?: (value: number | undefined) => void | undefined;
+	onBlur?: () => void | undefined;
 	type?: 'number' | 'email' | 'text' | 'decimal';
 	required?: boolean;
 	placeholder?: string;
@@ -21,6 +22,9 @@ export interface InputProps {
 	containerExtraStyle?: string;
 	labelStyle?: string;
 	tooltipContent?: string;
+	helperText?: string;
+	isUpdating?: boolean;
+	maxLength?: number;
 }
 
 const Input = ({

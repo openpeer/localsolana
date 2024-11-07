@@ -3,25 +3,30 @@ import { getAuthToken, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { PutObjectCommandOutput } from '@aws-sdk/client-s3';
 import { Errors } from 'models/errors';
 import { User } from 'models/types';
-import { useEffect, useState } from 'react';
-import { minkeApi } from '../pages/api/utils/utils';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+// import { minkeApi } from '../pages/api/utils/utils';
 import { useRouter } from 'next/router';
+import { isEqual, debounce, DebouncedFunc } from 'lodash';
 
-interface ErrorObject {
-	[fieldName: string]: string[];
-}
+// interface ErrorObject {
+// 	[fieldName: string]: string[];
+// }
 
 const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) => void }) => {
 	const router=useRouter();
-	const [user, setUser] = useState<User | null>();
+	const [user, setUser] = useState<User | null>(null);
 	const [username, setUsername] = useState<string>();
-	const [email, setEmail] = useState<string>();
-	const [twitter, setTwitter] = useState<string>();
-	const [timezone, setTimezone] = useState<string>();
-	const [availableFrom, setAvailableFrom] = useState<number>();
-	const [availableTo, setAvailableTo] = useState<number>();
-	const [weekendOffline, setWeekendOffline] = useState<boolean>();
+	const [isUpdating, setIsUpdating] = useState(false);
+	const [isUpdatingDebounced, setIsUpdatingDebounced] = useState(false);
 	const [errors, setErrors] = useState<Errors>({});
+	const [previousProfile, setPreviousProfile] = useState<Partial<User> | null>(null);
+
+	// const [email, setEmail] = useState<string>();
+	// const [twitter, setTwitter] = useState<string>();
+	// const [timezone, setTimezone] = useState<string>();
+	// const [availableFrom, setAvailableFrom] = useState<number>();
+	// const [availableTo, setAvailableTo] = useState<number>();
+	// const [weekendOffline, setWeekendOffline] = useState<boolean>();
 	const [contractAddress, setContractAddress] = useState<string | null>();
 
 	let primaryWallet;
@@ -34,138 +39,335 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 	const address  = primaryWallet?.address;
 
-	// const updateUserState=(data:any)=>{
-	// 	setUser(()=>{
-	// 	  if(data.image_url){
+	const telegramBotLinkRef = useRef<string>('');
 
-	// 		return {
-	// 		  ...data,
-	// 		  image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image_url}`
-	// 		}
-	// 	  }
 
-	// 	  return {...data};
-	// 	});
-	//   }
+	const updateUserState = useCallback((data: User) => {
+		setUser((prevUser) => {
+			if (!isEqual(prevUser, data)) {
+				const uniqueIdentifier = data.unique_identifier;
+				telegramBotLinkRef.current = `https://telegram.me/localsolanabot?start=${uniqueIdentifier}`;
+				// console.log('User updated:', data);
+				return data;
+			}
+			return prevUser;
+		});
+	}, []);
 
-	const fetchUserProfile = async () => {
+	const fetchUserProfile = useCallback(async () => {
 		if (!address) return;
 
-		// working accurately for image
-		minkeApi.get(`/api/user_profiles/${address}`, {
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`
-			}
-		})
-			.then((res) => res.data)
-			.then((data) => {
-				if (data.errors) {
-					setUser(null);
-				} else {
-					// updateUserState(data.data);
-					const updatedInfo = data.data;
-					setUser({...updatedInfo});
-					setContractAddress(data.data.contract_address); 
+		try {
+			// console.log('Fetching user profile...');
+			const res = await fetch(`/api/user_profiles/${address}`, {
+				headers: {
+					Authorization: `Bearer ${getAuthToken()}`
 				}
 			});
-	};
+			if (res.status === 401) {
+				console.error('Unauthorized: Invalid or missing auth token');
+				setUser(null);
+				return;
+			}
+			const data = await res.json();
+			if (data.errors) {
+				setUser(null);
+			} else {
+				updateUserState(data);
+				setPreviousProfile(data);
+				setContractAddress(data.data.contract_address);
+				// console.log('User profile fetched:', data);
+			}
+		} catch (error) {
+			console.error('Error fetching user profile:', error);
+		}
+	}, [address, getAuthToken, updateUserState]);
 
 	useEffect(() => {
 		fetchUserProfile();
-	}, [address]);
+	}, [fetchUserProfile]);
 
-	useEffect(() => {
-		if (user) {
-			setUsername(user.name || '');
-			setEmail(user.email || '');
-			setTwitter(user.twitter || '');
-			setTimezone(user.timezone || undefined);
-			setAvailableFrom(user.available_from || undefined);
-			setAvailableTo(user.available_to || undefined);
-			setWeekendOffline(user.weekend_offline);
-			setContractAddress(user.contract_address);
-		}
-	}, [user]);
+	const validateProfile = (profile: Partial<User>): Errors => {
+		const errors: Errors = {};
 
-	const updateUserProfile = async (profile: User, showNotification = true) => {
-		// working accurately for image
-		const result = await fetch(`/api/user_profiles/${address}`, {
-			method: 'POST',
-			body: JSON.stringify(profile),
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`,
-				'Content-Type': 'application/json',
+		const alphanumericUnderscoreRegex = /^[a-zA-Z0-9_]+$/;
+
+		if (profile.name) {
+			if (profile.name.length < 3) {
+				errors['name'] = 'Username must be at least 3 characters';
+			} else if (profile.name.length > 15) {
+				errors['name'] = 'Username must be 15 characters or less';
+			} else if (!alphanumericUnderscoreRegex.test(profile.name)) {
+				errors['name'] = 'Username must contain only alphanumeric characters and underscores';
 			}
-		});
-
-		const newUser = await result.json();
-
-		if (newUser.data.id) {
-			const updatedInfo = {...newUser.data};
-			setUser(updatedInfo);
-			// updateUserState(newUser.data);
-
-			// if (!showNotification) return;
-			onUpdateProfile?.(updatedInfo);
-		} else {
-			const foundErrors: ErrorObject = newUser.errors;
-			Object.entries(foundErrors).map(([fieldName, messages]) => {
-				const formattedMessages = messages.map(
-					(message) => `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} ${message}`
-				);
-
-				setErrors({ ...errors, ...{ [fieldName]: formattedMessages.join(', ') } });
-				return formattedMessages;
-			});
 		}
+
+		if (profile.twitter) {
+			if (profile.twitter.length < 3) {
+				errors.twitter = 'Twitter handle must be at least 3 characters';
+			} else if (profile.twitter.length > 15) {
+				errors.twitter = 'Twitter handle must be 15 characters or less';
+			} else if (profile.twitter.includes('@')) {
+				errors.twitter = 'Twitter handle should not include the @ symbol';
+			} else if (!alphanumericUnderscoreRegex.test(profile.twitter)) {
+				errors.twitter = 'Twitter handle must contain only alphanumeric characters and underscores';
+			}
+		}
+
+		if (profile.email && !/\S+@\S+\.\S+/.test(profile.email)) {
+			errors.email = 'Invalid email format';
+		}
+
+		if (profile.whatsapp_number && profile.whatsapp_number.length > 17) {
+			errors.whatsapp_number = 'WhatsApp number must be 17 digits or less';
+		}
+
+		if (profile.whatsapp_country_code && !profile.whatsapp_number) {
+			errors.whatsapp_number = 'WhatsApp number is required when country code is provided';
+		}
+
+		if (profile.whatsapp_number && !profile.whatsapp_country_code) {
+			errors.whatsapp_country_code = 'WhatsApp country code is required when number is provided';
+		}
+
+		return errors;
 	};
 
-	const onUploadFinished = async (data: PutObjectCommandOutput, imageName:string) => {
-		setErrors({});
-		const newUser = { ...user, image:imageName,image_url:imageName };
-		await updateUserProfile(newUser as User, true);
-		// window.location.reload();
-		router.reload();
-	};
+	// useEffect(() => {
+	// 	if (user) {
+	// 		setUsername(user.name || '');
+	// 		setEmail(user.email || '');
+	// 		setTwitter(user.twitter || '');
+	// 		setTimezone(user.timezone || undefined);
+	// 		setAvailableFrom(user.available_from || undefined);
+	// 		setAvailableTo(user.available_to || undefined);
+	// 		setWeekendOffline(user.weekend_offline);
+	// 		setContractAddress(user.contract_address);
+	// 	}
+	// }, [user]);
 
-	const updateProfile = () => {
-		console.log('Here in update profile',user,contractAddress);
-		setErrors({});
-		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contractAddress || null} };
-		updateUserProfile(newUser as User);
-	};
+	const updateUserProfile = useCallback(
+		async (profile: Partial<User>, showNotification = true) => {
+			if (!getAuthToken) return; // Ensure authToken is available
+			// console.log('Profile data before validation:', profile);
+			const validationErrors = validateProfile(profile);
+			if (Object.keys(validationErrors).length > 0) {
+				setErrors(validationErrors);
+				return;
+			}
+
+			// console.log('Profile data after validation:', profile);
+
+			if (previousProfile && isEqual(previousProfile, profile)) {
+				// console.log('Profile has not changed, skipping update.');
+				return;
+			}
+
+			try {
+				setIsUpdating(true);
+				let userProfileData = { ...profile };
+
+				// Only include WhatsApp data if both country code and number are present
+				if (profile.whatsapp_country_code || profile.whatsapp_number) {
+					if (!profile.whatsapp_country_code || !profile.whatsapp_number) {
+						throw new Error('Both WhatsApp country code and number must be provided.');
+					}
+				}
+
+				// Ensure we're not sending empty objects for nested properties
+				Object.keys(userProfileData).forEach((key) => {
+					const k = key as keyof Partial<User>;
+					if (
+						typeof userProfileData[k] === 'object' &&
+						userProfileData[k] !== null &&
+						Object.keys(userProfileData[k] as object).length === 0
+					) {
+						delete userProfileData[k];
+					}
+				});
+
+				// console.log('Sending user profile data to API:', userProfileData);
+
+				const result = await fetch(`/api/user_profiles/${address}`, {
+					method: 'PATCH',
+					body: JSON.stringify({ user_profile: userProfileData }),
+					headers: {
+						Authorization: `Bearer ${getAuthToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+
+				const responseData = await result.json();
+
+				if (!result.ok) {
+					if (result.status === 422) {
+						// This is a validation error (e.g., username already taken)
+						const errorMessage = responseData.data?.message || 'Validation error occurred';
+						setErrors((prevErrors) => ({
+							...prevErrors,
+							name: errorMessage
+						}));
+						// Throw an error so that the calling function can catch it
+						throw new Error(errorMessage);
+					} else {
+						// For other types of errors, throw an error to be caught below
+						throw new Error(responseData.data?.message || 'An error occurred while updating the profile');
+					}
+				}
+
+				// Check if responseData contains the updated user data
+				if (responseData.data) {
+					updateUserState(responseData.data);
+					setPreviousProfile(responseData.data);
+					if (showNotification) {
+						onUpdateProfile?.(responseData.data);
+					}
+					// console.log('User profile updated:', responseData.data);
+				} else {
+					// console.log('Profile updated successfully, but no data returned. Fetching latest profile.');
+					await fetchUserProfile();
+				}
+			} catch (error) {
+				console.error('Error updating profile:', error);
+				setErrors((prevErrors) => ({
+					...prevErrors,
+					general: error instanceof Error ? error.message : 'An unknown error occurred'
+				}));
+				// throw error;
+			} finally {
+				setIsUpdating(false);
+			}
+		},
+		[address, getAuthToken, onUpdateProfile, updateUserState, validateProfile, previousProfile, user, fetchUserProfile]
+	);
+
+	const debouncedUpdateUserProfile = useCallback(
+		debounce((profile: Partial<User>, showNotification = false) => {
+			// console.log('debouncedUpdateUserProfile called');
+			setIsUpdatingDebounced(true);
+			return updateUserProfile(profile, showNotification)
+				.then((result) => {
+					setIsUpdatingDebounced(false);
+					return result;
+				})
+				.catch((error) => {
+					setIsUpdatingDebounced(false);
+					throw error;
+				});
+		}, 2000),
+		[updateUserProfile]
+	);
+
+	const safeUpdateProfile = useCallback(
+		(profile: Partial<User>, showNotification = false) => {
+			const validationErrors = validateProfile(profile);
+			if (Object.keys(validationErrors).length > 0) {
+				setErrors(validationErrors);
+				return Promise.resolve();
+			}
+
+			return debouncedUpdateUserProfile(profile, showNotification);
+		},
+		[debouncedUpdateUserProfile, validateProfile]
+	) as unknown as DebouncedFunc<typeof updateUserProfile>;
+
+	safeUpdateProfile.cancel = debouncedUpdateUserProfile.cancel;
+	safeUpdateProfile.flush = debouncedUpdateUserProfile.flush;
+
+	const deleteTelegramInfo = useCallback(async () => {
+		if (!getAuthToken) return;
+		await updateUserProfile(
+			{
+				telegram_user_id: null,
+				telegram_username: null
+			},
+			false
+		);
+		await fetchUserProfile();
+	}, [updateUserProfile, fetchUserProfile, getAuthToken]);
+
+// mmm S3 thing
+const onUploadFinished = useCallback(
+  async (data: PutObjectCommandOutput, imageName: string) => {
+    setErrors({});
+    const newUser = { ...user, image: imageName, image_url: imageName };
+    await updateUserProfile(newUser as User, true);
+    router.reload();
+  },
+  [user, updateUserProfile, setErrors, router]
+);
+
+	const refreshUserProfile = useCallback(async () => {
+		if (!address || !getAuthToken) return { success: false, error: 'No address or auth token provided' };
+
+		try {
+			// console.log('Refreshing user profile...');
+			const res = await fetch(`/api/user_profiles/${address}`, {
+				headers: {
+					Authorization: `Bearer ${getAuthToken}`
+				}
+			});
+			if (!res.ok) {
+				const errorData = await res.json();
+				throw new Error(errorData.message || 'Failed to fetch user profile');
+			}
+			const data = await res.json();
+			updateUserState(data);
+			setPreviousProfile(data);
+			// console.log('User profile refreshed:', data);
+			return { success: true, user: data };
+		} catch (error) {
+			console.error('Error refreshing user profile:', error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'An error occurred while fetching the user profile'
+			};
+		}
+	}, [address, getAuthToken, updateUserState]);
+
 	const updateContractAddress = (contractAddress: string) => {
-		console.log('Here in update profile',user,contractAddress);
-		setErrors({});
-		const newUser = { ...user, ...{ name: username || null, email: email || null, twitter: twitter || null ,contract_address: contractAddress || null} };
-		updateUserProfile(newUser as User);
+		console.log('Updating contract address:', contractAddress);
+		setErrors({}); // Clear any existing errors
+		const updatedUser = { ...user, contract_address: contractAddress }; // Update contract address in user object
+		updateUserProfile(updatedUser as User); // Call updateUserProfile with the updated user
 	};
+	
 
-	return {
-		user,
-		onUploadFinished,
-		updateProfile,
-		errors,
-		username,
-		setUsername,
-		email,
-		setEmail,
-		twitter,
-		setTwitter,
-		timezone,
-		setTimezone,
-		availableFrom,
-		setAvailableFrom,
-		availableTo,
-		setAvailableTo,
-		weekendOffline,
-		setWeekendOffline,
-		updateUserProfile,
-		fetchUserProfile,
-		contractAddress,
-		setContractAddress,
-		updateContractAddress
-	};
+	return useMemo(
+		() => ({
+			user,
+			isUpdating,
+			isUpdatingDebounced,
+			onUploadFinished,
+			updateProfile: safeUpdateProfile,
+			updateUserProfile,
+			errors,
+			fetchUserProfile,
+			deleteTelegramInfo,
+			refreshUserProfile,
+			telegramBotLink: telegramBotLinkRef.current,
+			validateProfile,
+			contractAddress,
+			setContractAddress,
+			updateContractAddress
+		}),
+		[
+			user,
+			isUpdating,
+			isUpdatingDebounced,
+			onUploadFinished,
+			safeUpdateProfile,
+			updateUserProfile,
+			errors,
+			fetchUserProfile,
+			deleteTelegramInfo,
+			refreshUserProfile,
+			validateProfile,
+			contractAddress,
+			setContractAddress,
+			updateContractAddress
+		]
+	);
 };
 
 export default useUserProfile;
