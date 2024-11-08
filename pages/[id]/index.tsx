@@ -14,18 +14,6 @@ const Profile = ({ id }: { id: number }) => {
 	const router = useRouter();
 	const { verification } = router.query;
 
-	// const updateUserState=(data:any)=>{
-	// 	setUser(()=>{
-	// 	  if(data.image){
-	// 		return {
-	// 		  ...data,
-	// 		  image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
-	// 		}
-	// 	  }
-	// 	  return {...data};
-	// 	});
-	//   }
-
 
 	useEffect(() => {
 		fetch(`/api/user_profiles/${id}`)
@@ -50,8 +38,6 @@ const Profile = ({ id }: { id: number }) => {
 				setLists(data.data);
 			});
 
-
-		// 	"data": [
 		// 		{
 		// 			"id": 3600,
 		// 			"automatic_approval": true,

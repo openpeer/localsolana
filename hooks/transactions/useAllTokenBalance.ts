@@ -3,14 +3,15 @@ import { useState, useEffect } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import useLocalSolana from './useLocalSolana';
 import useShyft from './useShyft';
+import { TokenBalance } from '@shyft-to/js';
 
 
-export const useBalance = (walletAddress: string, tokenAddress: string, watch?: boolean) => {
-  const [balance, setBalance] = useState<number | null>(null);
+export const useAllTokenBalance = (walletAddress: string, watch?: boolean) => {
+  const [balances, setBalances] = useState<TokenBalance[] | null>(null);
   const [loadingBalance, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const {connection,} = useLocalSolana();
-  const {getTokenBalance,getWalletBalance} = useShyft();
+  const {getAllTokenBalance,} = useShyft();
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -18,19 +19,17 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
       setError(null);
 
       try {
-        const publicKey = new PublicKey(walletAddress);
         if(!connection){
             setError("Connection not established");
             setLoading(false);
             return
         }
-        if(tokenAddress == PublicKey.default.toBase58()){
-        const balance = await getWalletBalance(walletAddress);
-        setBalance(balance); // Convert lamports to SOL
-      }else{
-        const balance = await getTokenBalance(walletAddress,tokenAddress);
-        setBalance(balance);
-      }
+        console.log("Here is my balance",);
+        const balance = await getAllTokenBalance(walletAddress);
+        console.log("Here is my balance",balance);
+        setBalances(balance);
+        setLoading(false);
+
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -53,5 +52,5 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
   }, [walletAddress,connection]);
   // console.log("Here is my balance",balance, loadingBalance, error);
 
-  return { balance, loadingBalance, error };
+  return { balances, loadingBalance, error };
 };

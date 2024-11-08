@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
 // import { OpenPeerEscrow } from 'abis';
 import { useBalance } from "@/hooks/transactions/useBalance";
 import { useContractRead } from "@/hooks/transactions/useContractRead";

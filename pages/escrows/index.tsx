@@ -1,347 +1,295 @@
 // import { OpenPeerDeployer, OpenPeerEscrow } from 'abis';
-import { Accordion, Button, EscrowDepositWithdraw, Token as TokenImage } from 'components';
-import DeploySellerContract from 'components/Buy/EscrowButton/DeploySellerContract';
-import HeaderH3 from 'components/SectionHeading/h2';
+import {
+  Accordion,
+  Button,
+  EscrowDepositWithdraw,
+  Loading,
+  Token as TokenImage,
+} from "components";
+import DeploySellerContract from "components/Buy/EscrowButton/DeploySellerContract";
+import HeaderH3 from "components/SectionHeading/h2";
 // import NetworkSelect from 'components/Select/NetworkSelect';
-import { useAccount, useUserProfile } from 'hooks';
+import { useAccount, useUserProfile } from "hooks";
 // import { DEPLOYER_CONTRACTS, allChains } from 'models/networks';
-import React, { useEffect, useState } from 'react';
-import { formatUnits } from 'viem';
+import React, { useEffect, useState } from "react";
+import { formatUnits } from "viem";
 // import { Chain, useContractRead, useNetwork, useSwitchNetwork } from 'wagmi';
-import { Contract, Token } from 'models/types';
-import { CURRENT_NETWORK, smallWalletAddress } from 'utils';
-import { useBalance, useShyft } from '@/hooks/transactions';
-import { token } from '@coral-xyz/anchor/dist/cjs/utils';
+import { Contract, Token } from "models/types";
+import { CURRENT_NETWORK, smallWalletAddress } from "utils";
+import { useBalance, useShyft } from "@/hooks/transactions";
+import { token } from "@coral-xyz/anchor/dist/cjs/utils";
+import { useContractRead } from "@/hooks/transactions/useContractRead";
+import { minkeApi } from "../api/utils/utils";
+import { getAuthToken } from "@dynamic-labs/sdk-react-core";
+import { headers } from "next/headers";
+import { useAllTokenBalance } from "@/hooks/transactions/useAllTokenBalance";
+import { TokenBalance } from "@shyft-to/js";
+import { Router, useRouter } from "next/router";
+import { PublicKey } from "@solana/web3.js";
 
 const ContractTable = ({
-	contract,
-	tokens,
-	beingUsed,
-	//chain,
-	needToDeploy,
-	onSelectToken
+  contract,
+  tokens,
+  balances,
+  nativeBalance,
+  needToDeploy,
+  onSelectToken,
 }: {
-	contract: Contract;
-	tokens: Token[];
-	beingUsed: boolean;
-	needToDeploy: boolean;
-	//chain: Chain | undefined;
-	onSelectToken: (token: Token, contract: Contract, action: 'Withdraw' | 'Deposit') => void;
+  contract: string;
+  tokens: Token[];
+  balances: TokenBalance[] | null;
+  nativeBalance:number;
+  needToDeploy: boolean;
+  onSelectToken: (
+    token: Token,
+    contract: string,
+    action: "Withdraw" | "Deposit"
+  ) => void;
 }) => (
-	<div className="mt-4" key={contract.id}>
-		{beingUsed && (
-			<div className="flex flex-col md:flex-row md:items-center md:space-x-1 break-all">
-				<a
-					href={`https://explorer.solana.com/address/${contract.address}?cluster=${CURRENT_NETWORK}`}
-					className="text-purple-900"
-					target="_blank"
-					rel="noreferrer"
-				>
-					<h1>{smallWalletAddress(contract.address, 14)} </h1>
-				</a>
-				<span className="text-sm">{beingUsed ? '(being used)' : ''}</span>
-			</div>
-		)}
-		<table className="w-full md:rounded-lg overflow-hidden mt-2">
-			<thead className="bg-gray-100">
-				<tr className="w-full relative">
-					<th
-						scope="col"
-						className="hidden py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 lg:table-cell"
-					>
-						Token
-					</th>
-					<th
-						scope="col"
-						className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
-					>
-						Balance
-					</th>
-					<th
-						scope="col"
-						className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
-					>
-						Action
-					</th>
-				</tr>
-			</thead>
-			<tbody className="divide-y divide-gray-200">
-				{tokens
-					//.filter((t) => t.chain_id === chain?.id)
-					.map((t) => (
-						<TokenRow
-							key={t.id}
-							token={t}
-							contract={contract}
-							depositDisabled={!beingUsed || needToDeploy}
-							onSelectToken={onSelectToken}
-						/>
-					))}
-			</tbody>
-		</table>
-	</div>
+  <div className="mt-4" key={contract}>
+    {
+      <div className="flex flex-col md:flex-row md:items-center md:space-x-1 break-all">
+        <a
+          href={`https://explorer.solana.com/address/${contract}?cluster=${CURRENT_NETWORK}`}
+          className="text-purple-900"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <h1>{contract} </h1>
+        </a>
+      </div>
+    }
+    <table className="w-full md:rounded-lg overflow-hidden mt-2">
+      <thead className="bg-gray-100">
+        <tr className="w-full relative">
+          <th
+            scope="col"
+            className="hidden py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 lg:table-cell"
+          >
+            Token
+          </th>
+          <th
+            scope="col"
+            className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
+          >
+            Balance
+          </th>
+          <th
+            scope="col"
+            className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
+          >
+            Action
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-200">
+        {tokens
+          //.filter((t) => t.chain_id === chain?.id)
+          .map((t) => (
+            <TokenRow
+              key={t.id}
+              token={t}
+              contract={contract}
+              balance={(t.address==PublicKey.default.toBase58())?nativeBalance:(balances?.find((balance)=> balance.address == t.address)?.balance)||0}
+              depositDisabled={needToDeploy}
+              onSelectToken={onSelectToken}
+            />
+          ))}
+      </tbody>
+    </table>
+  </div>
 );
 
 const TokenRow = ({
-	token,
-	contract,
-	depositDisabled,
-	onSelectToken
+  token,
+  contract,
+  depositDisabled,
+  balance,
+  onSelectToken,
 }: {
-	token: Token;
-	contract: Contract;
-	depositDisabled: boolean;
-	onSelectToken: (token: Token, contract: Contract, action: 'Withdraw' | 'Deposit') => void;
+  token: Token;
+  contract: string;
+  depositDisabled: boolean;
+  balance:number | null
+  onSelectToken: (
+    token: Token,
+    contract: string,
+    action: "Withdraw" | "Deposit"
+  ) => void;
 }) => {
-	const { address } = useAccount();
 
-	// const { data } = useContractRead({
-	// 	address: contract.address,
-	// 	abi: OpenPeerEscrow,
-	// 	functionName: 'balances',
-	// 	args: [token.address],
-	// 	enabled: !!address,
-	// 	chainId: token.chain_id
-	// });
 
- 
-	//const data = useBalance(token.address);
+  return (
+    <tr className="hover:bg-gray-50">
+      <div className="mt-2 flex flex-col text-gray-500 lg:hidden">
+        <div className="fw-full lex flex-col space-y-4">
+          <div className="flex flex-row items-center space-x-1">
+            <TokenImage size={24} token={token} />
 
-	return (
-		<tr className="hover:bg-gray-50">
-			<div className="mt-2 flex flex-col text-gray-500 lg:hidden">
-				<div className="fw-full lex flex-col space-y-4">
-					<div className="flex flex-row items-center space-x-1">
-						<TokenImage size={24} token={token} />
-
-						<span className="text-sm">
-							{
-								token.symbol
-								}
-						</span>
-					</div>
-					<span className="w-full flex flex-row space-x-4 pb-4">
-						<Button
-							title="Deposit"
-							disabled={depositDisabled}
-							onClick={() => onSelectToken(token, contract, 'Deposit')}
-						/>
-						{/* <Button
-							title="Withdraw"
-							disabled={!data.balance || (data.balance <= 0)}
-							onClick={() => onSelectToken(token, contract, 'Withdraw')}
-						/> */}
-					</span>
-				</div>
-			</div>
-			<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-				<div className="flex flex-row items-center space-x-1">
-					<TokenImage size={24} token={token} />
-					<span>{token.symbol}</span>
-				</div>
-			</td>
-			{/* <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-				{data === undefined ? '' : `${data.balance}  ${token.symbol}`}
-			</td> */}
-			<td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-				<div className="w-full flex flex-row space-x-4">
-					<Button
-						title="Deposit"
-						disabled={depositDisabled}
-						onClick={() => onSelectToken(token, contract, 'Deposit')}
-					/>
-					{/* <Button
-						title="Withdraw"
-						disabled={!data.balance || (data.balance) <= 0}
-						onClick={() => onSelectToken(token, contract, 'Withdraw')}
-					/> */}
-				</div>
-			</td>
-		</tr>
-	);
+            <span className="text-sm">{token.symbol}</span>
+            <span className="text-sm">{balance} {token.symbol}</span>
+          </div>
+          <span className="w-full flex flex-row space-x-4 pb-4">
+            <Button
+              title="Deposit"
+              disabled={depositDisabled}
+              onClick={() => onSelectToken(token, contract, "Deposit")}
+            />
+            <Button
+              title="Withdraw"
+              disabled={!balance || balance <= 0}
+              onClick={() => onSelectToken(token, contract, "Withdraw")}
+            />
+          </span>
+        </div>
+      </div>
+      <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
+        <div className="flex flex-row items-center space-x-1">
+          <TokenImage size={24} token={token} />
+          <span>{token.symbol}</span>
+        </div>
+      </td>
+      <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
+        {balance ==null ? "" : `${balance}  ${token.symbol}`}
+      </td>
+      <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
+        <div className="w-full flex flex-row space-x-4">
+          <Button
+            title="Deposit"
+            disabled={depositDisabled}
+            onClick={() => onSelectToken(token, contract, "Deposit")}
+          />
+          <Button
+            title="Withdraw"
+            disabled={!balance || balance <= 0}
+            onClick={() => onSelectToken(token, contract, "Withdraw")}
+          />
+        </div>
+      </td>
+    </tr>
+  );
 };
 
 const MyEscrows = () => {
-	const { address } = useAccount();
-	// const { chain: connectedChain } = useNetwork();
-	// const { switchNetwork } = useSwitchNetwork();
+  const { address } = useAccount();
+  const [loading, setLoading] = useState(false);
+  const { user, fetchUserProfile } = useUserProfile({});
+  const [lastVersion, setLastVersion] = useState(0);
+  const [tokens, setTokens] = useState<Token[]>([]);
 
-	//const [chain, setChain] = useState<Chain>();
-	const [loading, setLoading] = useState(false);
-	const { user, fetchUserProfile } = useUserProfile({});
-	const [lastVersion, setLastVersion] = useState(0);
-	const [tokens, setTokens] = useState<Token[]>([]);
+  // deposit withdraw params
+  const [action, setAction] = useState<"Deposit" | "Withdraw">("Deposit");
+  const [token, setToken] = useState<Token>();
+  const [contract, setContract] = useState<string>();
 
-	// deposit withdraw params
-	const [action, setAction] = useState<'Deposit' | 'Withdraw'>('Deposit');
-	const [token, setToken] = useState<Token>();
-	const [contract, setContract] = useState<Contract>();
+  const { data: escrowData, loadingContract } = useContractRead(
+    address || "",
+    "escrowState",
+    true
+  );
 
-	// const deployer = DEPLOYER_CONTRACTS[chain?.id || 0];
-	// const chainInUse = allChains.find((c) => c.id === chain?.id);
+  useEffect(() => {
+    setLoading(true);
+    const fetchTokens = async () => {
+      // change it later
 
-	// const { data: sellerContract } = useContractRead({
-	// 	address: deployer,
-	// 	abi: OpenPeerDeployer,
-	// 	functionName: 'sellerContracts',
-	// 	args: [address],
-	// 	enabled: !!chain,
-	// 	watch: true,
-	// 	chainId: chain?.id,
-	// 	account: address
-	// });
+      minkeApi
+        .get(`/api/admin/tokens`, {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        })
+        .then((res) => {
+         console.log('Tokens are', res.data.data);
+          setTokens(res.data.data);
+          setLoading(false);
+        });
+    };
 
-	// useEffect(() => {
-	// 	if (connectedChain && !chain) {
-	// 		setChain({
-	// 			...connectedChain,
-	// 			// @ts-expect-error
-	// 			symbol: connectedChain.nativeCurrency.symbol
-	// 		});
-	// 	}
-	// }, [connectedChain]);
+    fetchTokens();
+  }, []);
 
-	useEffect(() => {
-		setLoading(true);
-		const fetchTokens = async () => {
-			// change it later
 
-			const response = await fetch('/api/admin/tokens');
-			setTokens(await response.json());
-			setLoading(false);
-		};
+   const {balances,loadingBalance,error} = useAllTokenBalance(user?.contract_address || '',true);
+   const {balance} = useBalance(user?.contract_address || '',PublicKey.default.toBase58(),true);
 
-		fetchTokens();
-	}, []);
+  const needToDeploy = escrowData == null;
+  const router=useRouter();
+  const onSelectToken = (t: Token, c: string, a: "Withdraw" | "Deposit") => {
+    setToken(t);
+    setAction(a);
+    setContract(c);
+  };
 
-	useEffect(() => {
-		const fetchSettings = async () => {
-			// change it later
-			const response = await fetch('/api/admin/settings/14');
-			const settings: { [key: string]: string } = await response.json();
-			setLastVersion(Number(settings.contract_version || 0));
-		};
-		fetchSettings();
-	}, []);
+  const onBack = () => {
+    setToken(undefined);
+    setContract(undefined);
+    setAction("Deposit");
+    //router.reload();
+  };
 
-//	const contracts = (user?.contracts || []).filter((c) => c.chain_id === chain?.id && Number(c.version) >= 2);
+  // if(loadingBalance){
+  //   return (<Loading/>);
+  // }
 
-	//const lastDeployedVersion = contracts.reduce((acc, c) => Math.max(acc, Number(c.version)), 0);
-//	const needToDeploy = contracts.length === 0 || lastDeployedVersion < lastVersion;
-	//const lastDeployedContract = sellerContract as `0x${string}` | undefined;
-	// const contractInUse = contracts.find((c) => c.address.toLowerCase() === (lastDeployedContract || '').toLowerCase());
-	// const otherContracts = contracts.filter(
-	// 	(c) => c.address.toLowerCase() !== (lastDeployedContract || '').toLowerCase()
-	// );
+  if (action && token && contract) {
+    return (
+      <EscrowDepositWithdraw
+        action={action}
+        token={token}
+        contract={contract}
+        onBack={onBack}
+        canDeposit={!needToDeploy} //ontract === contractInUse &&
+        canWithdraw={!needToDeploy}
+      />
+    );
+  }
 
-	// useEffect(() => {
-	// 	if (lastDeployedContract && contracts.length > 0) {
-	// 		const deployed = contracts.find(
-	// 			(cont) => cont.address.toLowerCase() === lastDeployedContract.toLowerCase()
-	// 		);
-	// 		if (!deployed) {
-	// 			fetchUserProfile();
-	// 		}
-	// 	}
-	// }, [lastDeployedContract, contracts]);
-
-	const onSelectToken = (t: Token, c: Contract, a: 'Withdraw' | 'Deposit') => {
-		setToken(t);
-		setAction(a);
-		setContract(c);
-	};
-
-	const onBack = () => {
-		setToken(undefined);
-		setContract(undefined);
-		setAction('Deposit');
-	};
-
-	// if (action && token && contract) {
-	// 	return (
-	// 		<EscrowDepositWithdraw
-	// 			action={action}
-	// 			token={token}
-	// 			contract={contract.address}
-	// 			onBack={onBack}
-	// 			canDeposit={!needToDeploy} //ontract === contractInUse && 
-	// 			canWithdraw
-	// 		/>
-	// 	);
-	// }
-
-	return (
-		<div className="px-6 w-full flex flex-col items-center justify-center mt-4 pt-4 md:pt-6 text-gray-700">
-			<div className="w-full lg:w-1/2 flex flex-col mb-16">
-				<HeaderH3 title="Deposit or Withdraw funds" />
-				<div className="border border-slate-300 mt-4 rounded">
-					<div>
-						{/* {contracts.length > 0 && lastDeployedVersion < lastVersion && (
-							<p className="px-4">
-								A new version of LocalSolana is available. Please withdraw your assets and deploy a new
-								escrow contract
-							</p>
-						)}
-						{needToDeploy && (
-							<div className="mt-4 mb-4 px-4">
-								<DeploySellerContract label="Deploy a new contract" />
-							</div>
-						)} */}
-					</div>
-					{!!user && !loading && (
-						<>
-							{/* {contractInUse && (
-								<div className="px-4 pb-4">
-									<ContractTable
-										contract={contractInUse}
-										tokens={tokens}
-										beingUsed
-										chain={chainInUse}
-										needToDeploy={needToDeploy}
-										onSelectToken={onSelectToken}
-									/>
-								</div>
-							)}
-							{otherContracts.map((c) => (
-								<div className="break-all text-left">
-									<Accordion
-										content={
-											<div className="px-4 pb-4">
-												<ContractTable
-													contract={c}
-													tokens={tokens}
-													beingUsed={false}
-													chain={chainInUse}
-													needToDeploy={needToDeploy}
-													onSelectToken={onSelectToken}
-												/>
-											</div>
-										}
-										title={
-											<a
-												href={`${chainInUse?.blockExplorers?.etherscan?.url}/address/${c.address}`}
-												className="text-purple-900 flex flex-row items-center space-x-2"
-												target="_blank"
-												rel="noreferrer"
-											>
-												<h1 className="text-left">{smallWalletAddress(c.address, 14)}</h1>
-											</a>
-										}
-									/>
-								</div>
-							))} */}
-						</>
-					)}
-				</div>
-			</div>
-		</div>
-	);
+  return (
+    <div className="px-6 w-full flex flex-col items-center justify-center mt-4 pt-4 md:pt-6 text-gray-700">
+      <div className="w-full lg:w-1/2 flex flex-col mb-16">
+        <HeaderH3 title="Deposit or Withdraw funds" />
+        <div className="border border-slate-300 mt-4 rounded">
+          <div>
+            {needToDeploy && (
+              <div className="mt-4 mb-4 px-4">
+                <DeploySellerContract
+                  label="Create LocalSolana Account"
+                  setContractAddress={function (
+                    address: string | undefined
+                  ): void {
+                    throw new Error("Function not implemented.");
+                  }}
+                />
+              </div>
+            )}
+          </div>
+          {!!user && !loading && !needToDeploy&& (
+            <>
+              {
+                <div className="px-4 pb-4">
+                  <ContractTable
+                    contract={user?.contract_address ||''}
+                    tokens={tokens}
+                    balances={balances||[]}
+                    nativeBalance = {balance ||0}
+                    needToDeploy={needToDeploy}
+                    onSelectToken={onSelectToken}
+                  />
+                </div>
+              }
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export async function getServerSideProps() {
-	return {
-		props: { title: 'My Escrows' }
-	};
+  return {
+    props: { title: "My LocalSolana Account" },
+  };
 }
 
 export default MyEscrows;

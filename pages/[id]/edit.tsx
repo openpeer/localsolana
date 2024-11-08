@@ -41,7 +41,7 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 	}
 
 	return (
-		<div className="w-full m-auto flex flex-col sm:flex-row px-8 py-4 gap-x-16 justify-center mt-8">
+		<div className="w-full m-auto bg-white flex flex-col sm:flex-row px-8 py-4 gap-x-16 justify-center mt-8">
 			<div className="w-full md:w-80 mb-8">
 				<div className="flex items-start">
 					<div className="w-48">

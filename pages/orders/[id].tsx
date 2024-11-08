@@ -101,7 +101,7 @@ const OrderPage = ({ id }: { id: string }) => {
     if(seller.address !== address && order.buyer.address !== address){
         return (
             <>
-               <div className="flex items-center justify-center h-screen">
+               <div className="flex items-center justify-center h-screen bg-white">
 					Only Seller or buyer of this order is allowed to see the details
 				</div>
             </>
@@ -112,7 +112,7 @@ const OrderPage = ({ id }: { id: string }) => {
 		return <Dispute order={order} />;
 	}
     return (
-        <div className="pt-4 md:pt-6">
+        <div className="pt-4 md:pt-6 bg-white">
             <div className="w-full flex flex-row px-4 sm:px-6 md:px-8 mb-16">
                 <div className="w-full lg:w-2/4">
                     <Steps currentStep={step} stepsCount={3} />
