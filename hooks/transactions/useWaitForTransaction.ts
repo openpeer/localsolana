@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import useLocalSolana from './useLocalSolana';
+import useShyft from './useShyft';
 
 const SOLANA_RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
 
@@ -13,6 +14,7 @@ export const useWaitForTransaction = ({ hash, onReplaced }: UseWaitForTransactio
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const {connection} = useLocalSolana();
+  const {shyft} = useShyft();
 
   useEffect(() => {
     const fetchTransactionStatus = async () => {
@@ -20,6 +22,7 @@ export const useWaitForTransaction = ({ hash, onReplaced }: UseWaitForTransactio
       setIsError(false);
 
       try {
+
 
         const confirmedTransaction = await connection?.confirmTransaction(hash, 'finalized');
 

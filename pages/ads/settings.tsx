@@ -124,7 +124,7 @@ const AdsSettings = () => {
 	const userSetup = !!(user.timezone && user.available_from !== null && user.available_to !== null);
 
 	return (
-		<div className="py-6">
+		<div className="py-6 bg-white">
 			<div className="w-full md:w-1/2 m-auto w-mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
 				<Link className="flex flex-row items-center text-sm text-gray-500 py-4" href="/ads">
 					<ArrowLeftIcon width="16" height="16" className="mr-2" />

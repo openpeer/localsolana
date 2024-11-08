@@ -17,6 +17,10 @@ import TokenImage from './Token/Token';
 import Button from './Button/Button';
 //import WithdrawFundsButton from './WithdrawButton/WithdrawFundsButton';
 import Loading from './Loading/Loading';
+import { CURRENT_NETWORK } from '@/utils';
+import ClipboardText from './Buy/ClipboardText';
+import DepositFunds from './DepositButton';
+import WithdrawFundsButton from './WithdrawButton/WithdrawFundsButton';
 
 
 interface EscrowDepositWithdrawProps {
@@ -60,7 +64,7 @@ const EscrowDepositWithdraw = ({
 	//const chain = allChains.find((c) => c.id === token.chain_id);
 
 	const deposit = type === 'Deposit';
-	const balance =  0; //data ? Number(formatUnits(data as bigint, token.decimals)) :
+	//const balance =  0; //data ? Number(formatUnits(data as bigint, token.decimals)) :
 
 	useEffect(() => {
 		if (canDeposit && !canWithdraw) {
@@ -73,6 +77,7 @@ const EscrowDepositWithdraw = ({
 	if (!canDeposit && !canWithdraw) {
 		return <Loading />;
 	}
+
 
 	return (
 		<div className="px-6 w-full flex flex-col items-center mt-4 pt-4 md:pt-6 text-gray-700 relative">
@@ -99,12 +104,12 @@ const EscrowDepositWithdraw = ({
 						<>
 							{type} {token.name} {deposit ? 'into' : 'from'} your{' '}
 							<a
-								//href={`${chain?.blockExplorers.etherscan.url}/address/${contract}`}
+								href={`https://explorer.solana.com/address/${contract}?cluster=${CURRENT_NETWORK}`}
 								className="text-purple-900"
 								target="_blank"
 								rel="noreferrer"
 							>
-								Escrow Contract.
+								LocalSolana Account.
 							</a>
 						</>
 						{deposit ? (
@@ -116,13 +121,7 @@ const EscrowDepositWithdraw = ({
 							<span>You can withdraw all your avaiable funds at any time.</span>
 						)}
 					</div>
-					<div className="flex flex-row justify-between text-sm py-4 border-b border-gray-200">
-						<span>Network</span>
-						<div className="flex flex-row items-center space-x-1">
-							{/* <Network id={token.chain_id} size={20} />
-							<span>{chain!.name}</span> */}
-						</div>
-					</div>
+				
 					<div className="flex flex-row justify-between text-sm py-4 border-b border-gray-200">
 						<span>Asset</span>
 						<div className="flex flex-row items-center space-x-1">
@@ -152,23 +151,22 @@ const EscrowDepositWithdraw = ({
 								onChangeNumber={setDepositAmount}
 								containerExtraStyle="mt-0 mb-2"
 							/>
-							{/* {wrongChain ? ( 
-								<Button title={`Switch to ${chain?.name}`} onClick={() => switchNetwork?.(chain?.id)} />
-							) :  */}
-								{/* deposit ? (<DepositFunds
+								{deposit ? (<DepositFunds
 									contract={contract}
 									token={token}
 									tokenAmount={depositAmount!}
 									disabled={(depositAmount || 0) <= 0}
+									onFundsDeposited={onBack}
 								/>
 							) : (
 								<WithdrawFundsButton
 									contract={contract}
 									token={token}
 									tokenAmount={depositAmount!}
-									disabled={(depositAmount || 0) <= 0 || (depositAmount || 0) > balance}
+									disabled={(depositAmount || 0) <= 0}
+									onFundsDWithdrawn={onBack}
 								/>
-							) */} 
+							) }
 						</div>
 						<span className="text-sm text-gray-500">Available funds can be withdrawn at any time</span>
 					</div>
@@ -190,7 +188,7 @@ const EscrowDepositWithdraw = ({
 								<div className="p-4">
 									<div className="mb-4">
 										<span className="font-bold">Send to Address</span>
-										{/* <ClipboardText itemValue={contract} extraStyle="break-all" /> */}
+										<ClipboardText itemValue={contract} extraStyle="break-all" />
 									</div>
 									<div className="text-sm font-bold">
 										{/* <ExplainerNotification

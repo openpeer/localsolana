@@ -6,7 +6,7 @@ function ConversationPage() {
 
   return (
     <TalkProvider>
-      <div className="my-5 w-full h-screen">
+      <div className="my-5 w-full h-screen bg-white">
         <Inbox
           className="w-full h-5/6"
           showChatHeader={true}

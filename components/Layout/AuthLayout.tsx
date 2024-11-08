@@ -84,7 +84,7 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 	// }
 
 	return (
-		<div>
+		<div >
 			{navigation.map((item) => {
 				if (item.href) {
 					return (
@@ -239,7 +239,7 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 	}, [address]);
 
 	return (
-		<div className={`${manrope.className} font-sans`}>
+		<div className={`${manrope.className} font-sans bg-white`}>
 			<div>
 				<Transition.Root show={sidebarOpen} as={Fragment}>
 					<Dialog as="div" className="relative z-40 lg:hidden" onClose={setSidebarOpen}>

@@ -115,6 +115,7 @@ const useGaslessDepositFunds = ({
     } catch (error) {
       console.error("Deposit failed", error);
       setIsSuccess(false);
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
