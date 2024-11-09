@@ -76,7 +76,7 @@ const OrdersPage = () => {
 
 	return (
 		<>
-			<div className="mx-auto sm:px-0 md:px-4 mb-8">
+			<div className="mx-auto sm:px-0 md:px-4 mb-8 bg-white">
 				<Accordion
 					content={isLoadingActive ? <Loading /> : <OrdersTable orders={activeOrders} />}
 					title="Active orders"

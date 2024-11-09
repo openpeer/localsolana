@@ -20,12 +20,12 @@ const DeploySellerContract = ({
 
   const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy();
 
-//   useTransactionFeedback({
-//     hash: data?.hash ?? "",
-//     isSuccess,
-//     Link: <TransactionLink hash={data?.hash} />,
-//     description: "Deployed the seller contract",
-//   });
+  useTransactionFeedback({
+    hash: data?.hash,
+    isSuccess,
+    Link: <TransactionLink hash={data?.hash} />,
+    description: "Deployed the LocalSolana Account",
+  });
 
   const deploySellerContract = async () => {
     if (!primaryWallet?.isConnected) return;
@@ -35,6 +35,7 @@ const DeploySellerContract = ({
   const prevIsSuccessRef = useRef<boolean>(false);
 
   useEffect(() => {
+    console.log('in use effect of DeploySellerContract',isSuccess,data);
       if (isSuccess && !prevIsSuccessRef.current && (data?.escrowPDA!='')) {
 		console.log('in use effect of DeploySellerContract',data);
           prevIsSuccessRef.current = true;

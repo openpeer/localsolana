@@ -28,7 +28,7 @@ const Quick = () => {
 	return (
 		<>
 			{showLists && (
-				<div className="py-6">
+				<div className="py-6 bg-white">
 					<div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
 						<div className="flex">
 							<div
@@ -50,7 +50,7 @@ const Quick = () => {
 					</div>
 				</div>
 			)}
-			<div className={`flex flex-col justify-center sm:py-12 sm:px-6 lg:px-8 ${showLists ? 'hidden' : ''}`}>
+			<div className={`bg-white flex flex-col justify-center sm:py-12 sm:px-6 lg:px-8 ${showLists ? 'hidden' : ''}`}>
 				{/* <Link
 					href="/airdrop"
 					className="flex w-full text-center md:hidden hover:animate-pulse drop-shadow-md pt-6 px-4"

@@ -32,13 +32,21 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			if (type === 'SellList') {
 				updateList({ ...list, ...{ step: list.step + 1, paymentMethods: filteredPaymentMethods } });
 			} else {
-				updateList({
-					...list,
-					...{ step: list.step + 1, banks: filteredPaymentMethods.map((pm) => pm.bank as Bank) }
-				});
+				if(list?.id){
+					const updatedBankList=listPaymentMethods?.map((value)=>value.bank);
+					console.log("Here is updated bank list",updatedBankList);
+					// @ts-ignore
+					updateList({...list,...{ step: list.step + 1, banks: updatedBankList }});
+				}else{
+					updateList({
+						...list,
+						...{ step: list.step + 1, banks: filteredPaymentMethods.map((pm) => pm.bank as Bank) }
+					});
+				}
 			}
 		}
 	};
+
 
 	const [apiPaymentMethods, setApiPaymentMethods] = useState<PaymentMethodType[]>();
 	const [newPaymentMethods, setNewPaymentMethods] = useState<UIPaymentMethod[]>([]);
@@ -105,7 +113,8 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					addNewPaymentMethod();
 				}
 			} else {
-				const savedPaymentMethods = banks.map((bank) => ({
+				//@ts-ignore
+				const savedPaymentMethods = list?.bank?.map((bank) => ({
 					bank,
 					id: new Date().getTime() + bank.id,
 					values: {}
@@ -172,7 +181,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	});
 	
 	const listPaymentMethods = [...existing, ...newPaymentMethods];
-
+	console.log('Payment methods list',listPaymentMethods);
 	return (
 		<StepLayout
 			onProceed={paymentMethodCreation === undefined && paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id).length > 0 ? onProceed : undefined}

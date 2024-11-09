@@ -7,6 +7,7 @@ import useReleaseFunds from './release/useGaslessReleaseFunds';
 import useDepositFunds from './deposit/useDepositFunds';
 import useShyft from './useShyft';
 import { useBalance } from './useBalance';
+import useWithdrawFunds from './useWithdrawFunds';
 
 export {
 	//useApproval,
@@ -16,5 +17,6 @@ export {
 	useReleaseFunds,
 	useDepositFunds,
 	useShyft,
-	useBalance
+	useBalance,
+	useWithdrawFunds
 };

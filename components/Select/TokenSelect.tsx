@@ -20,18 +20,9 @@ const TokenSelect = ({
 }: TokenSelectProps) => {
 	const [tokens, setTokens] = useState<Token[]>();
 	const [isLoading, setLoading] = useState(false);
-	//const { chain, chains } = useNetwork();
-	//const chainId = allTokens ? undefined : networkId || chain?.id || chains[0]?.id || polygon.id;
 
 	useEffect(() => {
-		//if (!chainId && !allTokens) return;
-		// console.log(getAuthToken());
-
 		setLoading(true);
-
-		// axios.get(`/api/admin/tokens`)
-		// 	.then((res) => console.log(res));
-
 		minkeApi.get(`/api/admin/tokens`, {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`

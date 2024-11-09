@@ -68,7 +68,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
             snakecaseKeys(
               {
                 ...list,
-                ...{ bankIds: (list.banks || []).map((b) => b.id) },
+                ...{ bankIds: (list.id)?(list.banks||[]):(list.banks || []).map((b) => b.id) },
                 marginType: list.marginType === "fixed" ? 0 : 1,
                 seller_address: address,
                 escrowType: escrowVal,

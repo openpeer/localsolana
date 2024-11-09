@@ -9,6 +9,7 @@ import DepositFunds from 'components/DepositButton';
 import { useAccount, useUserProfile } from '@/hooks';
 import { BLOCK_EXPLORER, CURRENT_NETWORK } from '@/utils';
 import StepLayout from './StepLayout';
+import { useContractRead } from '@/hooks/transactions/useContractRead';
 
 interface FundsEscrowProps {
 	token: Token;
@@ -32,10 +33,16 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 	const { user,updateContractAddress } = useUserProfile({});
 	  const handleContractUpdate=async (contractAddress:string|undefined)=>{
 		if(contractAddress !== undefined){
-		await updateContractAddress(contractAddress);
+		updateContractAddress(contractAddress);
 		}
 	  }
-	  var sellerContractDeployed = user?.contract_address;
+
+	  const { data: escrowState } = useContractRead(
+		address||'',
+		"escrowState",
+		true
+	);
+	  var sellerContractDeployed =  escrowState!=undefined && escrowState!=null;
 
 	function handleFundsDeposited(): void {
 		

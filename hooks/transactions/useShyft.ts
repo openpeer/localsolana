@@ -35,8 +35,12 @@ const useShyft = () => {
 
   useEffect(() => {
     const initializeShyft = async () => {
+      const apiKey = process.env.NEXT_PUBLIC_SHYFT_API_KEY ;
+      if(!apiKey){
+        throw new Error("Error Initialising signer");
+      }
       const shyftInstance = new ShyftSdk({
-        apiKey: process.env.NEXT_PUBLIC_SHYFT_API_KEY || '',
+        apiKey: apiKey,
         network: getShyftNetwork(CURRENT_NETWORK), // Convert string to Network enum
       });
       setShyft(shyftInstance);
@@ -49,11 +53,14 @@ const useShyft = () => {
     transaction: Transaction,
     localSignRequired: boolean
   ) => {
+    if(!shyft){
+      throw new Error("Shyft SDK not initialized");
+    }
     if (!feePayer) {
       throw new Error("Fee payer is not set in env");
     }
     const connection = new Connection(CURRENT_NETWORK_URL);
-    const recentBlockhash = await connection.getLatestBlockhash();
+    const recentBlockhash = await connection.getLatestBlockhash('confirmed');
     transaction.recentBlockhash = recentBlockhash.blockhash;
     transaction.feePayer = new PublicKey(feePayer);
     let signedTransaction;
@@ -149,10 +156,11 @@ const useShyft = () => {
 
   const getAccountInfo = async (address: string) => {
     if (!shyft) return null;
+    
     const accountInfo = await shyft.connection.getAccountInfo(
       new PublicKey(address)
     );
-    return accountInfo?.data.toString();
+    return accountInfo;
   };
 
   return {

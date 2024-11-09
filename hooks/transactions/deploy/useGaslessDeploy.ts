@@ -42,24 +42,23 @@ const useGaslessDeploy = () => {
     setIsLoading(true);
 
     try {
-      const escrowStatePDA = await getEscrowStatePDA(primaryWallet?.address);
+      const escrowStatePDA =  getEscrowStatePDA(primaryWallet?.address);
       console.log(escrowStatePDA?.toBase58());
-      const status = await getAccountInfo(escrowStatePDA?.toBase58() ?? "");
+      //const status = await getAccountInfo(escrowStatePDA?.toBase58() ?? "");
       var result = null;
-      if (status == null || status == undefined) {
+      //if (status == null || status == undefined) {
         const transaction = await initialiseSolanaAccount(
           primaryWallet?.address
         );
         result = await sendTransactionWithShyft(transaction,false);
         console.log(`Shyft Transaction result: ${result}`);
-      }
-      if (status==null && (result==undefined || result == null)) {
+     // }
+      if ( result==undefined || result == null) {
         console.log(`Status ${status}`);
         setIsSuccess(false);
       } else {
-        console.log(`Status ${status}`);
+        console.log(`Status ${result}`);
         updateData({ hash: result ?? undefined, escrowPDA: escrowStatePDA?.toBase58() || "" });
-        setIsLoading(false);
         setIsSuccess(true);
       }
     } catch (error) {

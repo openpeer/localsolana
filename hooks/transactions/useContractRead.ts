@@ -3,12 +3,14 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import useLocalSolana from "./useLocalSolana";
 import { BN } from "@coral-xyz/anchor";
 import useAccount from "../useAccount";
+import useShyft from "./useShyft";
 
 export const useContractRead = (contractAddress: string, method: string,watch? : boolean) => {
   const [data, setData] = useState<any>(null);
   const [loadingContract, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { provider, program, connection,getEscrowStatePDA } = useLocalSolana();
+  const {getAccountInfo} = useShyft();
 
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
       setError(null);
       var escrowStateAddress;
       if(method =="escrowState"){
-        escrowStateAddress = await getEscrowStatePDA(contractAddress);
+        escrowStateAddress = getEscrowStatePDA(contractAddress);
         console.log('LocalSolana Account',escrowStateAddress?.toBase58());
       if(!escrowStateAddress){
         setData(null);

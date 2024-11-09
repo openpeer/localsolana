@@ -62,7 +62,7 @@ const DisputePage = ({ id }: { id: string }) => {
         return (
             <>
                 {/* <Loading /> */}
-                <div className="flex items-center justify-center h-screen">
+                <div className="flex items-center justify-center h-screen bg-white">
 					Not Authorized to access this page
 				</div>
             </>
@@ -70,7 +70,7 @@ const DisputePage = ({ id }: { id: string }) => {
     }
 
     return (
-        <div className="p-4 md:p-6 w-full m-auto mb-16">
+        <div className="p-4 md:p-6 w-full m-auto mb-16 bg-white" >
 			<div className="p-8 bg-white rounded-lg border border-slate-200 w-full flex flex-col md:flex-row md:gap-x-10">
 				<div className="w-full md:w-1/2">
 					<span>
