@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 import { User } from 'models/types';
-import { minkeApi } from 'utils/utils';
+import { minkeApi } from 'pages/api/utils/utils';
 
 const fetchUser = async (address: string, token: string): Promise<User> => {
     console.log(`Fetching user profile for address: ${address}`);
