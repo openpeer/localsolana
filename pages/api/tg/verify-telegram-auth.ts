@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 		// console.log('Data check string:', dataCheckString);
 
 		const secretKey = crypto.createHash('sha256').update(BOT_TOKEN).digest();
-		const calculatedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+		const calculatedHash = crypto.createHmac('sha256', new Uint8Array(secretKey)).update(dataCheckString).digest('hex');
 
 		// console.log('Calculated hash:', calculatedHash);
 		// console.log('Received hash:', hash);
