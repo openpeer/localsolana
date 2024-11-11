@@ -214,7 +214,6 @@ const MyEscrows = () => {
    const {balance} = useBalance(user?.contract_address || '',PublicKey.default.toBase58(),true);
 
   const needToDeploy = escrowData == null;
-  const router=useRouter();
   const onSelectToken = (t: Token, c: string, a: "Withdraw" | "Deposit") => {
     setToken(t);
     setAction(a);
@@ -232,12 +231,12 @@ const MyEscrows = () => {
   //   return (<Loading/>);
   // }
 
-  if (action && token && contract) {
+  if (action && token && (contract || escrowData)) {
     return (
       <EscrowDepositWithdraw
         action={action}
         token={token}
-        contract={contract}
+        contract={contract || user?.contract_address || ''}
         onBack={onBack}
         canDeposit={!needToDeploy} //ontract === contractInUse &&
         canWithdraw={!needToDeploy}
