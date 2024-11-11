@@ -106,7 +106,7 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 
 	const handleFieldChange = useCallback(
 		(field: string, value: string) => {
-			console.log(`handleFieldChange called for field: ${field}, value: ${value}`);
+
 			if (user && user[field as keyof User] === value) {
 				console.log(`No change detected for field: ${field}`);
 				return;
@@ -201,7 +201,9 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 							setUsername(value);
 							clearFieldError('name');
 						}}
-						onBlur={() => handleFieldChange('name', username)}
+						onBlur={() => {
+							handleFieldChange('name', username);
+					}}
 						error={localErrors.name}
 						helperText="Use only alphanumeric characters and underscores (3-15 characters)"
 						isUpdating={updatingFields.has('name')}
