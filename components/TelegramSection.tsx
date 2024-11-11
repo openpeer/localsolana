@@ -258,9 +258,9 @@ const TelegramSection: React.FC<TelegramSectionProps> = ({
 								<li className="pl-1">
 									<span className="">
 										Open Telegram and search for:
-										<span className="font-bold mx-1">@openpeer_bot</span>
+										<span className="font-bold mx-1">@LocalSolanaBot</span>
 										<button
-											onClick={() => handleCopyToClipboard('@openpeer_bot')}
+											onClick={() => handleCopyToClipboard('@LocalSolanaBot')}
 											className="ml-1 text-blue-500 hover:text-blue-700"
 											aria-label="Copy bot name"
 										>
