@@ -25,7 +25,6 @@ const EditListButtons = ({ list }: { list: List }) => {
 		onSuccess: async () => {
 			await fetch(
 				`/api/list_management/${id}`,
-
 				{
 					method: 'DELETE',
 					headers: {

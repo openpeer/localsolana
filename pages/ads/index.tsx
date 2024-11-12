@@ -16,7 +16,7 @@ const Ads = () => {
 
 	useEffect(() => {
 		if (!address) return;
-		fetch(`/api/lists/ads`, {
+		fetch(`/api/lists/ads`, { 
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
 			}
