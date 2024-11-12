@@ -54,11 +54,21 @@ const ORDER_STATUS_MAPPING: { [key: number]: string } = {
 	3: 'cancelled',
 	4: 'dispute',
 	5: 'closed'
-  };
+};
 
-  export function getStatusString(status: number): string {
+const LIST_STATUS_MAPPING: { [key: number]: string } ={
+	0:'created',
+	1:'activate',
+	2:'closed'
+}
+
+export function getStatusStringList(status: number): string{
+	return LIST_STATUS_MAPPING[status] || 'unknown';
+}
+
+export function getStatusString(status: number): string {
 	return ORDER_STATUS_MAPPING[status] || 'unknown';
-  }
+}
 
 
   // Reversing the ORDER_STATUS_MAPPING object
