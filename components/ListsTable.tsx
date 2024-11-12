@@ -20,6 +20,8 @@ import Token from './Token/Token';
 //import IdVerificationNeeded from './IdVerificationNeeded';
 //import Network from './Network/Network';
 import FriendlyTime from './FriendlyTime';
+import { getStatusStringList } from '@/utils';
+import HiddenBadge from './HiddenBadge';
 
 
 interface ListsTableProps {
@@ -69,29 +71,19 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 	const { primaryWallet } = useDynamicContext();
 	//const chains = allChains;
 
-	const contracts = lists
-		.filter(({ contract }) => !!contract)
-		.map((list) => ({ id: list.id, contract: list.contract, token: list.token.address, chainId: list.chain_id }));
+	// const contracts = lists
+	// 	.filter(({ contract }) => !!contract)
+	// 	.map((list) => ({ id: list.id, contract: list.contract, token: list.token.address, chainId: list.chain_id }));
 
-	let signatures = contracts.map((item) => {
-		const { contract, token, chainId } = item;
-		return {
-			address: contract,
-			// abi: OpenPeerEscrow as Abi,
-			// functionName: 'balances',
-			args: [token],
-			//chainId
-		};
-	});
 
 //	remove duplicates with the same address, args and chainId
-	signatures = signatures.filter(
-		(item, index, self) =>
-			index ===
-			self.findIndex(
-				(t) => t.address === item.address && t.args[0] === item.args[0]
-			)
-	);
+	// signatures = signatures.filter(
+	// 	(item, index, self) =>
+	// 		index ===
+	// 		self.findIndex(
+	// 			(t) => t.address === item.address && t.args[0] === item.args[0]
+	// 		)
+	// );
 	//const { data, isLoading } = useContractReads({ contracts: signatures });
 	//const showVerification = user && !user.verified;
 
@@ -195,12 +187,13 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 					// 	console.log(err);
 					// }
 
+					const isHidden = getStatusStringList(Number(list.status)) === 'created';
 					if (hideLowAmounts && Number(escrowedAmount) < Number(minimumAmount)) {
 						return <></>;
 					}
 
 					return (
-						<tr key={`list-${id}`} className="hover:bg-gray-50">
+						<tr key={`list-${id}`} className={`hover:bg-gray-50 ${isHidden ? 'bg-gray-100 text-gray-500' : ''}`}>
 							<td className="lg:pl-4 py-4">
 								<div className="w-full flex flex-col">
 									<div className="w-full flex flex-row justify-around md:justify-start items-center">
@@ -279,6 +272,9 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 												<span className="pr-2 text-[11px]">Solana</span>
 												{/* <Network id={chainId} size={16} /> */}
 											</div>
+											<div className="flex flex-row items-center mb-2">
+												{isHidden && <HiddenBadge />}
+											</div>
 											{!!instantEscrow && (
 												<div className="flex flex-row items-center mb-2">
 													<span className="pr-2 text-[11px] text-gray-700">
@@ -335,10 +331,13 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 										</span>
 									</div>
 									<div className="flex flex-row items-center">
-										<div className=" flex flex-row items-center space-x-1 bg-gray-100 px-2 rounded-full">
+										<div className="flex flex-row items-center space-x-1 bg-gray-100 px-2 rounded-full">
 											{/* <Network id={chainId} size={14} /> */}
 											<span className="text-[10px]">Solana</span>
 										</div>
+									</div>
+									<div className="flex flex-row items-center">
+										{isHidden && <HiddenBadge />}
 									</div>
 									{/* {showVerification && acceptOnlyVerified && <IdVerificationNeeded />} */}
 								</div>
