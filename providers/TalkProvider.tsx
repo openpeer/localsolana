@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import Talk from 'talkjs';
 import { Session } from '@talkjs/react';
 import { useDynamicContext, getAuthToken } from '@dynamic-labs/sdk-react-core';
@@ -381,31 +381,38 @@ const TalkProvider = ({ children }: TalkProviderProps): JSX.Element => {
 		};
 	}, [cleanup, connectionRefs]);
 
-	if (!TALKJS_APP_ID) {
-		// initDebugLog('No TalkJS App ID provided');
-		return <>{children}</>;
-	}
+	const memoizedSession = useMemo(() => {
+    if (
+        state.status !== 'connected' ||
+        !state.userDetails?.email ||
+        (typeof state.userDetails.email === 'string' && state.userDetails.email.includes('*'))
+    ) {
+        // initDebugLog('Not rendering TalkJS session - invalid status or email');
+        return null;
+    }
 
-	return React.useMemo(() => {
-		if (
-			isLoading ||
-			!talkInitialized ||
-			state.status !== 'connected' ||
-			!state.userDetails?.email ||
-			(typeof state.userDetails.email === 'string' && state.userDetails.email.includes('*'))
-		) {
-			// initDebugLog('Not rendering TalkJS session - invalid status or email');
-			return <>{children}</>;
-		}
+    // initDebugLog('Rendering TalkJS session with user:', state.userDetails);
 
-		// initDebugLog('Rendering TalkJS session with user:', state.userDetails);
+    return (
+        <Session appId={TALKJS_APP_ID} syncUser={syncUser} token={state.jwtToken!}>
+            {children}
+        </Session>
+    );
+}, [state.status, state.userDetails, state.jwtToken, syncUser, children]);
 
-		return (
-			<Session appId={TALKJS_APP_ID} syncUser={syncUser} token={state.jwtToken!}>
-				{children}
-			</Session>
-		);
-	}, [isLoading, talkInitialized, state.status, state.userDetails, state.jwtToken, syncUser, children]);
-};
+if (!TALKJS_APP_ID) {
+    // initDebugLog('No TalkJS App ID provided');
+    return <>{children}</>;
+}
+
+return (
+    <>
+        {memoizedSession}
+        {children}
+    </>
+);
+
+}
+
 
 export default React.memo(TalkProvider);
