@@ -12,7 +12,6 @@ import { useAccount } from '@/hooks';
 import profilePlaceholder from 'public/ooui_user-avatar.svg'
 
 const TALKJS_APP_ID = process.env.NEXT_PUBLIC_TALKJS_APP_ID!;
-
 const CONNECTION_RETRY_DELAY = 1000;
 const MAX_RECONNECT_ATTEMPTS = 3;
 const INITIALIZATION_DELAY = 500;

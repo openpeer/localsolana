@@ -1,6 +1,6 @@
 import Amount from './Amount';
  import Cancelled from './Cancelled';
-// import Chat from './Chat';
+import Chat from './Chat';
 import Completed from './Completed';
 import Payment from './Payment';
 import OrderPaymentMethod from './OrderPaymentMethod';
@@ -15,6 +15,6 @@ export {
      Release, 
     Summary,
     Cancelled,
-    // Chat,
+    Chat,
     OrderPaymentMethod
 };
