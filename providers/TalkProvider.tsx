@@ -408,7 +408,6 @@ if (!TALKJS_APP_ID) {
 return (
     <>
         {memoizedSession}
-        {children}
     </>
 );
 
