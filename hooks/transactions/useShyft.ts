@@ -99,16 +99,6 @@ const useShyft = () => {
         return txSignature;
       }
     } catch (error: any) {
-      toast.error(`${error}`, {
-        theme: "dark",
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: false,
-        progress: undefined,
-      });
 
       try {
         const errorMessage = error.message || error.toString();
@@ -129,6 +119,16 @@ const useShyft = () => {
         }
       } catch (parsingError) {
         console.error("Failed to parse the error message:", parsingError);
+        toast.error(`${error}`, {
+          theme: "dark",
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: false,
+          progress: undefined,
+        });
       }
     }
   };
