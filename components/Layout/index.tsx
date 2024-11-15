@@ -8,7 +8,6 @@ import Head from 'app/head';
 import { MessageContextProvider } from '@/contexts/MessageContext';
 //import SolanaWalletProvider from '@/providers/SolanaWalletProvider';
 import { TransactionFeedbackProvider } from '@/contexts/TransactionFeedContext';
-import IntercomWidget from '../IntercomWidget';
 import TalkProvider from '@/providers/TalkProvider';
 
 
@@ -47,12 +46,11 @@ const App = ({ Component, pageProps,router}: AppProps) => {
           <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
         ) : (
           
-          // <TalkProvider>
+          <TalkProvider>
             <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
-          // </TalkProvider>
+          </TalkProvider>
             // <AuthLayout pageProps={pageProps} Component={Component} router={router}/>            
         )}
-        {/* <IntercomWidget/> */}
         </MessageContextProvider>
         </TransactionFeedbackProvider>
       </DynamicContextProvider>
