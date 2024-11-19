@@ -18,7 +18,7 @@ const useListPrice = (list: List | undefined) => {
 
 	const updatePrice = useCallback(async () => {
 		if (!list) return;
-
+		console.log('called updatePrice',marginType);
 		if (marginType === 'percentage') {
 			fetch(
 				`/api/prices?token=${uuid}&fiat=${code.toLowerCase()}&tokenSymbol=${symbol}&priceSource=${priceSource}&type=${
@@ -32,7 +32,8 @@ const useListPrice = (list: List | undefined) => {
 			)
 				.then((res) => res.json())
 				.then((data) => {
-					const apiPrice: number = data[uuid!][code.toLowerCase()];
+					console.log('Here uuid and code is ',uuid,code,data);
+					const apiPrice: number = data.data[token.coingecko_id.toLowerCase()][currency.code.toLowerCase()];
 					const percentage = margin;
 					setPrice(apiPrice + (apiPrice * percentage!) / 100);
 				});

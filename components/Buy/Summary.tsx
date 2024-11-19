@@ -1,5 +1,4 @@
 /* eslint-disable react/no-danger */
-/* eslint-disable @typescript-eslint/indent */
 import Avatar from 'components/Avatar';
 import Link from 'next/link';
 import React from 'react';

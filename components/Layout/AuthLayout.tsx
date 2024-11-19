@@ -82,7 +82,9 @@ const NavItems = ({ selected, onClick }: { selected: string | undefined; onClick
 	// else if((primaryWallet && (!primaryWallet.address) || (!primaryWallet)) && addConversation){
 	// 	navigation = navigation.filter(item => item.name !== 'My Conversations');
 	// }
-
+	if(process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS===primaryWallet?.address){
+			navigation.push({ name: 'Disputes', href: '/disputes', icon: QuestionMarkCircleIcon });
+	}
 	return (
 		<div >
 			{navigation.map((item) => {
@@ -204,7 +206,7 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 	const { title, disableAuthentication } = pageProps;
 	const { address } = useAccount();
 	const { primaryWallet } = useDynamicContext();
-	const authenticated = disableAuthentication || primaryWallet?.isAuthenticated;
+	const authenticated = disableAuthentication || (primaryWallet?.isAuthenticated || false);
 
 
 	const updateUserState=(data:any)=>{
@@ -239,7 +241,7 @@ const Layout = ({ Component, pageProps }: AppProps) => {
 	}, [address]);
 
 	return (
-		<div className={`${manrope.className} font-sans bg-white`}>
+		<div className={`${manrope.className} font-sans`}>
 			<div>
 				<Transition.Root show={sidebarOpen} as={Fragment}>
 					<Dialog as="div" className="relative z-40 lg:hidden" onClose={setSidebarOpen}>

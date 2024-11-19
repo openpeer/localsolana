@@ -101,7 +101,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 		if(tokenName==='USDC')tokenName='usd-coin';
 		else if(tokenName==='USDT')tokenName='tether';
 
-		minkeApi.get(`/api/prices?ids=${tokenName}&vs_currencies=${currency.name.toLowerCase()}`)
+		minkeApi.get(`/api/prices?token=${coingeckoId}&fiat=${currency.name.toLowerCase()}`)
 			.then((res) => res.data.data)
 			.then((data) => {
 				if(Object.keys(data).length>0) setPrice(data[coingeckoId || token.name][currency.name.toLowerCase()]);
