@@ -388,7 +388,7 @@ const TalkProvider = ({ children }: TalkProviderProps): JSX.Element => {
         (typeof state.userDetails.email === 'string' && state.userDetails.email.includes('*'))
     ) {
         // initDebugLog('Not rendering TalkJS session - invalid status or email');
-        return null;
+		return <>{children}</>;
     }
 
     // initDebugLog('Rendering TalkJS session with user:', state.userDetails);

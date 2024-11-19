@@ -79,7 +79,6 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   const banks = Array.isArray(list.payment_methods)? list.payment_methods.map((pm) => ({ ...pm.bank, id: pm.id })): [list.payment_methods].map((pm) => ({ ...pm.bank, id: pm.id }));
 
   const instantEscrow = list?.escrow_type === "instant";
-console.log('list is ',list.type,list.escrow_type);
   const { data: sellerContract } = useContractRead(
     list.type === "SellList" ? order.list.seller.address || "" : address || "",
     "escrowState",

@@ -28,9 +28,14 @@ const BuyPage = ({ id }: { id: number }) => {
 			.then((res)=> res.data)
 			.then((data) => {
 				console.log('list is ',data);
+				data.margin_type = data.margin_type === 1 ? 'percentage' : 'fixed';
 				setOrder({
 					...order,
-					...{ list: data, listId: data.id }
+					...{ 
+						list: data, 
+						listId: data.id,
+						marginType: data.margin_type === 1 ? 'percentage' : 'fixed' 
+					}
 				});
 			});
 	}, [id]);
