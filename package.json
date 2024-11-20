@@ -40,7 +40,9 @@
     "eslint": "8.47.0",
     "eslint-config-next": "13.4.19",
     "formidable": "^3.5.1",
+    "helius-sdk": "^1.4.0",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "next": "14.2.7",
     "next-auth": "^4.24.7",
     "next-qrcode": "^2.5.1",
@@ -60,8 +62,7 @@
     "socket.io-client": "^4.7.5",
     "tailwindcss": "3.3.3",
     "talkjs": "^0.30.0",
-    "typescript": "5.1.6",
-    "lodash": "^4.17.21"
+    "typescript": "5.1.6"
   },
   "devDependencies": {
     "@types/formidable": "^3.4.5",
