@@ -29,7 +29,7 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 	const [creatingAd, setCreatingAd] = useState(false);
 	const [loading, setLoading] = useState(false);
 
-	const [fee,setFee] = useState<bigint>();
+	// const [fee,setFee] = useState<bigint>();
 
 	const router = useRouter();
 
@@ -43,6 +43,18 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
     //     setFee(result.fee);
     // }
 	// }	, [token]);
+
+
+	 // Use the useEscrowFee hook to get the fee data
+	 const { fee, isFetching } = useEscrowFee({
+		address: token?.address,
+		token,
+		tokenAmount
+});
+
+ // Fallback fee calculation
+const fallbackFee = tokenAmount ? BigInt(tokenAmount) * BigInt(10 ** (token?.decimals || 0)) * BigInt(5) / BigInt(1000) : null;
+
 
 	const updateLoading = (l: boolean) => {
 		setLoading(l);
@@ -166,9 +178,10 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 				/>
 
 				<div className="text-center mt-4">
-					{!!fee && !!token && (
+					{/* Display the fee if available, otherwise use the fallback fee */}
+					{!!(fee || fallbackFee) && !!token && (
 						<span className="text-xs text-gray-600 text-center">
-							Total fee: {formatUnits(fee, token.decimals)} {token.symbol}
+							Total fee: {formatUnits(fee || fallbackFee, token.decimals)} {token.symbol}
 						</span>
 					)}
 				</div>
