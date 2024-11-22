@@ -24,6 +24,7 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 	const [loading, setLoading] = useState(false);
 	const [creatingAd, setCreatingAd] = useState(false);
 	const router = useRouter();
+	let changeInSelector=false;
 
 	const updateLoading = (l: boolean) => {
 		setLoading(l);
@@ -38,6 +39,7 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 		fiatValue: number | undefined;
 	}) => {
 		if (!token || !currency || (!tokenValue && !fiatValue)) return;
+		if(changeInSelector===false && ((fiatValue && fiatAmount===fiatValue)||(tokenValue && tokenAmount===tokenValue))) return;
 		updateLoading(true);
 		try {
 			const params = {
@@ -63,9 +65,14 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 			const [list] = searchLists;
 			const { price } = list || {};
 			if (price) {
-				if (tokenValue) setFiatAmount(tokenValue * price);
-				if (fiatValue) setTokenAmount(truncate(fiatValue / price, token.decimals));
+				if (tokenValue){
+					setFiatAmount(tokenValue * price);
+				}
+				if (fiatValue){ 
+					setTokenAmount(truncate(fiatValue / price, token.decimals));
+				}
 			} else {
+
 				// @ts-ignore
 				if (fiatValue) setTokenAmount('');
 				// @ts-ignore
@@ -74,18 +81,23 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 		} catch (error) {
 			console.error(error);
 		}
+		changeInSelector=false;
 		updateLoading(false);
 	};
 
 	useEffect(() => {
+		changeInSelector=true;
 		search({ fiatValue: fiatAmount, tokenValue: undefined });
 	}, [currency]);
 
 	useEffect(() => {
+		changeInSelector=true;
 		search({ fiatValue: undefined, tokenValue: tokenAmount });
 	}, [token]);
 
 	const onChangeFiat = (val: number | undefined) => {
+		console.log("Fiat Change");
+		if(fiatAmount===val)return;
 		setFiatAmount(val);
 		if (val && token && currency) {
 			search({ fiatValue: val, tokenValue: undefined });
@@ -93,6 +105,8 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 	};
 
 	const onChangeToken = (val: number | undefined) => {
+		console.log("Token Change");
+		if(tokenAmount===val)return;
 		setTokenAmount(val);
 		if (val && token && currency) {
 			search({ fiatValue: undefined, tokenValue: val });
