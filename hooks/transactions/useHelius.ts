@@ -260,37 +260,55 @@ const useHelius = () => {
     }
   };
 
-  /**
-   * Get all token balances and metadata for a wallet address
-   * @param address - The wallet address to check
-   * @returns Array of token data including balances, metadata and USD values
-   * @throws Error if address invalid
-   */
-  const getAllTokenBalances = async (address: string) => {
-    if (!validateAddress(address)) throw new Error("Invalid address");
-    if (!helius) return null;
+/**
+ * Get all token balances and metadata for a wallet address using batching or pagination
+ * @param address - The wallet address to check
+ * @param batchSize - Number of items per batch (default: 1000)
+ * @returns Array of token data including balances, metadata, and USD values
+ * @throws Error if address is invalid
+ */
+const getAllTokenBalances = async (address: string, batchSize: number = 1000) => {
+  if (!validateAddress(address)) throw new Error("Invalid address");
+  if (!helius) return null;
 
-    try {
-      const response = await helius.rpc.searchAssets({
-        ownerAddress: address,
-        tokenType: "fungible",
-        page: 1,
-        limit: 1000
-      });
-      
-      return response.items.map(item => ({
-        balance: item.token_info?.balance || 0,
-        decimals: item.token_info?.decimals || 0,
-        mint: item.id,
-        tokenName: item.content?.metadata?.name || '',
-        symbol: item.content?.metadata?.symbol || '',
-        usdValue: item.token_info?.price_info?.total_price || 0
+  try {
+      let allTokens: any[] = [];
+      let currentPage = 1;
+
+      while (true) {
+          // Fetch a batch of token balances
+          const response = await helius.rpc.searchAssets({
+              ownerAddress: address,
+              tokenType: "fungible",
+              page: currentPage,
+              limit: batchSize,
+          });
+
+          // Merge the current batch into the allTokens array
+          allTokens = [...allTokens, ...response.items];
+
+          // If the number of items returned is less than the batch size, we've reached the end
+          if (response.items.length < batchSize) break;
+
+          // Increment the page for the next batch
+          currentPage++;
+      }
+
+      // Transform the combined results into the desired format
+      return allTokens.map(item => ({
+          balance: item.token_info?.balance || 0,
+          decimals: item.token_info?.decimals || 0,
+          mint: item.id,
+          tokenName: item.content?.metadata?.name || '',
+          symbol: item.content?.metadata?.symbol || '',
+          usdValue: item.token_info?.price_info?.total_price || 0,
       }));
-    } catch (error) {
-      console.error("Error getting all token balances:", error);
+  } catch (error) {
+      console.error("Error getting all token balances with batching:", error);
       return [];
-    }
-  };
+  }
+};
+
 
   /**
    * Get raw account information for any Solana address
