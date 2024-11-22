@@ -1,3 +1,5 @@
+// hooks/transactions/useHelius.ts
+
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isSolanaWallet } from "@dynamic-labs/solana-core";
 import { 
@@ -13,6 +15,16 @@ import { toast } from "react-toastify";
 import { CURRENT_NETWORK_URL } from "utils";
 import { Helius } from "helius-sdk";
 import useLocalSolana from "./useLocalSolana";
+
+/**
+ * Interface for Dynamic wallet integration with Solana capabilities
+ * @property getSigner - Returns a signer object that can sign transactions
+ * @property publicKey - The wallet's public key string
+ */
+interface SolanaWallet {
+  getSigner: () => Promise<any>;
+  publicKey?: string;
+}
 
 // Cache connection instance
 let cachedConnection: Connection | null = null;
@@ -74,12 +86,12 @@ const useHelius = () => {
     }
   };
 
-  /**
-   * Gets cached Solana connection or throws if uninitialized
-   * @returns Connection instance
-   * @throws Error if connection not initialized
-   * @private internal helper function
-   */
+/**
+ * Gets cached Solana connection or throws if uninitialized
+ * @returns Connection instance for interacting with the Solana network
+ * @throws Error if connection not initialized
+ * @private internal helper function
+ */
   const getConnection = (): Connection => {
     if (!connectionRef.current) {
       throw new Error("Connection not initialized");
@@ -93,7 +105,7 @@ const useHelius = () => {
    * @param localSignRequired - Whether the transaction needs user wallet signing
    * @param options - Optional configuration {commitment, maxRetries, skipPreflight}
    * @returns Transaction signature if successful
-   * @throws Error on failed transaction or max retries exceeded 
+   * @throws Error on failed transaction, wallet connection issues, missing public key, or max retries exceeded
    */
   const sendTransaction = async (
     transaction: Transaction,
@@ -101,18 +113,28 @@ const useHelius = () => {
     options: {
       commitment?: Commitment;
       maxRetries?: number;
-      skipPreflight?: boolean;
+      skipPreflight?: boolean;  
     } = {}
   ) => {
     if (!helius) throw new Error("Helius SDK not initialized");
+    if (!primaryWallet || !isSolanaWallet(primaryWallet)) {
+      throw new Error("Wallet not connected or not a Solana wallet");
+    }
+  
+    const signer = await primaryWallet.getSigner();
+    if (!signer.publicKey) throw new Error("Wallet public key not available");
+    
+    const publicKey = new PublicKey(signer.publicKey.toString());
+    transaction.feePayer = publicKey;
     
     const connection = getConnection();
+    
     const {
       commitment = 'confirmed',
       maxRetries = 3,
       skipPreflight = false
     } = options;
-
+  
     let retries = 0;
     while (retries < maxRetries) {
       try {
@@ -125,7 +147,6 @@ const useHelius = () => {
             throw new Error("Wallet not connected");
           }
           
-          const signer = await primaryWallet.getSigner();
           signedTransaction = await signer.signTransaction(transaction);
           
           if (!signedTransaction) {
@@ -134,7 +155,7 @@ const useHelius = () => {
         } else {
           signedTransaction = transaction;
         }
-
+  
         const txSignature = await connection.sendRawTransaction(
           signedTransaction.serialize(),
           {
@@ -142,13 +163,13 @@ const useHelius = () => {
             preflightCommitment: commitment,
           }
         );
-
+  
         await connection.confirmTransaction({
-          signature: txSignature,
+          signature: txSignature, 
           blockhash: recentBlockhash.blockhash,
           lastValidBlockHeight: recentBlockhash.lastValidBlockHeight
         });
-
+  
         return txSignature;
 
       } catch (error: any) {
@@ -214,10 +235,24 @@ const useHelius = () => {
         page: 1,
         limit: 1
       });
+
+      console.log("Full token response:", JSON.stringify(response, null, 2));
+
+      // Try without grouping first
+      const alternateResponse = await helius.rpc.searchAssets({
+        ownerAddress: address,
+        tokenType: "fungible",
+        page: 1,
+        limit: 1000
+      });
+
+      // Find specific token
+      const token = alternateResponse.items.find(item => item.id === tokenAddress);
+      console.log("Found token:", token);
       
       return {
-        balance: response.items[0]?.token_info?.balance || 0,
-        decimals: response.items[0]?.token_info?.decimals || 0
+        balance: token?.token_info?.balance || 0,
+        decimals: token?.token_info?.decimals || 0
       };
     } catch (error) {
       console.error("Error getting token balance:", error);
@@ -269,7 +304,9 @@ const useHelius = () => {
 
     try {
       const connection = getConnection();
-      return await connection.getAccountInfo(new PublicKey(address));
+      const info = await connection.getAccountInfo(new PublicKey(address));
+      console.log("Account info response:", info); // Added debug log
+      return info;
     } catch (error) {
       console.error("Error getting account info:", error);
       return null;
