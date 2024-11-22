@@ -210,8 +210,8 @@ const MyEscrows = () => {
   }, []);
 
 
-   const {balances,loadingBalance,error} = useAllTokenBalance(user?.contract_address || '',true);
-   const {balance} = useBalance(user?.contract_address || '',PublicKey.default.toBase58(),true);
+   const {balances,loadingBalance,error} = useAllTokenBalance(user?.contract_address || '',false);
+   const {balance} = useBalance(user?.contract_address || '',PublicKey.default.toBase58(),false);
 
   const needToDeploy = escrowData == null;
   const onSelectToken = (t: Token, c: string, a: "Withdraw" | "Deposit") => {

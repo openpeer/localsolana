@@ -4,14 +4,10 @@ import { useAccount, useUserProfile } from "hooks";
 //import { DEPLOYER_CONTRACTS } from 'models/networks';
 import React, { useState } from "react";
 //import { useContractRead, useNetwork } from 'wagmi';
-
-import ApproveTokenButton from "./ApproveTokenButton";
-import DeploySellerContract from "./DeploySellerContract";
 import { EscrowFundsParams } from "./EscrowButton.types";
 import EscrowFundsButton from "./EscrowFundsButton";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useContractRead } from "@/hooks/transactions/useContractRead";
-import useEscrowFee from "@/hooks/useEscrowFee";
 import { User } from "@/models/types";
 import CreateEscrowAccount from "./CreateEscrowAccount";
 

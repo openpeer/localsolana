@@ -10,13 +10,20 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
   const [loadingContract, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { provider, program, connection,getEscrowStatePDA } = useLocalSolana();
-  const {getAccountInfo} = useShyft();
+  //const {getAccountInfo} = useShyft();
 
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
+      console.log("Contract Address",contractAddress);
+      if(contractAddress==''){
+      //setError('Error in address');
+      setData(null);
+      setLoading(false);
+      return;
+      }
       var escrowStateAddress;
       if(method =="escrowState"){
         escrowStateAddress = getEscrowStatePDA(contractAddress);

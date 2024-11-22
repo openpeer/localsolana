@@ -134,9 +134,9 @@ const useShyft = () => {
   };
 
   const getWalletBalance = async (address: string) => {
-    if (!shyft) return null;
-    const balance = await shyft.wallet.getBalance({ wallet: address });
-    return balance;
+    if (!connection) return null;
+    const balance = await connection.getBalance(new PublicKey(address));
+    return balance/1e9;
   };
 
   const getTokenBalance = async (address: string, tokenAddress: string) => {
@@ -155,9 +155,9 @@ const useShyft = () => {
   };
 
   const getAccountInfo = async (address: string) => {
-    if (!shyft) return null;
+    if (!connection) return null;
     
-    const accountInfo = await shyft.connection.getAccountInfo(
+    const accountInfo = await connection.getAccountInfo(
       new PublicKey(address)
     );
     return accountInfo;
