@@ -63,8 +63,9 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 			updateLists(searchLists);
 
 			const [list] = searchLists;
-
+			console.log('list item',list);
 			const { price } = list || {};
+			console.log('Price of item',price);
 			if (price) {
 				if (tokenValue){
 					setFiatAmount(tokenValue * price);
