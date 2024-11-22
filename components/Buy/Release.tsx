@@ -1,5 +1,4 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
-/* eslint-disable @typescript-eslint/indent */
 import StepLayout from 'components/Listing/StepLayout';
 import HeaderH3 from 'components/SectionHeading/h3';
 import React from 'react';

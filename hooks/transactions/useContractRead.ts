@@ -17,6 +17,13 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
     const fetchData = async () => {
       setLoading(true);
       setError(null);
+      console.log("Contract Address",contractAddress);
+      if(contractAddress==''){
+      //setError('Error in address');
+      setData(null);
+      setLoading(false);
+      return;
+      }
       var escrowStateAddress;
       if(method =="escrowState"){
         escrowStateAddress = getEscrowStatePDA(contractAddress);

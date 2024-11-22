@@ -4,7 +4,7 @@ import Input from "components/Input/Input";
 import Loading from "components/Loading/Loading";
 import CurrencySelect from "components/Select/CurrencySelect";
 import TokenSelect from "components/Select/TokenSelect";
-//import { useEscrowFee } from '../../hooks';
+import { useContractRead } from '../../hooks/transactions/useContractRead';
 import debounce from "lodash/debounce";
 import { FiatCurrency, List, Token } from "models/types";
 import { useRouter } from "next/router";
@@ -13,8 +13,8 @@ import React, { useEffect, useState } from "react";
 import { CheckIcon } from "@heroicons/react/24/outline";
 import { getAuthToken } from "@dynamic-labs/sdk-react-core";
 import { formatUnits } from "viem";
-import useEscrowFee from "@/hooks/useEscrowFee";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useUserProfile } from "@/hooks";
 
 interface SellProps {
   lists: List[];
@@ -29,6 +29,7 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
   const [token, setToken] = useState<Token>();
   const [creatingAd, setCreatingAd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { user } = useUserProfile({});
 
   // const [fee,setFee] = useState<bigint>();
 
@@ -47,12 +48,12 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 
   //@ts-ignore
   // Use the useEscrowFee hook to get the fee data
-  const { fee, isFetching } = useEscrowFee({
-    address: token?.address,
-    token,
-    tokenAmount,
-  });
-
+  const {fee, loadingContract } = useContractRead(
+	user?.contract_address ||'',
+	"fee",
+	false
+);
+console.log(fee,loadingContract);
   // Fallback fee calculation
   const fallbackFee = tokenAmount
     ? (BigInt(tokenAmount * 10 ** (token?.decimals || 0)) * BigInt(10 ** (token?.decimals || 0)) * BigInt(5)) /
