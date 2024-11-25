@@ -1,16 +1,24 @@
+// hooks/transactions/useBalance.ts
+
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import useLocalSolana from './useLocalSolana';
-import useShyft from './useShyft';
+// import useShyft from './useShyft';
+import useHelius from "./useHelius";
 
 
-export const useBalance = (walletAddress: string, tokenAddress: string, watch?: boolean) => {
+export const useBalance = (
+  walletAddress: string,
+  tokenAddress: string,
+  watch?: boolean
+) => {
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
   const {connection,} = useLocalSolana();
-  const {getTokenBalance,getWalletBalance} = useShyft();
+  const {getTokenBalance,getWalletBalance} = useHelius();
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -18,20 +26,30 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
       setError(null);
 
       try {
-        const publicKey = new PublicKey(walletAddress);
-        if(!connection){
-            setError("Connection not established");
-            setLoading(false);
-            return
+        if (!connection) {
+          throw new Error("Connection not established");
         }
-        if(tokenAddress == PublicKey.default.toBase58()){
-        const balance = await getWalletBalance(walletAddress);
-        setBalance(balance); // Convert lamports to SOL
-      }else{
-        const balance = await getTokenBalance(walletAddress,tokenAddress);
-        setBalance(balance);
+
+        if (!PublicKey.isOnCurve(walletAddress)) {
+          throw new Error("Invalid wallet address");
+        }
+
+        console.log("Fetching balance for:", walletAddress);
+
+        if(tokenAddress === PublicKey.default.toBase58()){
+        const walletBalance = await getWalletBalance(walletAddress);
+        setBalance(walletBalance / 10 ** 9);
+      } else {
+        const tokenBalance = await getTokenBalance(walletAddress, tokenAddress);
+        if (tokenBalance) {
+          setBalance(tokenBalance.balance / 10 ** tokenBalance.decimals); // Convert to human-readable format
+        } else {
+          throw new Error("Token balance not found");
+        }
       }
+      console.log("Balance fetched successfully");
       } catch (err: any) {
+        console.error("Error fetching balance:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -50,7 +68,7 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
     }
 
     
-  }, [walletAddress,connection]);
+  }, [walletAddress, tokenAddress, connection, watch]);
   // console.log("Here is my balance",balance, loadingBalance, error);
 
   return { balance, loadingBalance, error };
