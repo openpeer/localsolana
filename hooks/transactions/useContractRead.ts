@@ -17,7 +17,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      console.log("Contract Address",contractAddress);
+      console.log("Contract Address",contractAddress,'method', method);
       if(contractAddress==''){
       //setError('Error in address');
       setData(null);
