@@ -24,6 +24,9 @@
     "@typescript-eslint"
   ],
   "ignorePatterns": [
+    "node_modules/",
+    "dist/",
+    "build/",
     "next.config.js",
     "postcss.config.js",
     "tailwind.config.js",
@@ -37,8 +40,9 @@
       }
     ],
     "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-non-null-assertion": "off"
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-non-null-assertion": "warn"
   }
 }
