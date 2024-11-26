@@ -15,7 +15,7 @@ const AuthLayout = dynamic(() => import('./AuthLayout'), { ssr: false });
 const NoAuthLayout = dynamic(() => import('./NoAuthLayout'), { ssr: false });
 
 const App = ({ Component, pageProps,router}: AppProps) => {
-	const { simpleLayout } = pageProps;
+	const { simpleLayout, includeTalkProvider = false } = pageProps;
   const [messageToSign, setMessageToSign] = useState('');
 	const [signedMessage, setSignedMessage] = useState('');
  
@@ -43,14 +43,14 @@ const App = ({ Component, pageProps,router}: AppProps) => {
         <Head />
         <MessageContextProvider messageToSign={messageToSign} signedMessage={signedMessage}>
         {simpleLayout ? (
-          <NoAuthLayout pageProps={pageProps} Component={Component} router={router}/>  // Pass Component
-        ) : (
-          
-          <TalkProvider>
-            <AuthLayout pageProps={pageProps} Component={Component} router={router}/>  
-          </TalkProvider>
-            // <AuthLayout pageProps={pageProps} Component={Component} router={router}/>            
-        )}
+            <NoAuthLayout pageProps={pageProps} Component={Component} router={router} />
+          ) : includeTalkProvider ? (
+            <TalkProvider>
+              <AuthLayout pageProps={pageProps} Component={Component} router={router} />
+            </TalkProvider>
+          ) : (
+            <AuthLayout pageProps={pageProps} Component={Component} router={router} />
+          )}
         </MessageContextProvider>
         </TransactionFeedbackProvider>
       </DynamicContextProvider>
