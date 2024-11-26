@@ -138,7 +138,7 @@ const OrderPage = ({ id }: { id: string }) => {
 };
 
 export const getServerSideProps: GetServerSideProps<{ id: string }> = async ({ params }) => ({
-    props: { title: 'Buy', id: String(params?.id) }
+    props: { title: 'Buy', id: String(params?.id), includeTalkProvider: true, }
 });
 
 export default OrderPage;
