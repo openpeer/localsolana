@@ -28,8 +28,7 @@
       "utils/*": ["./utils/*"],
       "models/*":["./models/*"],
       "hooks/*": ["./hooks/*"],
-      "pages/*": ["./pages/*"],
-      
+      "pages/*": ["./pages/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
