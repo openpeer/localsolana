@@ -11,71 +11,80 @@ import { NEXT_PUBLIC_SOLANA_RPC } from 'utils';
 import idl from "../../idl/local_solana_migrate.json";
 import { LocalSolanaMigrate } from "../../idl/local_solana_migrate";
 import { arbitrator, feePayer, feeRecepient } from "@/utils/constants";
+import { useConnection } from '@/contexts/ConnectionContext';
+import { Wallet } from "@coral-xyz/anchor";
+import useHelius from './useHelius';
 
 const useLocalSolana = () => {
   const [program, setProgram] = useState<Program<LocalSolanaMigrate> | null>(null);
   const [provider, setProvider] = useState<AnchorProvider | null>(null);
-  const [connection, setConnection] = useState<Connection | null>(null);
   const [myWallet, setMyWallet] = useState<SolanaWallet | null>(null);
   const { primaryWallet } = useDynamicContext();
-  const connectionRef = useRef<Connection | null>(null);
+  const { getConnection } = useConnection();
+  const { isConnectionReady } = useHelius();
+
 
   useEffect(() => {
+    // Only initialize when connection is ready and we have a wallet
+    if (!isConnectionReady || !primaryWallet) {
+      return;
+    }
+
     const initializeLocalSolana = async () => {
       try {
-        // First check if we have a wallet connected
-        if (!primaryWallet) {
-        console.log("No wallet connected yet");
-        return;
-      }
-
+        const connection = getConnection();
 
         if (!NEXT_PUBLIC_SOLANA_RPC) {
           throw new Error("Solana RPC URL is not set");
         }
 
-        const connectionInstance = new Connection(NEXT_PUBLIC_SOLANA_RPC, { commitment: "confirmed" });
-        setConnection(connectionInstance);
-        connectionRef.current = connectionInstance;
+        // First check if we have a wallet connected
+        if (!primaryWallet) {
+          console.log("No wallet connected yet");
+          return;
+        }
 
-        if (!primaryWallet || !isSolanaWallet(primaryWallet)) {
-          console.error("Wallet is not initialized or not a Solana wallet");
+        if (!isSolanaWallet(primaryWallet)) {
+          console.warn("Connected wallet is not a Solana wallet");
           return;
         }
 
         try {
-        // @ts-ignore
-        const providerInstance = new AnchorProvider(connectionInstance, primaryWallet, {
-          commitment: "processed",
-        });
+          // Cast primaryWallet to the expected Wallet type
+          const wallet = primaryWallet as unknown as Wallet;
 
-        const programInstance = new Program<LocalSolanaMigrate>(
-          idl as LocalSolanaMigrate,
-          providerInstance
-        );
+          // Initialize provider and program
+          const providerInstance = new AnchorProvider(connection, wallet, {
+            commitment: "processed",
+          });
 
-        setProvider(providerInstance);
-        setProgram(programInstance);
-        setMyWallet(primaryWallet);
+          const programInstance = new Program<LocalSolanaMigrate>(
+            idl as LocalSolanaMigrate,
+            providerInstance
+          );
 
-      } catch (initError) {
-        console.error("Failed to initialize provider or program:", initError);
-      }
+          setProvider(providerInstance);
+          setProgram(programInstance);
+          setMyWallet(primaryWallet);
+
+        } catch (initError) {
+          console.error("Failed to initialize provider or program:", initError);
+        }
 
       } catch (error) {
-        console.error("Error initializing Solana connection:", error);
+        console.error("Error initializing Solana:", error);
       }
     };
 
     initializeLocalSolana();
-  }, [primaryWallet]);
+  }, [primaryWallet, isConnectionReady, getConnection]);
 
-  const getConnection = (): Connection => {
-    if (!connectionRef.current) {
-      throw new Error("Connection is not initialized");
-    }
-    return connectionRef.current;
-  };
+  // const getConnection = (): Connection => {
+  //   if (!connectionRef.current) {
+  //     throw new Error("Connection is not initialized");
+  //   }
+  //   return connectionRef.current;
+  // };
 
   const initialiseSolanaAccount = async (address: string) => {
     const walletAddress = primaryWallet?.address;
@@ -314,7 +323,7 @@ const useLocalSolana = () => {
     escrow: PublicKey,
     token: PublicKey
   ) => {
-    if (!program || !provider || !connection || !feePayer) {
+    if (!program || !provider || !getConnection() || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
     if (token == PublicKey.default) {
@@ -528,7 +537,7 @@ const useLocalSolana = () => {
     token: PublicKey,
     decimals: number
   ) => {
-    if (!program || !provider || !connection || !feePayer) {
+    if (!program || !provider || !getConnection() || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
     var escrowTokenAccount = await getAssociatedTokenAddress(token, escrow, true);
@@ -553,7 +562,6 @@ const useLocalSolana = () => {
     program,
     provider,
     myWallet,
-    connection,
     getConnection,
     idl,
     initialiseSolanaAccount,
@@ -571,6 +579,7 @@ const useLocalSolana = () => {
     resolveDispute,
     cancelOrderOnChain,
     withdrawFundsFromLocalSolana,
+    isConnectionReady,
   };
 };
 

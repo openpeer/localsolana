@@ -30,6 +30,7 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
   const [creatingAd, setCreatingAd] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useUserProfile({});
+  const isWalletConnected = !!user?.contract_address;
 
   // const [fee,setFee] = useState<bigint>();
 
@@ -47,17 +48,19 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
   // }	, [token]);
 
   //@ts-ignore
-  // Use the useEscrowFee hook to get the fee data
-  const {fee, loadingContract } = useContractRead(
-	user?.contract_address ||'',
-	"fee",
-	false
+  // Always call the hook, but pass null if wallet isn't connected
+  const { fee, loadingContract } = useContractRead(
+    isWalletConnected ? user.contract_address : null,
+  'escrowState'
 );
-console.log(fee,loadingContract);
+
+  console.log("fee, loadingContract from Sell.tsx", fee, loadingContract);
+
   // Fallback fee calculation
-  const fallbackFee = tokenAmount
-    ? (BigInt(tokenAmount * 10 ** (token?.decimals || 0)) * BigInt(10 ** (token?.decimals || 0)) * BigInt(5)) /
-      BigInt(10000)
+  const fallbackFee = tokenAmount && token?.decimals
+    ? (BigInt(tokenAmount * 10 ** token.decimals) * 
+       BigInt(10 ** token.decimals) * 
+       BigInt(5)) / BigInt(10000)
     : null;
 
   const updateLoading = (l: boolean) => {
@@ -135,6 +138,9 @@ console.log(fee,loadingContract);
     }
   };
 
+  // Add null check for fee calculation
+  const finalFee = (fee || fallbackFee || BigInt(0)) / BigInt(LAMPORTS_PER_SOL);
+
   return (
     <>
       <div className={`${creatingAd ? "hidden" : ""}`}>
@@ -207,12 +213,12 @@ console.log(fee,loadingContract);
 
         <div className="text-center mt-4">
           {/* Display the fee if available, otherwise use the fallback fee */}
-          {!!(fee || (fallbackFee)) && !!token && (
+          {!!(fee || fallbackFee) && token?.decimals && (
             <span className="text-xs text-gray-600 text-center">
-              Total fee: {(formatUnits((fee || fallbackFee) / BigInt(LAMPORTS_PER_SOL), token.decimals))}{" "}
+              Total fee: {formatUnits((fee || fallbackFee || BigInt(0)) / BigInt(LAMPORTS_PER_SOL), token.decimals)}{" "}
               {token.symbol}
-            </span>
-          )}
+    </span>
+  )}
         </div>
       </div>
       <div className={`${!creatingAd ? "hidden" : ""}`}>

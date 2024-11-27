@@ -1,24 +1,17 @@
-// hooks/transactions/useHelius.ts
-
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isSolanaWallet } from "@dynamic-labs/solana-core";
 import { 
-  Connection, 
   PublicKey, 
   Transaction, 
   Commitment,
-  SendOptions,
-  Signer,
-  TransactionMessage,
-  VersionedTransaction
 } from "@solana/web3.js";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { Helius } from "helius-sdk";
-import useLocalSolana from "./useLocalSolana";
 import { NEXT_PUBLIC_SOLANA_RPC, NEXT_PUBLIC_BLOCK_EXPLORER_URL, NEXT_PUBLIC_SOLANA_NETWORK } from 'utils';
+import { useConnection } from '@/contexts/ConnectionContext';
 
-// Improved interfaces
+// Interfaces
 interface TokenInfo {
   balance: number;
   decimals: number;
@@ -33,11 +26,6 @@ interface TransactionOptions {
   maxRetries?: number;
   skipPreflight?: boolean;
   simulation?: boolean;
-}
-
-interface SolanaWallet {
-  getSigner: () => Promise<any>;
-  publicKey?: string;
 }
 
 // Cache implementation
@@ -70,14 +58,11 @@ const ERROR_MAP: Record<string, string> = {
   'BlockhashNotFound': 'Network congestion - please try again'
 };
 
-// Cache connection instance
-let cachedConnection: Connection | null = null;
-
 const useHelius = () => {
   const [helius, setHelius] = useState<Helius | null>(null);
   const { primaryWallet } = useDynamicContext();
-  const { connection: localConnection } = useLocalSolana();
-  const connectionRef = useRef<Connection | null>(null);
+  const [isConnectionReady, setIsConnectionReady] = useState(false);
+  const { getConnection } = useConnection();
 
   useEffect(() => {
     const initializeHelius = async () => {
@@ -89,21 +74,13 @@ const useHelius = () => {
       }
     
       try {
-        if (!cachedConnection) {
-          // Create RPC URL with API key
-          const rpcUrl = `${NEXT_PUBLIC_SOLANA_RPC}?api-key=${apiKey}`;
-          
-          cachedConnection = new Connection(rpcUrl, {
-            commitment: 'confirmed',
-            confirmTransactionInitialTimeout: 60000
-          });
-        }
-        connectionRef.current = cachedConnection;
+        // Test connection
+        const connection = getConnection();
+        await connection.getLatestBlockhash();
+        
         const heliusInstance = new Helius(apiKey);
         setHelius(heliusInstance);
-        
-        // Test connection
-        await cachedConnection.getLatestBlockhash();
+        setIsConnectionReady(true);
       } catch (error) {
         console.error("Failed to initialize Helius:", error);
         toast.error("Failed to connect to Solana network");
@@ -113,10 +90,10 @@ const useHelius = () => {
     initializeHelius();
   
     return () => {
-      connectionRef.current = null;
+      setIsConnectionReady(false);
       cache.clear();
     };
-  }, []);
+  }, [getConnection]);
 
   const validateAddress = (address: string): boolean => {
     try {
@@ -125,13 +102,6 @@ const useHelius = () => {
     } catch {
       return false;
     }
-  };
-
-  const getConnection = (): Connection => {
-    if (!connectionRef.current) {
-      throw new Error("Connection not initialized");
-    }
-    return connectionRef.current;
   };
 
   const sendTransaction = async (
@@ -160,9 +130,9 @@ const useHelius = () => {
     } = options;
   
     let retries = 0;
+    
     while (retries < maxRetries) {
       try {
-        // Simulate transaction first if enabled
         if (simulation) {
           const sim = await connection.simulateTransaction(transaction);
           if (sim.value.err) {
@@ -198,7 +168,7 @@ const useHelius = () => {
         );
   
         await connection.confirmTransaction({
-          signature: txSignature, 
+          signature: txSignature,
           blockhash: recentBlockhash.blockhash,
           lastValidBlockHeight: recentBlockhash.lastValidBlockHeight
         });
@@ -348,13 +318,14 @@ const useHelius = () => {
 
   return {
     helius,
-    connection: connectionRef.current,
     sendTransaction,
     getWalletBalance,
     getTokenBalance, 
     getAllTokenBalances,
     getAccountInfo,
-    getConnectionDetails
+    getConnectionDetails,
+    getConnection,
+    isConnectionReady,
   };
 };
 

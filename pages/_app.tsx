@@ -1,6 +1,7 @@
 import 'tailwindcss/tailwind.css';
 import type { AppProps } from 'next/app';
 import type { Router } from 'next/router';
+import { ConnectionProvider } from '@/contexts/ConnectionContext';
 
 import dynamic from 'next/dynamic';
 import React, { useEffect } from 'react';
@@ -23,7 +24,15 @@ const App = ({ Component, pageProps }: AppProps & { router: Router }) => {
 		};
 	}, [router.events]);
 
-	return <Layout pageProps={pageProps} Component={Component} router={router as Router} />;
+	return (
+    <ConnectionProvider>
+      <Layout 
+        pageProps={pageProps} 
+        Component={Component} 
+        router={router as Router} 
+      />
+    </ConnectionProvider>
+  );
 }
 
 export default App;
