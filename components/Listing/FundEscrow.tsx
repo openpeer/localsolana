@@ -7,7 +7,7 @@ import DeploySellerContract from 'components/Buy/EscrowButton/DeploySellerContra
 import Input from 'components/Input/Input';
 import DepositFunds from 'components/DepositButton';
 import { useAccount, useUserProfile } from '@/hooks';
-import { BLOCK_EXPLORER, CURRENT_NETWORK } from '@/utils';
+import { NEXT_PUBLIC_BLOCK_EXPLORER_URL as BLOCK_EXPLORER, NEXT_PUBLIC_SOLANA_NETWORK as CURRENT_NETWORK } from '@/utils';
 import StepLayout from './StepLayout';
 import { useContractRead } from '@/hooks/transactions/useContractRead';
 
@@ -39,8 +39,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 
 	  const { data: escrowState } = useContractRead(
 		address||'',
-		"escrowState",
-		true
+		"escrowState"
 	);
 	  var sellerContractDeployed =  escrowState!=undefined && escrowState!=null;
 
@@ -57,7 +56,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 						{balance} {token.symbol}
 					</span>
 				</div>
-				<h2 className="block text-xl font-medium mb-1 font-bold">
+				<h2 className="block text-xl mb-1 font-bold">
 					{`${sellerContractDeployed ? 'Fund' : 'Create'} Escrow Account`}
 				</h2>
 				<div className="mb-4">
@@ -66,13 +65,13 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 							<>
 								Deposit {token.name} into your{' '}
 								<a
-									href={`${BLOCK_EXPLORER[0]}/address/${sellerContract}?cluster=${CURRENT_NETWORK}`}
+									href={`${BLOCK_EXPLORER}/address/${sellerContract}?cluster=${CURRENT_NETWORK}`}
 									className="text-purple-900"
 									target="_blank"
 									rel="noreferrer"
-								>
+							>
 									LocalSolana Account.
-								</a>
+							</a>
 							</>
 						)}
 						The amount you deposit will be available for other traders to buy. You will have to acknowledge
@@ -108,7 +107,7 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 					</div>
 					{sellerContractDeployed && (
 						<div className="mt-8">
-							<h2 className="block text-xl font-medium mb-1 font-bold my-8">
+							<h2 className="block text-xl mb-1 font-bold my-8">
 								{`or send ${token.symbol} from your exchange`}
 							</h2>
 							<div className="mt-2 mb-4 border border-gray-200 rounded-lg py-8 px-4 md:px-8  flex flex-col xl:flex-row items-center">
