@@ -11,7 +11,8 @@ import { ErrorBoundary, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { UseDepositFundsProps } from "../types";
 import useLocalSolana from "../useLocalSolana";
 import { web3 } from "@coral-xyz/anchor";
-import useShyft from "../useShyft";
+// import useShyft from "../useShyft";
+import { useShyft } from "../index";
 //import { Shyft } from '@shyft-to/js';
 import useHelius from "../useHelius";
 
@@ -31,6 +32,7 @@ const useGaslessDepositFunds = ({
 
   const { primaryWallet } = useDynamicContext();
   const { sendTransactionWithShyft, shyft } = useShyft();
+  const { getWalletBalance } = useHelius();
   const { getAccountInfo } = useHelius()
   const { depositFundsToLocalSolana } = useLocalSolana();
 
