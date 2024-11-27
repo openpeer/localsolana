@@ -9,13 +9,13 @@ import { useEffect, useState, useRef } from "react";
 import { NEXT_PUBLIC_SOLANA_RPC } from 'utils';
 import idl from "../../idl/local_solana_migrate.json";
 import { LocalSolanaMigrate } from "../../idl/local_solana_migrate";
-import { Helius } from "helius-sdk";
+// import { Helius } from "helius-sdk";
 
 const useLocalSolana = () => {
   const [program, setProgram] = useState<Program<LocalSolanaMigrate> | null>(null);
   const [provider, setProvider] = useState<AnchorProvider | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
-  const [helius, setHelius] = useState<Helius | null>(null);
+  // const [helius, setHelius] = useState<Helius | null>(null);
   const { primaryWallet } = useDynamicContext();
   const connectionRef = useRef<Connection | null>(null);
 
@@ -50,7 +50,7 @@ useEffect(() => {
     program,
     provider,
     connection,
-    helius,
+    // helius,
     getConnection,
     idl
   };
