@@ -8,7 +8,7 @@ const useDepositWithGas = ({ amount, token, contract }: UseDepositFundsProps) =>
     const { address } = token;
     const nativeToken = address === PublicKey.default.toBase58();
     const { primaryWallet } = useDynamicContext();
-    const connection = new Connection('https://api.mainnet-beta.solana.com'); // Adjust the cluster as needed
+    const connection = new Connection(process.env.NEXT_PUBLIC_SHYFT_MAINNET_RPC as string);
 
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
