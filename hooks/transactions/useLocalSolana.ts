@@ -23,6 +23,13 @@ const useLocalSolana = () => {
   useEffect(() => {
     const initializeLocalSolana = async () => {
       try {
+        // First check if we have a wallet connected
+        if (!primaryWallet) {
+        console.log("No wallet connected yet");
+        return;
+      }
+
+
         if (!NEXT_PUBLIC_SOLANA_RPC) {
           throw new Error("Solana RPC URL is not set");
         }
@@ -36,6 +43,7 @@ const useLocalSolana = () => {
           return;
         }
 
+        try {
         // @ts-ignore
         const providerInstance = new AnchorProvider(connectionInstance, primaryWallet, {
           commitment: "processed",
@@ -49,6 +57,10 @@ const useLocalSolana = () => {
         setProvider(providerInstance);
         setProgram(programInstance);
         setMyWallet(primaryWallet);
+
+      } catch (initError) {
+        console.error("Failed to initialize provider or program:", initError);
+      }
 
       } catch (error) {
         console.error("Error initializing Solana connection:", error);
