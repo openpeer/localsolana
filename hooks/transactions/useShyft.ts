@@ -9,73 +9,132 @@ import {
 } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { CURRENT_NETWORK, CURRENT_NETWORK_URL } from "utils";
-import useLocalSolana from "./useLocalSolana";
+import { 
+  NEXT_PUBLIC_SHYFT_API_KEY, 
+  NEXT_PUBLIC_SOLANA_NETWORK,
+  NEXT_PUBLIC_SHYFT_MAINNET_RPC
+} from "utils";
 import { feePayer } from "@/utils/constants";
-
-// Helper function to convert string network to ShyftSdk Network enum
-const getShyftNetwork = (network: string): Network => {
-  switch (network.toLowerCase()) {
-    case "mainnet-beta":
-    case "mainnet":
-      return Network.Mainnet;
-    case "devnet":
-      return Network.Devnet;
-    case "testnet":
-      return Network.Testnet;
-    default:
-      return Network.Devnet; // Default to devnet if unknown
-  }
-};
 
 const useShyft = () => {
   const [shyft, setShyft] = useState<ShyftSdk | null>(null);
+  const [shyftConnection, setShyftConnection] = useState<Connection | null>(null);
   const { primaryWallet } = useDynamicContext();
-  const { provider, program, idl, connection } = useLocalSolana();
 
   useEffect(() => {
     const initializeShyft = async () => {
-      const apiKey = process.env.NEXT_PUBLIC_SHYFT_API_KEY ;
-      if(!apiKey){
-        throw new Error("Error Initialising signer");
-      }
-      const shyftInstance = new ShyftSdk({
-        apiKey: apiKey,
-        network: getShyftNetwork(CURRENT_NETWORK), // Convert string to Network enum
-      });
-      setShyft(shyftInstance);
-    };
+      try {
+        if (!NEXT_PUBLIC_SHYFT_API_KEY) {
+          console.error("Shyft API key not configured");
+          return;
+        }
+        if (!NEXT_PUBLIC_SOLANA_NETWORK) {
+          console.error("Solana network not configured");
+          return;
+        }
+        if (!NEXT_PUBLIC_SHYFT_MAINNET_RPC) {
+          console.error("Shyft RPC URL not configured");
+          return;
+        }
+  
+        // Initialize Shyft SDK with proper network value
+        const shyftInstance = new ShyftSdk({ 
+          apiKey: NEXT_PUBLIC_SHYFT_API_KEY,
+          network: Network.Mainnet
+        });
+  
+        // Test the connection using the SDK method instead of raw fetch
+        try {
+          // Test with a simple wallet balance check using SDK
+          await shyftInstance.wallet.getBalance({
+            wallet: "11111111111111111111111111111111",
+            network: Network.Mainnet
+          });
+  
+          // Only set the instances if the health check passes
+          const connection = new Connection(
+            NEXT_PUBLIC_SHYFT_MAINNET_RPC,
+            { commitment: 'confirmed' }
+          );
+          
+          setShyftConnection(connection);
+          setShyft(shyftInstance);
 
+        } catch (healthError) {
+          console.error("Failed health check:", healthError);
+          toast.error("Failed to connect to Shyft network");
+          return;
+        }
+  
+      } catch (error) {
+        console.error("Failed to initialize Shyft:", error);
+        toast.error("Failed to initialize Shyft SDK");
+      }
+    };
+  
     initializeShyft();
   }, []);
+
+  const handleTransactionError = (error: any) => {
+    try {
+      const errorMessage = error.message || error.toString();
+      const parsedError = JSON.parse(errorMessage.match(/{.*}/)[0]);
+
+      if (parsedError.InstructionError && Array.isArray(parsedError.InstructionError)) {
+        const [index, instructionError] = parsedError.InstructionError;
+        if (instructionError.Custom !== undefined) {
+          console.log(
+            "This is an InstructionError with a custom error code:",
+            instructionError.Custom
+          );
+          toast.error(`Transaction failed with error code: ${instructionError.Custom}`);
+        }
+      }
+    } catch (parsingError) {
+      console.error("Failed to parse error:", parsingError);
+      toast.error(error.message || "Transaction failed", {
+        theme: "dark",
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: false,
+        progress: undefined,
+      });
+    }
+  };
 
   const sendTransactionWithShyft = async (
     transaction: Transaction,
     localSignRequired: boolean
   ) => {
-    if(!shyft){
+    if (!shyft) {
       throw new Error("Shyft SDK not initialized");
     }
     if (!feePayer) {
       throw new Error("Fee payer is not set in env");
     }
-    const connection = new Connection(CURRENT_NETWORK_URL);
-    const recentBlockhash = await connection.getLatestBlockhash('confirmed');
+    if (!shyftConnection) {
+      throw new Error("Shyft connection not initialized");
+    }
+
+    const recentBlockhash = await shyftConnection.getLatestBlockhash('confirmed');
     transaction.recentBlockhash = recentBlockhash.blockhash;
     transaction.feePayer = new PublicKey(feePayer);
     let signedTransaction;
 
     if (localSignRequired) {
-      if (primaryWallet == null || !isSolanaWallet(primaryWallet)) {
-        return;
+      if (!primaryWallet || !isSolanaWallet(primaryWallet)) {
+        throw new Error("Solana wallet not connected");
       }
       try {
         signedTransaction = await (await primaryWallet.getSigner()).signTransaction(transaction);
         if (!signedTransaction) {
-          throw new Error(`Cannot sign transaction: ${transaction}`);
+          throw new Error("Failed to sign transaction");
         }
       } catch (err: any) {
-        throw new Error(err);
+        throw new Error(`Signing error: ${err.message}`);
       }
     } else {
       signedTransaction = transaction;
@@ -90,52 +149,26 @@ const useShyft = () => {
     try {
       const signature = await shyft?.txnRelayer.sign({
         encodedTransaction: base64Transaction,
-        network: getShyftNetwork(CURRENT_NETWORK),
+        network: NEXT_PUBLIC_SOLANA_NETWORK as Network,
       });
 
-      if (signature) {
+      if (signature && shyftConnection) {
         const txSignature: TransactionSignature = signature as TransactionSignature;
-        await connection.confirmTransaction(txSignature, "confirmed");
+        await shyftConnection.confirmTransaction(txSignature, "confirmed");
         return txSignature;
       }
     } catch (error: any) {
-
-      try {
-        const errorMessage = error.message || error.toString();
-        const parsedError = JSON.parse(errorMessage.match(/{.*}/)[0]);
-
-        if (
-          parsedError.InstructionError &&
-          Array.isArray(parsedError.InstructionError)
-        ) {
-          const [index, instructionError] = parsedError.InstructionError;
-          if (instructionError.Custom !== undefined) {
-            console.log(
-              "This is an InstructionError with a custom error code:",
-              instructionError.Custom
-            );
-            idl.errors[instructionError.custom];
-          }
-        }
-      } catch (parsingError) {
-        console.error("Failed to parse the error message:", parsingError);
-        toast.error(`${error}`, {
-          theme: "dark",
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: false,
-          progress: undefined,
-        });
-      }
+      handleTransactionError(error);
     }
   };
 
   const getWalletBalance = async (address: string) => {
-    if (!connection) return null;
-    const balance = await connection.getBalance(new PublicKey(address));
+    if (!shyftConnection) {
+      console.error("Shyft connection not initialized");
+      return null;
+    }
+
+    const balance = await shyftConnection.getBalance(new PublicKey(address));
     return balance/1e9;
   };
 
@@ -155,9 +188,11 @@ const useShyft = () => {
   };
 
   const getAccountInfo = async (address: string) => {
-    if (!connection) return null;
-    
-    const accountInfo = await connection.getAccountInfo(
+    if (!shyftConnection) {
+      console.error("Shyft connection not initialized");
+      return null;
+    }
+    const accountInfo = await shyftConnection.getAccountInfo(
       new PublicKey(address)
     );
     return accountInfo;
@@ -165,7 +200,7 @@ const useShyft = () => {
 
   return {
     shyft,
-    connection,
+    connection: shyftConnection,
     sendTransactionWithShyft,
     getWalletBalance,
     getTokenBalance,

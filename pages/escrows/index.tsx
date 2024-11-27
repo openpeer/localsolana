@@ -15,7 +15,7 @@ import React, { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 // import { Chain, useContractRead, useNetwork, useSwitchNetwork } from 'wagmi';
 import { Contract, Token } from "models/types";
-import { CURRENT_NETWORK, smallWalletAddress } from "utils";
+import { NEXT_PUBLIC_SOLANA_NETWORK, smallWalletAddress } from "utils";
 import { useBalance, useShyft } from "@/hooks/transactions";
 import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 import { useContractRead } from "@/hooks/transactions/useContractRead";

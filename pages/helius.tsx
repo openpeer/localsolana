@@ -123,9 +123,9 @@ export default function HeliusTest() {
             
             <button
               onClick={() => handleSubmit('testTransaction')}
-              className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Test Transaction
+              className="p-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Test Transaction (Mainnet)
             </button>
           </div>
 

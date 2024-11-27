@@ -1,5 +1,3 @@
-// hooks/transactions/useHelius.ts
-
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isSolanaWallet } from "@dynamic-labs/solana-core";
 import { 
@@ -8,75 +6,117 @@ import {
   Transaction, 
   Commitment,
   SendOptions,
-  Signer
+  Signer,
+  TransactionMessage,
+  VersionedTransaction
 } from "@solana/web3.js";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
-import { CURRENT_NETWORK_URL } from "utils";
 import { Helius } from "helius-sdk";
 import useLocalSolana from "./useLocalSolana";
+import { NEXT_PUBLIC_SOLANA_RPC, NEXT_PUBLIC_BLOCK_EXPLORER_URL, NEXT_PUBLIC_SOLANA_NETWORK } from 'utils';
 
-/**
- * Interface for Dynamic wallet integration with Solana capabilities
- * @property getSigner - Returns a signer object that can sign transactions
- * @property publicKey - The wallet's public key string
- */
+// Improved interfaces
+interface TokenInfo {
+  balance: number;
+  decimals: number;
+  mint: string;
+  tokenName: string;
+  symbol: string;
+  usdValue: number;
+}
+
+interface TransactionOptions {
+  commitment?: Commitment;
+  maxRetries?: number;
+  skipPreflight?: boolean;
+  simulation?: boolean;
+}
+
 interface SolanaWallet {
   getSigner: () => Promise<any>;
   publicKey?: string;
 }
 
+// Cache implementation
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 30000; // 30 seconds
+
+const getFromCache = (key: string) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setInCache = (key: string, data: any) => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
+// Error mapping
+const ERROR_MAP: Record<string, string> = {
+  'AccountNotFound': 'Account not found',
+  'InsufficientFunds': 'Insufficient funds',
+  'InvalidAddress': 'Invalid wallet address',
+  'SignatureRequestDenied': 'Transaction signing rejected',
+  'TransactionExpired': 'Transaction expired - please try again',
+  'WalletConnectionError': 'Please connect your wallet',
+  'RpcError': 'Network error - please try again',
+  'SimulationFailed': 'Transaction simulation failed',
+  'InvalidInstruction': 'Invalid transaction instruction',
+  'BlockhashNotFound': 'Network congestion - please try again'
+};
+
 // Cache connection instance
 let cachedConnection: Connection | null = null;
 
-/**
- * Custom hook for interacting with the Helius SDK and Solana blockchain
- * Provides optimized methods for transaction handling, balance queries, and account information
- * Implements connection caching and secure transaction processing
- * @returns Object containing Helius instance and utility methods
- */
 const useHelius = () => {
   const [helius, setHelius] = useState<Helius | null>(null);
   const { primaryWallet } = useDynamicContext();
-  const { idl, connection: localConnection } = useLocalSolana();
-  
-  // Use ref to store connection to prevent recreation
+  const { connection: localConnection } = useLocalSolana();
   const connectionRef = useRef<Connection | null>(null);
 
   useEffect(() => {
-    const initializeHelius = () => {
+    const initializeHelius = async () => {
       const apiKey = process.env.NEXT_PUBLIC_HELIUS_API_KEY;
       if (!apiKey) {
-        throw new Error("Helius API key not found");
+        console.error("Missing Helius API key");
+        toast.error("Helius API configuration error");
+        return;
       }
-      
-      // Initialize cached connection if needed
-      if (!cachedConnection) {
-        cachedConnection = new Connection(CURRENT_NETWORK_URL, {
-          commitment: 'confirmed',
-          confirmTransactionInitialTimeout: 60000
-        });
+    
+      try {
+        if (!cachedConnection) {
+          // Create RPC URL with API key
+          const rpcUrl = `${NEXT_PUBLIC_SOLANA_RPC}?api-key=${apiKey}`;
+          
+          cachedConnection = new Connection(rpcUrl, {
+            commitment: 'confirmed',
+            wsEndpoint: `wss://rpc-devnet.helius.xyz/?api-key=${apiKey}`,
+            confirmTransactionInitialTimeout: 60000
+          });
+        }
+        connectionRef.current = cachedConnection;
+        const heliusInstance = new Helius(apiKey);
+        setHelius(heliusInstance);
+        
+        // Test connection
+        await cachedConnection.getLatestBlockhash();
+      } catch (error) {
+        console.error("Failed to initialize Helius:", error);
+        toast.error("Failed to connect to Solana network");
       }
-      connectionRef.current = cachedConnection;
-
-      const heliusInstance = new Helius(apiKey);
-      setHelius(heliusInstance);
     };
-
+  
     initializeHelius();
-
-    // Cleanup
+  
     return () => {
       connectionRef.current = null;
+      cache.clear();
     };
   }, []);
 
-  /**
-   * Validates a Solana address format
-   * @param address - The address string to validate
-   * @returns boolean indicating if address is valid
-   * @private internal helper function
-   */
   const validateAddress = (address: string): boolean => {
     try {
       new PublicKey(address);
@@ -86,12 +126,6 @@ const useHelius = () => {
     }
   };
 
-/**
- * Gets cached Solana connection or throws if uninitialized
- * @returns Connection instance for interacting with the Solana network
- * @throws Error if connection not initialized
- * @private internal helper function
- */
   const getConnection = (): Connection => {
     if (!connectionRef.current) {
       throw new Error("Connection not initialized");
@@ -99,22 +133,10 @@ const useHelius = () => {
     return connectionRef.current;
   };
 
-  /**
-   * Send and confirm a transaction with retry logic and configurable options
-   * @param transaction - The transaction to send
-   * @param localSignRequired - Whether the transaction needs user wallet signing
-   * @param options - Optional configuration {commitment, maxRetries, skipPreflight}
-   * @returns Transaction signature if successful
-   * @throws Error on failed transaction, wallet connection issues, missing public key, or max retries exceeded
-   */
   const sendTransaction = async (
     transaction: Transaction,
     localSignRequired: boolean,
-    options: {
-      commitment?: Commitment;
-      maxRetries?: number;
-      skipPreflight?: boolean;  
-    } = {}
+    options: TransactionOptions = {}
   ) => {
     if (!helius) throw new Error("Helius SDK not initialized");
     if (!primaryWallet || !isSolanaWallet(primaryWallet)) {
@@ -132,12 +154,21 @@ const useHelius = () => {
     const {
       commitment = 'confirmed',
       maxRetries = 3,
-      skipPreflight = false
+      skipPreflight = false,
+      simulation = true
     } = options;
   
     let retries = 0;
     while (retries < maxRetries) {
       try {
+        // Simulate transaction first if enabled
+        if (simulation) {
+          const sim = await connection.simulateTransaction(transaction);
+          if (sim.value.err) {
+            throw new Error(`Transaction simulation failed: ${sim.value.err}`);
+          }
+        }
+
         const recentBlockhash = await connection.getLatestBlockhash(commitment);
         transaction.recentBlockhash = recentBlockhash.blockhash;
         
@@ -161,6 +192,7 @@ const useHelius = () => {
           {
             skipPreflight,
             preflightCommitment: commitment,
+            maxRetries: 3
           }
         );
   
@@ -170,166 +202,148 @@ const useHelius = () => {
           lastValidBlockHeight: recentBlockhash.lastValidBlockHeight
         });
   
+        toast.success("Transaction confirmed");
         return txSignature;
 
       } catch (error: any) {
         retries++;
         if (retries === maxRetries) {
           console.error("Transaction failed after max retries:", error);
-          
-          // Parse and map error
           const errorCode = error?.code || 'unknown';
-          const errorMap: Record<string, string> = {
-            'AccountNotFound': 'Account not found',
-            'InsufficientFunds': 'Insufficient funds',
-            // Add more error mappings
-          };
-
-          const errorMessage = errorMap[errorCode] || error.message || 'Transaction failed';
+          const errorMessage = ERROR_MAP[errorCode] || error.message || 'Transaction failed';
           toast.error(errorMessage);
           throw error;
         }
-        // Exponential backoff
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
       }
     }
   };
 
-  /**
-   * Get SOL balance for a Solana address with validation
-   * @param address - The wallet address to check
-   * @returns Balance in lamports or null if error
-   * @throws Error if address invalid
-   */
   const getWalletBalance = async (address: string) => {
     if (!validateAddress(address)) throw new Error("Invalid address");
     if (!helius) return null;
 
+    const cacheKey = `balance-${address}`;
+    const cached = getFromCache(cacheKey);
+    if (cached !== null) return cached;
+
     try {
       const connection = getConnection();
-      return await connection.getBalance(new PublicKey(address));
+      const balance = await connection.getBalance(new PublicKey(address));
+      setInCache(cacheKey, balance);
+      return balance;
     } catch (error) {
       console.error("Error getting wallet balance:", error);
       return null;
     }
   };
 
-  /**
-   * Get specific token balance and info for a wallet address
-   * @param address - The wallet address to check 
-   * @param tokenAddress - The token's mint address
-   * @returns Object containing balance and decimals or null
-   * @throws Error if addresses invalid
-   */
-  const getTokenBalance = async (address: string, tokenAddress: string) => {
+  const getTokenBalance = async (address: string, tokenAddress: string): Promise<TokenInfo | null> => {
     if (!validateAddress(address) || !validateAddress(tokenAddress)) {
       throw new Error("Invalid address");
     }
     if (!helius) return null;
 
+    const cacheKey = `token-${address}-${tokenAddress}`;
+    const cached = getFromCache(cacheKey);
+    if (cached !== null) return cached;
+
     try {
       const response = await helius.rpc.searchAssets({
-        ownerAddress: address,
-        tokenType: "fungible",
-        grouping: ["collection", tokenAddress],
-        page: 1,
-        limit: 1
-      });
-
-      console.log("Full token response:", JSON.stringify(response, null, 2));
-
-      // Try without grouping first
-      const alternateResponse = await helius.rpc.searchAssets({
         ownerAddress: address,
         tokenType: "fungible",
         page: 1,
         limit: 1000
       });
 
-      // Find specific token
-      const token = alternateResponse.items.find(item => item.id === tokenAddress);
-      console.log("Found token:", token);
+      const token = response.items.find(item => item.id === tokenAddress);
       
-      return {
-        balance: token?.token_info?.balance || 0,
-        decimals: token?.token_info?.decimals || 0
+      if (!token) return null;
+
+      const tokenInfo: TokenInfo = {
+        balance: token.token_info?.balance || 0,
+        decimals: token.token_info?.decimals || 0,
+        mint: token.id,
+        tokenName: token.content?.metadata?.name || '',
+        symbol: token.content?.metadata?.symbol || '',
+        usdValue: token.token_info?.price_info?.total_price || 0
       };
+
+      setInCache(cacheKey, tokenInfo);
+      return tokenInfo;
     } catch (error) {
       console.error("Error getting token balance:", error);
-      return { balance: 0, decimals: 0 };
+      return null;
     }
   };
 
-/**
- * Get all token balances and metadata for a wallet address using batching or pagination
- * @param address - The wallet address to check
- * @param batchSize - Number of items per batch (default: 1000)
- * @returns Array of token data including balances, metadata, and USD values
- * @throws Error if address is invalid
- */
-const getAllTokenBalances = async (address: string, batchSize: number = 1000) => {
-  if (!validateAddress(address)) throw new Error("Invalid address");
-  if (!helius) return null;
+  const getAllTokenBalances = async (address: string, batchSize: number = 1000): Promise<TokenInfo[]> => {
+    if (!validateAddress(address)) throw new Error("Invalid address");
+    if (!helius) return [];
 
-  try {
+    const cacheKey = `all-tokens-${address}`;
+    const cached = getFromCache(cacheKey);
+    if (cached !== null) return cached;
+
+    try {
       let allTokens: any[] = [];
       let currentPage = 1;
 
       while (true) {
-          // Fetch a batch of token balances
-          const response = await helius.rpc.searchAssets({
-              ownerAddress: address,
-              tokenType: "fungible",
-              page: currentPage,
-              limit: batchSize,
-          });
+        const response = await helius.rpc.searchAssets({
+          ownerAddress: address,
+          tokenType: "fungible",
+          page: currentPage,
+          limit: batchSize,
+        });
 
-          // Merge the current batch into the allTokens array
-          allTokens = [...allTokens, ...response.items];
+        allTokens = [...allTokens, ...response.items];
 
-          // If the number of items returned is less than the batch size, we've reached the end
-          if (response.items.length < batchSize) break;
-
-          // Increment the page for the next batch
-          currentPage++;
+        if (response.items.length < batchSize) break;
+        currentPage++;
       }
 
-      // Transform the combined results into the desired format
-      return allTokens.map(item => ({
-          balance: item.token_info?.balance || 0,
-          decimals: item.token_info?.decimals || 0,
-          mint: item.id,
-          tokenName: item.content?.metadata?.name || '',
-          symbol: item.content?.metadata?.symbol || '',
-          usdValue: item.token_info?.price_info?.total_price || 0,
+      const tokenInfos: TokenInfo[] = allTokens.map(item => ({
+        balance: item.token_info?.balance || 0,
+        decimals: item.token_info?.decimals || 0,
+        mint: item.id,
+        tokenName: item.content?.metadata?.name || '',
+        symbol: item.content?.metadata?.symbol || '',
+        usdValue: item.token_info?.price_info?.total_price || 0,
       }));
-  } catch (error) {
-      console.error("Error getting all token balances with batching:", error);
+
+      setInCache(cacheKey, tokenInfos);
+      return tokenInfos;
+    } catch (error) {
+      console.error("Error getting all token balances:", error);
       return [];
-  }
-};
+    }
+  };
 
-
-  /**
-   * Get raw account information for any Solana address
-   * @param address - The account address to query
-   * @returns AccountInfo object or null if error/not found
-   * @throws Error if address invalid
-   */
   const getAccountInfo = async (address: string) => {
     if (!validateAddress(address)) throw new Error("Invalid address");
     if (!helius) return null;
 
+    const cacheKey = `account-${address}`;
+    const cached = getFromCache(cacheKey);
+    if (cached !== null) return cached;
+
     try {
       const connection = getConnection();
       const info = await connection.getAccountInfo(new PublicKey(address));
-      console.log("Account info response:", info); // Added debug log
+      if (info) setInCache(cacheKey, info);
       return info;
     } catch (error) {
       console.error("Error getting account info:", error);
       return null;
     }
   };
+
+  const getConnectionDetails = () => ({
+    network: NEXT_PUBLIC_SOLANA_NETWORK,
+    blockExplorer: NEXT_PUBLIC_BLOCK_EXPLORER_URL,
+    rpcEndpoint: NEXT_PUBLIC_SOLANA_RPC
+  });
 
   return {
     helius,
@@ -338,7 +352,8 @@ const getAllTokenBalances = async (address: string, batchSize: number = 1000) =>
     getWalletBalance,
     getTokenBalance, 
     getAllTokenBalances,
-    getAccountInfo
+    getAccountInfo,
+    getConnectionDetails
   };
 };
 
