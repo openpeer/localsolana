@@ -10,7 +10,7 @@ interface UseEscrowFeeParams {
 const useEscrowFee = ({ address, tokenAmount, token }: UseEscrowFeeParams) => {
     if (!address || !token || !tokenAmount) return { isFetching: false, fee: null, partnerFeeBps: null, totalAmount: null };
 
-    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    const connection = new Connection(process.env.NEXT_PUBLIC_SHYFT_MAINNET_RPC as string);
     const contract = new PublicKey(address);
     const partner = PublicKey.default.toString();
 
