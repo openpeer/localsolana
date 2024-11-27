@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import useLocalSolana from './useLocalSolana';
 import useShyft from './useShyft';
 
-const SOLANA_RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
+const SOLANA_RPC_ENDPOINT = process.env.NEXT_PUBLIC_SHYFT_MAINNET_RPC;
+
 
 interface UseWaitForTransactionProps {
   hash: string;
