@@ -1,3 +1,5 @@
+// hooks/transactions/useHelius.ts
+
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isSolanaWallet } from "@dynamic-labs/solana-core";
 import { 
@@ -93,7 +95,6 @@ const useHelius = () => {
           
           cachedConnection = new Connection(rpcUrl, {
             commitment: 'confirmed',
-            wsEndpoint: `wss://rpc-devnet.helius.xyz/?api-key=${apiKey}`,
             confirmTransactionInitialTimeout: 60000
           });
         }
