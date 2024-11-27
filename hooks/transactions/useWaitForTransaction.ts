@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
-import useLocalSolana from './useLocalSolana';
-import useShyft from './useShyft';
-
-const SOLANA_RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
+import useHelius from './useHelius';
 
 interface UseWaitForTransactionProps {
   hash: string;
@@ -13,8 +10,7 @@ export const useWaitForTransaction = ({ hash, onReplaced }: UseWaitForTransactio
   const [isError, setIsError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
-  const {connection} = useLocalSolana();
-  const {shyft} = useShyft();
+  const { getConnection, isConnectionReady } = useHelius();
 
   useEffect(() => {
     const fetchTransactionStatus = async () => {
@@ -22,19 +18,23 @@ export const useWaitForTransaction = ({ hash, onReplaced }: UseWaitForTransactio
       setIsError(false);
 
       try {
+        if (!isConnectionReady) {
+          throw new Error("Connection not initialized");
+        }
 
+        const connection = getConnection();
+        const confirmedTransaction = await connection.confirmTransaction(hash, 'finalized');
 
-        const confirmedTransaction = await connection?.confirmTransaction(hash, 'finalized');
-
-        if (confirmedTransaction) {
+        if (confirmedTransaction?.value?.err) {
+          setIsError(true);
+        } else {
           setIsSuccess(true);
           if (onReplaced) {
             onReplaced({ hash });
           }
-        } else {
-          setIsError(true);
         }
       } catch (err) {
+        console.error("Error confirming transaction:", err);
         setIsError(true);
       } finally {
         setIsLoading(false);
@@ -44,7 +44,7 @@ export const useWaitForTransaction = ({ hash, onReplaced }: UseWaitForTransactio
     if (hash) {
       fetchTransactionStatus();
     }
-  }, [hash, onReplaced]);
+  }, [hash, onReplaced, getConnection, isConnectionReady]);
 
   return { isError, isLoading, isSuccess };
 };
