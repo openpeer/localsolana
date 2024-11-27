@@ -22,6 +22,7 @@ export const DEFAULT_ESCROW_TYPE: List['escrow_type'] = 'instant';
 export const NEXT_PUBLIC_SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK;
 export const NEXT_PUBLIC_SOLANA_RPC = process.env.NEXT_PUBLIC_SOLANA_RPC;
 export const NEXT_PUBLIC_BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL;
+export const NEXT_PUBLIC_HELIUS_API_KEY = process.env.NEXT_PUBLIC_HELIUS_API_KEY;
 
 // Shyft Configuration
 export const NEXT_PUBLIC_SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
