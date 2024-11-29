@@ -91,7 +91,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   );
 
   const { data: fee } = useContractRead(sellerContract || "", "fee", true);
-  console.log('Instant',instantEscrow);
+  //console.log('Instant',instantEscrow);
 
   const resolver: Resolver = () => {
     const error: Errors = {};
@@ -165,7 +165,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   });
   useEffect(() => {
     if (orderID && !isLoading && instantEscrow) {
-      console.log('Here in Amount', buyer==address, instantEscrow);
+     // console.log('Here in Amount', buyer==address, instantEscrow);
       deploy?.();
     }
   }, [orderID]);
@@ -220,7 +220,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
         setOrderID(orderId);
       }
     }
-    console.log("Order Created", data);
+    //console.log("Order Created", data);
   };
 
   const onProceed = async () => {
@@ -250,7 +250,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   }
 
   function onChangeToken(val: number | undefined) {
-    console.log("OnChange Token", val);
+    //console.log("OnChange Token", val);
     clearErrors(["tokenAmount"]);
 
     if (val) {

@@ -63,7 +63,7 @@ const useGaslessEscrowAccountDeploy = ({
 
     try {
       const escrowPDA = await getEscrowPDA(orderId);
-      console.log("Escrow PDA:", escrowPDA?.toBase58());
+      //console.log("Escrow PDA:", escrowPDA?.toBase58());
 
       // Validate Escrow Account Existence using Helius
       const status = await getAccountInfo(escrowPDA?.toBase58() ?? "");
@@ -123,11 +123,12 @@ const useGaslessEscrowAccountDeploy = ({
         // Use Shyft for transaction relaying
         const finalTx = await sendTransactionWithShyft(
           transaction,
-          isLocalSigningRequired
+          isLocalSigningRequired,
+          orderId
         );
 
         if (finalTx) {
-          console.log("Transaction successful, Escrow PDA:", escrowPDA?.toBase58());
+          //console.log("Transaction successful, Escrow PDA:", escrowPDA?.toBase58());
           updateData({ hash: escrowPDA?.toBase58() });
           setIsSuccess(true);
         } else {
@@ -135,7 +136,7 @@ const useGaslessEscrowAccountDeploy = ({
           setIsSuccess(false);
         }
       } else {
-        console.log("Escrow account already exists, PDA:", escrowPDA?.toBase58());
+        //console.log("Escrow account already exists, PDA:", escrowPDA?.toBase58());
         updateData({ hash: escrowPDA?.toBase58() });
         setIsSuccess(true);
       }

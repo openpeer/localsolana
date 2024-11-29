@@ -8,7 +8,7 @@ import useLocalSolana from '../useLocalSolana';
 import { PublicKey } from '@solana/web3.js';
 
 interface Data {
-	hash?: string;
+	hash?: string | null;
 }
 
 const useGaslessEscrowCancel = ({ orderID,seller, token }: UseEscrowCancelProps) => {
@@ -33,8 +33,8 @@ const useGaslessEscrowCancel = ({ orderID,seller, token }: UseEscrowCancelProps)
 		try {
 			setIsLoading(true);
 			const tx = await cancelOrderOnChain(orderID,new PublicKey(address||''),new PublicKey(seller),new PublicKey(token.address));
-			const finalTx = await sendTransactionWithShyft(tx,true);
-			if(finalTx !== undefined){
+			const finalTx = await sendTransactionWithShyft(tx,true,orderID);
+			if(finalTx !== undefined && finalTx !== null){
 				setIsLoading(false);
 				setIsSuccess(true);
 				updateData({hash: finalTx} );
@@ -43,6 +43,8 @@ const useGaslessEscrowCancel = ({ orderID,seller, token }: UseEscrowCancelProps)
 				console.error('error', finalTx);
 				setIsLoading(false);
 				setIsSuccess(false);
+				updateData({hash: null} );
+				return false;
 			}
             return false;
 		} catch (error) {

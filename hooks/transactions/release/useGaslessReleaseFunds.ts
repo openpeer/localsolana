@@ -43,13 +43,13 @@ const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTran
 	const releaseFund = async () => {
 		try {
 			setIsLoading(true);
-			console.log('order id',orderID);
+			//console.log('order id',orderID);
 
 			const escrowPDA = await getEscrowPDA(orderID);
-			console.log('Derived escrow address:', escrowPDA?.toString());
+			//console.log('Derived escrow address:', escrowPDA?.toString());
 
             if (!escrowPDA) {
-                console.error('Could not derive escrow address');
+                //console.log('Could not derive escrow address');
                 setIsLoading(false);
                 setIsSuccess(false);
                 return;
@@ -57,7 +57,7 @@ const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTran
 
 						const escrowExists = await verifyEscrowExists(escrowPDA);
             if (!escrowExists) {
-                console.error('Escrow account not found');
+                //console.log('Escrow account not found');
                 setIsLoading(false);
                 setIsSuccess(false);
                 return;
@@ -71,18 +71,18 @@ const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTran
 					);
 
 
-					const finalTx = await sendTransactionWithShyft(tx, true);
-					if (finalTx !== undefined) {
+					const finalTx = await sendTransactionWithShyft(tx, true,orderID);
+					if (finalTx !== undefined && finalTx !== null) {
 							setIsLoading(false);
 							setIsSuccess(true);
 							updateData({ hash: finalTx });
 					} else {
-							console.error('error', finalTx);
+							//console.log('error');
 							setIsLoading(false);
 							setIsSuccess(false);
 					}
 			} catch (error) {
-					console.error('error', error);
+					console.error( error);
 					setIsLoading(false);
 					setIsSuccess(false);
 			} finally {

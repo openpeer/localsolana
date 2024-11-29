@@ -17,7 +17,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      console.log("Contract Address",contractAddress,'method', method);
+      //console.log("Contract Address",contractAddress,'method', method);
       if(contractAddress==''){
       //setError('Error in address');
       setData(null);
@@ -27,7 +27,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
       var escrowStateAddress;
       if(method =="escrowState"){
         escrowStateAddress = getEscrowStatePDA(contractAddress);
-        console.log('LocalSolana Account',escrowStateAddress?.toBase58());
+        //console.log('LocalSolana Account',escrowStateAddress?.toBase58());
       if(!escrowStateAddress){
         setData(null);
         setLoading(false);
@@ -65,9 +65,9 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
                 "escrow",
                 accountBuffer
               );
-              console.log(decodedData);
+              //console.log(decodedData);
             } catch (err) {
-              console.log(err);
+              //console.log(err);
             }
             break;
           case "fee":
@@ -79,7 +79,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
                 );
               decodedData = decodedEscrowData.fee ?? new BN(0);
             } catch (err: any) {
-              console.log(err);
+              //console.log(err);
               setError(err?.toString());
               setData(null);
             }
@@ -94,7 +94,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
                   );
                 decodedData = decodedEscrowStateData!=null?escrowStateAddress:null;
               } catch (err: any) {
-                console.log(err);
+                //console.log(err);
                 setError(err?.toString());
                 setData(null);
               }
@@ -102,10 +102,10 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
 
         }
         if (decodedData) {
-          console.log("Account data", decodedData);
+          //console.log("Account data", decodedData);
           setData(decodedData);
         } else {
-          console.log("Account data not found");
+          //console.log("Account data not found");
           setError("No data found");
         }
       } catch (err: any) {
@@ -148,7 +148,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
               accountBuffer
             );
           } catch (err) {
-            console.log(err);
+            //console.log(err);
           }
           break;
         case "fee":
@@ -160,7 +160,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
               );
             decodedData = decodedEscrowData.fee ?? new BN(0);
           } catch (err: any) {
-            console.log(err);
+            //console.log(err);
             setError(err?.toString());
             setData(null);
           }
@@ -175,7 +175,7 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
                 );
               decodedData = decodedEscrowStateData!=null?escrowStateAddress:null;
             } catch (err: any) {
-              console.log(err);
+              //console.log(err);
               setError(err?.toString());
               setData(null);
             }
@@ -183,11 +183,11 @@ export const useContractRead = (contractAddress: string, method: string,watch? :
 
       }
       if (decodedData) {
-        console.log("Account data", decodedData);
+        //console.log("Account data", decodedData);
         setData(decodedData);
         setLoading(false);
       } else {
-        console.log("Account data not found");
+        //console.log("Account data not found");
         setError("No data found");
         setLoading(false);
       }

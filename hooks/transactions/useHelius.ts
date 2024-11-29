@@ -236,7 +236,7 @@ const useHelius = () => {
         limit: 1
       });
 
-      console.log("Full token response:", JSON.stringify(response, null, 2));
+      //console.log("Full token response:", JSON.stringify(response, null, 2));
 
       // Try without grouping first
       const alternateResponse = await helius.rpc.searchAssets({
@@ -248,7 +248,7 @@ const useHelius = () => {
 
       // Find specific token
       const token = alternateResponse.items.find(item => item.id === tokenAddress);
-      console.log("Found token:", token);
+      //console.log("Found token:", token);
       
       return {
         balance: token?.token_info?.balance || 0,
@@ -323,7 +323,7 @@ const getAllTokenBalances = async (address: string, batchSize: number = 1000) =>
     try {
       const connection = getConnection();
       const info = await connection.getAccountInfo(new PublicKey(address));
-      console.log("Account info response:", info); // Added debug log
+      //console.log("Account info response:", info); // Added debug log
       return info;
     } catch (error) {
       console.error("Error getting account info:", error);

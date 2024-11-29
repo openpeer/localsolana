@@ -50,7 +50,7 @@ const useOpenDispute = ({ orderID }: {orderID:string}) => {
         return false;
       }
 
-			const finalTx = await sendTransactionWithShyft(tx,true);
+			const finalTx = await sendTransactionWithShyft(tx,true,orderID);
 			if (finalTx) {
 				updateData({hash: finalTx} );
 				setIsSuccess(true);

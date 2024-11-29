@@ -65,7 +65,7 @@ const useWithdrawFunds = ({
       }
 
       setIsLoading(true);
-      console.log("In Withdraw funds");
+      //console.log("In Withdraw funds");
 
       try {
           // Verify balance before proceeding
@@ -110,7 +110,7 @@ const useWithdrawFunds = ({
           //   }
           // } else {
 
-          console.log('Withdraw funds from local solana', contract, token.name, token.decimals);
+          //console.log('Withdraw funds from local solana', contract, token.name, token.decimals);
 
           const tx = await withdrawFundsFromLocalSolana(
               amount,
@@ -135,7 +135,7 @@ const useWithdrawFunds = ({
           }
 
           const finalTx = await sendTransactionWithShyft(tx, true);
-          if (finalTx !== undefined) {
+          if (finalTx !== undefined && finalTx !== null) {
               setIsLoading(false);
               setIsSuccess(true);
               updateData({ hash: finalTx || "" });

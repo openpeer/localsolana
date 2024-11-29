@@ -53,7 +53,7 @@ const useGaslessDepositFunds = ({
       }
 
     setIsLoading(true);
-    console.log("Initiating deposit");
+    //console.log("Initiating deposit");
 
     try {
       const senderAccountInfo = await getAccountInfo(primaryWallet.address);
@@ -82,6 +82,7 @@ const useGaslessDepositFunds = ({
         }
 
         const finalTx = await sendTransactionWithShyft(transaction,true);
+        //console.log('here is final result', finalTx);
         if (finalTx) {
           setIsSuccess(true);
           updateData({ hash: finalTx });
@@ -106,6 +107,7 @@ const useGaslessDepositFunds = ({
         }
 
           const finalTx = await sendTransactionWithShyft(tx,true);
+          //console.log('here is final result', finalTx);
           if (finalTx) {
             setIsSuccess(true);
             updateData({ hash: finalTx });

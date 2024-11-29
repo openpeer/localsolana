@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 interface Params {
   isSuccess: boolean;
-  hash: string | undefined;
+  hash: string | undefined | null;
   Link: JSX.Element;
   description: string;
 }
@@ -20,7 +20,7 @@ const useTransactionFeedback = ({
   const { addRecentTransaction } = useTransactionFeedbackModal();
   const prevIsSuccessRef = useRef<boolean>(false);
   useEffect(() => {
-    if (hash !== undefined && isSuccess) {
+    if (hash  && isSuccess) {
       if (isSuccess && !prevIsSuccessRef.current) {
         prevIsSuccessRef.current = true;
         addRecentTransaction({

@@ -31,8 +31,8 @@ const useResolveDispute = ({ orderID,winner,seller,buyer,token }: {orderID:strin
 		try {
 			setIsLoading(true);
 			const tx = await resolveDispute(orderID,new PublicKey(seller),new PublicKey(buyer),new PublicKey(winner),new PublicKey(token));
-			const finalTx = await sendTransactionWithShyft(tx,true);
-			if(finalTx !== undefined){
+			const finalTx = await sendTransactionWithShyft(tx,true,orderID);
+			if(finalTx !== undefined  && finalTx !== null){
 				setIsLoading(false);
 				setIsSuccess(true);
 				updateData({hash: finalTx} );

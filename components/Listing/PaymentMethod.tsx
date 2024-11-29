@@ -34,7 +34,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			} else {
 				if(list?.id){
 					const updatedBankList=listPaymentMethods?.map((value)=>value.bank);
-					console.log("Here is updated bank list",updatedBankList);
+					//console.log("Here is updated bank list",updatedBankList);
 					// @ts-ignore
 					updateList({...list,...{ step: list.step + 1, banks: updatedBankList }});
 				}else{
@@ -181,7 +181,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	});
 	
 	const listPaymentMethods = [...existing, ...newPaymentMethods];
-	console.log('Payment methods list',listPaymentMethods);
+	//('Payment methods list',listPaymentMethods);
 	return (
 		<StepLayout
 			onProceed={paymentMethodCreation === undefined && paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id).length > 0 ? onProceed : undefined}

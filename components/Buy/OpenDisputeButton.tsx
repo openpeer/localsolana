@@ -45,7 +45,7 @@ const OpenDisputeButton = ({
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [disputeConfirmed, setDisputeConfirmed] = useState(false)
-  console.log(order,isBuyer,isSeller,connectedAddress);
+  //console.log(order,isBuyer,isSeller,connectedAddress);
 
   const { balance, loadingBalance, error } = useBalance(
     isBuyer?buyer.address:seller.address,
@@ -117,7 +117,7 @@ const OpenDisputeButton = ({
       setModalOpen(true);
       return;
     }
-	console.log("Balance is ",balance);
+	//console.log("Balance is ",balance);
     if (disputeFee > (balance || 0)) {
       toast.error(`You need ${disputeFee} SOL to open a dispute`, {
         theme: "dark",

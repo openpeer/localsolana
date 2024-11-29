@@ -32,10 +32,10 @@ const useGaslessMarkAsPaid = ({ orderID,buyer,seller }: {orderID:string,buyer:st
 		try {
 			
 			setIsLoading(true);
-			console.log('order id',orderID);
+			//console.log('order id',orderID);
 			const tx = await markAsPaid(orderID,new PublicKey(buyer),new PublicKey(seller));
-			const finalTx = await sendTransactionWithShyft(tx,true);
-			if(finalTx !== undefined){
+			const finalTx = await sendTransactionWithShyft(tx,true,orderID);
+			if(finalTx !== undefined && finalTx !== null){
 				setIsLoading(false);
 				setIsSuccess(true);
 				updateData({hash: finalTx} );
