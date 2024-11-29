@@ -31,7 +31,7 @@ const TokenSelect = ({
 		})
 			.then((res) => res.data.data)
 			.then((data) => {
-				console.log(data);
+				//console.log(data);
 				const source: Token[] = minimal ? data.map((t: Token) => ({ ...t, ...{ name: t.symbol } })) : data;
 				if (allTokens) {
 					// remove symbol duplicates from the source array

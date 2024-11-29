@@ -1,93 +1,125 @@
+// hooks/transactions/escrow/useGaslessEscrow.ts
+
 /* eslint-disable no-mixed-spaces-and-tabs */
-import { useState } from 'react';
-import { useAccount } from 'hooks';
-import { toast } from 'react-toastify';
-import { UseGaslessEscrowFundsProps } from '../types';
-import { PublicKey } from '@solana/web3.js';
-import useShyft from '../useShyft';
-import useLocalSolana from '../useLocalSolana';
+import { useState } from "react";
+import { useAccount } from "hooks";
+import { toast } from "react-toastify";
+import { UseGaslessEscrowFundsProps } from "../types";
+import { PublicKey } from "@solana/web3.js";
+import useShyft from "../useShyft";
+import useLocalSolana from "../useLocalSolana";
+import useHelius from "../useHelius"; // Added Helius integration
 
 interface Data {
-	hash?: string;
+  hash?: string;
 }
 
 const useGaslessEscrow = ({
-	contract,
-	orderID,
-	buyer,
-	seller,
-	token,
-	amount,
-	instantEscrow,
-	sellerWaitingTime
+  contract,
+  orderID,
+  buyer,
+  seller,
+  token,
+  amount,
+  instantEscrow,
+  sellerWaitingTime,
 }: UseGaslessEscrowFundsProps) => {
-	const [data, updateData] = useState<Data>({});
-	const [isSuccess, setIsSuccess] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
+  const [data, updateData] = useState<Data>({});
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-	const { address } = useAccount();
-	const {depositFundsEscrow,getEscrowPDA} = useLocalSolana();
+  const { address } = useAccount();
+  const { depositFundsEscrow, getEscrowPDA } = useLocalSolana();
+  const { getAccountInfo } = useHelius(); // Using Helius for account validation
+  const { shyft, sendTransactionWithShyft } = useShyft();
 
-	const { shyft,sendTransactionWithShyft } = useShyft();
+  if (!shyft) {
+    console.error("Shyft not initialized");
+    return {
+      isFetching: false,
+      gaslessEnabled: false,
+      isSuccess,
+      isLoading,
+      data,
+    };
+  }
 
-	if (shyft === undefined) {
-		return { isFetching: true, isSuccess, isLoading, data };
-	}
+  const escrowFunds = async () => {
+    try {
+      setIsLoading(true);
 
-	if (shyft === null ) {
-		return { isFetching: false, gaslessEnabled: false, isSuccess, isLoading, data };
-	}
+      const escrowPDA = await getEscrowPDA(orderID);
+      if (!escrowPDA) {
+        console.error("Error retrieving escrow PDA");
+        setIsLoading(false);
+        setIsSuccess(false);
+        return;
+      }
 
-	const escrowFunds = async () => {
-		try {
-			const partner = PublicKey.default.toBase58();
-			const escrow = await getEscrowPDA(orderID);
-			if(!escrow){
-				console.error('Error Funding escrow');
-				setIsLoading(false);
-				setIsSuccess(false);
-				return
-			}
-			console.log('Escrow is ',escrow.toBase58(),orderID,seller);
-			const  tx = await depositFundsEscrow(
-				amount,
-				new PublicKey(seller),
-				new PublicKey(token.address),orderID,token.decimals
-		  );
-		  if(tx ===undefined){
-			setIsLoading(false);
-			setIsSuccess(false);
-			return;
-		}
-			setIsLoading(true);
-			console.log('Deposit Transaction');
-			const finalTx =await sendTransactionWithShyft(tx,true)
-			if(finalTx !==undefined){
-				setIsLoading(false);
-				setIsSuccess(true);
-				updateData({hash:escrow.toString()});
-			}else{
-				console.error('Error Funding escrow');
-				setIsLoading(false);
-				setIsSuccess(false);
-			}
-			
-		} catch (error: any) {
-			toast.error(error.message, {
-				theme: 'dark',
-				position: 'top-right',
-				autoClose: 5000,
-				hideProgressBar: true,
-				closeOnClick: true,
-				pauseOnHover: true,
-				draggable: false,
-				progress: undefined
-			});
-			setIsLoading(false);
-			setIsSuccess(false);
-		}
-	};
-	return { isFetching: false, gaslessEnabled: true, isLoading, isSuccess, data, escrowFunds };
+      //console.log("Escrow PDA:", escrowPDA.toBase58());
+
+      // Validate Escrow Account Existence using Helius
+      const escrowAccountInfo = await getAccountInfo(escrowPDA.toBase58());
+      if (!escrowAccountInfo) {
+        console.error("Escrow account does not exist");
+        setIsLoading(false);
+        setIsSuccess(false);
+        return;
+      }
+
+      const transaction = await depositFundsEscrow(
+        amount,
+        new PublicKey(seller),
+        new PublicKey(token.address),
+        orderID,
+        token.decimals
+      );
+
+      if (!transaction) {
+        console.error("Failed to create escrow deposit transaction");
+        setIsLoading(false);
+        setIsSuccess(false);
+        return;
+      }
+
+      //console.log("Deposit Transaction Prepared:", transaction);
+
+      // Use Shyft for transaction relaying
+      const finalTx = await sendTransactionWithShyft(transaction, true,orderID);
+      if (finalTx) {
+        //console.log("Transaction Successful:", finalTx);
+        updateData({ hash: escrowPDA.toBase58() });
+        setIsSuccess(true);
+      } else {
+        console.error("Error relaying transaction through Shyft");
+        setIsSuccess(false);
+      }
+    } catch (error: any) {
+      toast.error(error.message, {
+        theme: "dark",
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: false,
+        progress: undefined,
+      });
+      console.error("Error during escrow funding process:", error);
+      setIsSuccess(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    isFetching: false,
+    gaslessEnabled: true,
+    isLoading,
+    isSuccess,
+    data,
+    escrowFunds,
+  };
 };
 
 export default useGaslessEscrow;

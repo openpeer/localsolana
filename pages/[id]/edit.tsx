@@ -61,8 +61,8 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 
 	useEffect(() => {
 
-		console.log('useEffect triggered');
-		console.log('user:', user);
+		//console.log('useEffect triggered');
+		//console.log('user:', user);
 
 		if (user) {
 			const newState = {
@@ -98,7 +98,7 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 	}, [user]);
 
 	useEffect(() => {
-		console.log('Errors updated:', errors);
+		//console.log('Errors updated:', errors);
 
 		// Update localErrors when errors from useUserProfile change
 		setLocalErrors(errors);
@@ -108,7 +108,7 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 		(field: string, value: string) => {
 
 			if (user && user[field as keyof User] === value) {
-				console.log(`No change detected for field: ${field}`);
+				//console.log(`No change detected for field: ${field}`);
 				return;
 			}
 
@@ -128,7 +128,7 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 
 				(updateProfile?.(updatedProfile, false) ?? Promise.resolve())
 					.then(() => {
-						console.log(`Field ${field} updated successfully`);
+						//console.log(`Field ${field} updated successfully`);
 						setLocalErrors((prev) => {
 							const newErrors = { ...prev };
 							delete newErrors[field as keyof Errors];
@@ -165,11 +165,11 @@ const EditProfile = ({ id }: { id: `0x${string}` }) => {
 	}, []);
 
 	if (user === undefined) {
-		console.log('User is undefined, showing Loading component');
+		//console.log('User is undefined, showing Loading component');
 		return <Loading />;
 	}
 	if (user === null || id !== address) {
-		console.log('User is null or id does not match address, showing ErrorPage component');
+		//console.log('User is null or id does not match address, showing ErrorPage component');
 		return <ErrorPage statusCode={404} />;
 	}
 

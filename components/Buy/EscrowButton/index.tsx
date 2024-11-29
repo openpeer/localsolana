@@ -33,7 +33,7 @@ const EscrowButton = ({
   if (loadingContract || fee === undefined) return <></>;
 
   const needsToDeploy = !instantEscrow || !sellerContract;
-  console.log(needsToDeploy,sellerContract,instantEscrow);
+  //console.log(needsToDeploy,sellerContract,instantEscrow);
 
   return (
     <span className="w-full">

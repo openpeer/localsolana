@@ -24,9 +24,9 @@ export const useAllTokenBalance = (walletAddress: string, watch?: boolean) => {
             setLoading(false);
             return
         }
-        console.log("Here is my balance",);
+        ////console.log("Here is my balance",);
         const balance = await getAllTokenBalance(walletAddress);
-        console.log("Here is my balance",balance);
+        ////console.log("Here is my balance",balance);
         setBalances(balance);
         setLoading(false);
 
@@ -50,7 +50,7 @@ export const useAllTokenBalance = (walletAddress: string, watch?: boolean) => {
 
     
   }, [walletAddress,connection]);
-  // console.log("Here is my balance",balance, loadingBalance, error);
+  // //console.log("Here is my balance",balance, loadingBalance, error);
 
   return { balances, loadingBalance, error };
 };

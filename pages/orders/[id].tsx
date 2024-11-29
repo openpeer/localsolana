@@ -52,12 +52,12 @@ const OrderPage = ({ id }: { id: string }) => {
         fetchOrder();
     }, [id, token, order?.status]);
 
-    console.log('Socket',socketRef);
+    //console.log('Socket',socketRef);
     useEffect(() => {
         const setupChannel = async () => {
             
             if (!token) return;
-            console.log('Socket on',process.env.NEXT_PUBLIC_API_WS_URL);
+            //console.log('Socket on',process.env.NEXT_PUBLIC_API_WS_URL);
             if (!socketRef.current) {
                 socketRef.current = io(`${process.env.NEXT_PUBLIC_API_WS_URL}`, {
                     query: { token },
@@ -65,19 +65,19 @@ const OrderPage = ({ id }: { id: string }) => {
                 },);
     
                 socketRef.current.on('connect', () => {
-                    console.log('Connected to socket server');
+                    //console.log('Connected to socket server');
                     socketRef.current.emit('subscribeToOrder', { channel: 'OrdersChannel',
                         orderId: id });
                 });
     
                 socketRef.current.on('orderUpdate', (response: any) => {
-                    console.log('updatedOrder', response);
+                    //console.log('updatedOrder', response);
                     const  updatedOrder  = (response);
                     setOrder(snakecaseKeys({ ...updatedOrder, step: steps[getStatusString(updatedOrder.status)] },{deep: true}));
                 });
     
                 socketRef.current.on('disconnect', () => {
-                    console.log('Disconnected from socket server');
+                    //console.log('Disconnected from socket server');
                 });
             }
         };

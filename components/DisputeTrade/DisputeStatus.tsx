@@ -197,11 +197,11 @@ const DisputeStatus = ({ order, address }: DisputeStatusParams) => {
 				(!resolved) 
 				? 
 				<div className="mt-8">
-					{isBuyer ? (
+					{/* {isBuyer ? (
 						<CancelOrderButton order={order} title="Close Dispute" outlined={false} />
 					) : (
 						<ReleaseFundsButton order={order} title="Close Dispute" dispute />
-					)}
+					)} */}
 				</div>
 				: 
 				<>Local Solana Arbitration resolved dispute.</>

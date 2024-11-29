@@ -1,3 +1,5 @@
+// hooks/transactions/deposit/useGaslessDepositFunds.ts
+
 import {
   PublicKey,
   Connection,
@@ -11,9 +13,11 @@ import useLocalSolana from "../useLocalSolana";
 import { web3 } from "@coral-xyz/anchor";
 import useShyft from "../useShyft";
 //import { Shyft } from '@shyft-to/js';
+import useHelius from "../useHelius";
+
 
 interface Data {
-  hash?: string;
+  hash?: string | null;
 }
 
 const useGaslessDepositFunds = ({
@@ -27,6 +31,7 @@ const useGaslessDepositFunds = ({
 
   const { primaryWallet } = useDynamicContext();
   const { sendTransactionWithShyft, shyft } = useShyft();
+  const { getAccountInfo } = useHelius()
   const { depositFundsToLocalSolana } = useLocalSolana();
 
   if (!primaryWallet?.address) {
@@ -41,46 +46,51 @@ const useGaslessDepositFunds = ({
 
   const depositFunds = async () => {
     if (!primaryWallet?.address) {
-        console.error("Deposit failed");
+        console.error("Deposit failed: Primary wallet address not available");
         setIsSuccess(false);
         setIsLoading(false);
-        
-        return;}
+        return;
+      }
 
     setIsLoading(true);
-    console.log("In Deposit");
+    //console.log("Initiating deposit");
+
     try {
-      if (token.address == PublicKey.default.toBase58()) {
-        const transaction = new web3.Transaction().add(
+      const senderAccountInfo = await getAccountInfo(primaryWallet.address);
+      if (!senderAccountInfo) {
+        console.error("Sender account not found");
+        setIsSuccess(false);
+        setIsLoading(false);
+        return;
+      }
+
+      if (token.address === PublicKey.default.toBase58()) {
+        const transaction = new Transaction().add(
           SystemProgram.transfer({
             fromPubkey: new PublicKey(primaryWallet.address),
             toPubkey: new PublicKey(contract),
             lamports: Number(amount),
           })
         );
-        if (shyft == null) {
-          console.error("Deposit failed");
+
+        // Shyft used only for transaction relaying
+        if (!shyft) {
+          console.error("Shyft not initialized for transaction relaying");
           setIsSuccess(false);
           setIsLoading(false);
           return;
-        } else {
-          try {
-            const finalTx = await sendTransactionWithShyft(transaction,true);
-            if (finalTx !== undefined) {
-              setIsLoading(false);
-              setIsSuccess(true);
-              updateData({ hash: finalTx });
-            } else {
-              console.error("error", finalTx);
-              setIsLoading(false);
-              setIsSuccess(false);
-            }
-          } catch (err) {
-            console.error("error", err);
-            setIsLoading(false);
-            setIsSuccess(false);
-          }
         }
+
+        const finalTx = await sendTransactionWithShyft(transaction,true);
+        //console.log('here is final result', finalTx);
+        if (finalTx) {
+          setIsSuccess(true);
+          updateData({ hash: finalTx });
+        } else {
+          console.error("Transaction relaying failed", finalTx);
+          setIsSuccess(false);
+        }
+
       } else {
         const tx = await depositFundsToLocalSolana(
           amount,
@@ -88,32 +98,27 @@ const useGaslessDepositFunds = ({
           new PublicKey(contract),
           new PublicKey(token.address)
         );
-        if (tx === undefined || shyft == null) {
-          console.error("Deposit failed,", tx, shyft);
+
+        if (!tx || !shyft) {
+          console.error("Deposit failed: Missing transaction or Shyft instance", tx, shyft);
           setIsSuccess(false);
           setIsLoading(false);
           return;
-        } else {
-          if (tx == null) {
-            console.error("error", tx);
-            setIsLoading(false);
-            setIsSuccess(false);
-            return;
-          }
+        }
+
           const finalTx = await sendTransactionWithShyft(tx,true);
-          if (finalTx !== undefined) {
-            setIsLoading(false);
+          //console.log('here is final result', finalTx);
+          if (finalTx) {
             setIsSuccess(true);
-            updateData({ hash: finalTx || "" });
+            updateData({ hash: finalTx });
           } else {
-            console.error("error", finalTx);
-            setIsLoading(false);
+            console.error("Transaction relaying failed", finalTx);
             setIsSuccess(false);
           }
         }
-      }
+
     } catch (error) {
-      console.error("Deposit failed", error);
+      console.error("Deposit operation failed", error);
       setIsSuccess(false);
       setIsLoading(false);
     } finally {

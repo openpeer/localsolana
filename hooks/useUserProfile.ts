@@ -46,7 +46,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
 
 				// delete
 				const token = getAuthToken();
-        console.log('Auth Token:', token);
+        //console.log('Auth Token:', token);
 
         try {
             const res = await axios.get(`/api/user_profiles/${address}`, {
@@ -124,7 +124,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
         async (profile: Partial<User>, showNotification = true) => {
 
 						const token = getAuthToken();
-        		console.log('Auth Token:', token);
+        		////console.log('Auth Token:', token);
 
             if (!getAuthToken) return;
             const validationErrors = validateProfile(profile);
@@ -137,7 +137,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
                 return;
             }
 
-            console.log('Updating profile:', profile);
+            //console.log('Updating profile:', profile);
 
             try {
                 setIsUpdating(true);
@@ -160,7 +160,7 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
                     }
                 });
 
-								console.log('Sending request to backend:', userProfileData);
+								//console.log('Sending request to backend:', userProfileData);
 
                 const result = await axios.patch(`/api/user_profiles/${address}`, {
                     user_profile: userProfileData
@@ -171,10 +171,10 @@ const useUserProfile = ({ onUpdateProfile }: { onUpdateProfile?: (user: User) =>
                     }
                 });
 
-                console.log('Result:', result);
+                //console.log('Result:', result);
 
                 const responseData: UserResponse = result.data;
-                console.log('Response data:', responseData);
+                //console.log('Response data:', responseData);
 
                 if (result.status !== 200) {
                     if (result.status === 422) {
