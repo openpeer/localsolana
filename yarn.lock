@@ -8559,10 +8559,10 @@ tailwindcss@3.3.3:
     resolve "^1.22.2"
     sucrase "^3.32.0"
 
-talkjs@^0.30.0:
-  version "0.30.0"
-  resolved "https://registry.npmjs.org/talkjs/-/talkjs-0.30.0.tgz"
-  integrity sha512-+dpE3/oaLrDw16wQpSIPkzvKBQebyZAQQaxvL4ubE/OVZC5jY2SuHxHmzjnzvkJLW/I5Ij6iG91IRaASbo5k3g==
+talkjs@^0.31.0:
+  version "0.31.0"
+  resolved "https://registry.yarnpkg.com/talkjs/-/talkjs-0.31.0.tgz#d0b92538a5902d5ce3c3e6dd65b1666ab30b5f27"
+  integrity sha512-xa2GuzO1ty/CtIGXERDu9al3xj53/g1GyG+jwnEVTm8fSSpda8xCTWJoN/KIDx4y+EfGEXRh214pYX3v8LhLyg==
 
 tapable@^2.2.0:
   version "2.2.1"
