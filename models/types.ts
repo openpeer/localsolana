@@ -74,7 +74,9 @@ export interface List {
 	accept_only_verified: boolean;
 	escrow_type: 'manual' | 'instant';
 	contract: string | undefined;
+	token_spot_price?: number;
 	price_source: PriceSource;
+	calculatedPrice: number;
 }
 
 export interface AccountField {

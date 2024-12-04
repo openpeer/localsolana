@@ -1,4 +1,3 @@
-
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { countries } from 'models/countries';
 import { List } from 'models/types';
@@ -64,6 +63,13 @@ const BuyButton = ({ fiatAmount, tokenAmount, list }: BuyButtonProps) => {
 			/>
 		</Link>
 	);
+};
+
+const getDisplayName = (seller: any) => {
+	if (seller.name) return seller.name;
+	if (seller.email) return seller.email;
+	// If no name or email, show shortened wallet address
+	return `${seller.address.slice(0, 4)}...${seller.address.slice(-4)}`;
 };
 
 const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTableProps) => {
@@ -146,18 +152,21 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 						fiat_currency: { symbol: fiatSymbol, country_code: countryCode } = {},
 						limit_min: min,
 						limit_max: max,
-						price,
+						calculatedPrice,
+						margin_type: marginType,
+						margin,
 						payment_methods: paymentMethods,
-						//chain_id: chainId,
-						//token_spot_price: tokenSpotPrice,
 						payment_time_limit: paymentTimeLimit,
 						escrow_type: escrowType,
 						type,
 						accept_only_verified: acceptOnlyVerified
 					} = list;
+
+					const effectivePrice = calculatedPrice;
+
 					// @ts-ignore
 
-					const banks = type === 'BuyList' ? list.bank : paymentMethods?.map((pm) => pm.bank);
+					const banks = type === 'BuyList' ? list.banks : paymentMethods?.map((pm) => pm.bank) || [];
 					const { address: sellerAddress, name } = seller;
 					const isSeller = primaryWallet && sellerAddress === address;
 
@@ -203,7 +212,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 													<Avatar user={seller} className="w-5 md:w-10 aspect-square" />
 													<div className="flex flex-col">
 														<div className="pl-1 md:pl-2 text-sm text-gray-900 text-ellipsis overflow-hidden">
-															{name || sellerAddress}
+															{getDisplayName(seller)}
 														</div>
 														{seller.online !== null && (
 															<div className="pl-1 md:pl-2 text-sm">
@@ -243,7 +252,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 															<span className="mb-2">
 																<div className="flex flex-row items-center">
 																	<span className="pr-1 text-sm text-gray-800">
-																		{fiatSymbol} {Number(price).toFixed(2)} per
+																		{fiatSymbol} {effectivePrice.toFixed(2)} per
 																	</span>
 																	<span className="text-sm text-gray-800">
 																		{symbol}
@@ -347,7 +356,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 									<div className="flex flex-row space-x-2">
 										<Flag name={countries[countryCode!]} size={24} />
 										<span className="flex flex-col">
-											{fiatSymbol} {Number(price).toFixed(2)} per {symbol}
+											{fiatSymbol} {effectivePrice.toFixed(2)} per {symbol}
 											{priceDifferencePercentage <= 5 && (
 												<div
 													className={`flex flex-row items-center justify-start space-x-1 text-${

@@ -23,6 +23,7 @@ import { useContractRead } from "@/hooks/transactions/useContractRead";
 import { watch } from "fs";
 import FriendlySelector from 'components/FriendlySelector';
 import FriendlyTime from 'components/FriendlyTime';
+import { priceSourceToNumber } from 'constants/priceSourceMap';
 
 
 const QuillEditor = dynamic(() => import("react-quill"), { ssr: false });
@@ -59,7 +60,6 @@ const Details = ({ list, updateList }: ListStepProps) => {
     const escrowVal = escrowType === "manual" ? 0 : 1;
 
     if (isAuthenticated) {
-      // need to add data inside the body
       const result = await fetch(
         list.id ? `/api/list_management/${list.id}` : "/api/createList",
         {
@@ -72,9 +72,9 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 marginType: list.marginType === "fixed" ? 0 : 1,
                 seller_address: address,
                 escrowType: escrowVal,
-                price: list.margin,
+                price: list.marginType === "fixed" ? list.margin : null, 
                 bank_id: 16,
-                priceSource: (list.currency as FiatCurrency)?.default_price_source
+                priceSource: priceSourceToNumber[list.priceSource as string] || 0
               },
               { deep: true }
             )
@@ -85,6 +85,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
           },
         }
       );
+
       const apiResult = await result.json();
       if (apiResult!.data!.id) {
         router.push(`/${address}`);

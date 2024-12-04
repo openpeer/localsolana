@@ -23,7 +23,7 @@ const Ads = () => {
 		})
 		.then((res) => res.json())
 		.then((data) => {
-			setLists(data.data);
+			setLists(data.data.data);
 		});
 	}, [address]);
 

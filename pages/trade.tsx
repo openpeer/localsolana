@@ -15,6 +15,14 @@ interface PaginationMeta {
 	total_count: number;
 }
 
+// Fix the interface to match the API response structure
+interface ListsResponse {
+	data: {
+		data: List[];
+		meta: PaginationMeta;
+	}
+}
+
 const HomePage = () => {
 	const [buySideLists, setBuySideLists] = useState<List[]>([]);
 	const [sellSideLists, setSellSideLists] = useState<List[]>([]);
@@ -25,49 +33,58 @@ const HomePage = () => {
 	const [filters, setFilters] = useState<SearchFilters>({} as SearchFilters);
 	const [showFilters, setShowFilters] = useState(false);
 	const [needToReset, setNeedToReset] = useState(false);
+	const [hideLowAmounts, setHideLowAmounts] = useState(false);
 
 	const { page, onNextPage, onPrevPage, resetPage } = usePagination();
 
 	const performSearch = async (selectedPage: number) => {
-		setLoading(true);
-		if (Object.keys(filters).length === 0) return;
+		try {
+			setLoading(true);
+			if (Object.keys(filters).length === 0) return;
 
-		const params: { [key: string]: string | undefined } = {
-			page: selectedPage.toString(),
-			type: type === 'Buy' ? 'SellList' : 'BuyList',
-			amount: filters.amount ? filters.amount.toString() : undefined,
-			currency: filters.currency ? filters.currency.id.toString() : undefined,
-			payment_method: filters.paymentMethod ? filters.paymentMethod.id.toString() : undefined,
-			token: filters.token ? filters.token.id.toString() : undefined,
-			fiat_amount: filters.fiatAmount ? filters.fiatAmount.toString() : undefined,
-			//chain_id: filters.chain ? filters.chain : undefined
-		};
+			const params: { [key: string]: string | undefined } = {
+				page: selectedPage.toString(),
+				type: type === 'Buy' ? 'SellList' : 'BuyList',
+				amount: filters.amount ? filters.amount.toString() : undefined,
+				currency: filters.currency ? filters.currency.id.toString() : undefined,
+				payment_method: filters.paymentMethod ? filters.paymentMethod.id.toString() : undefined,
+				token: filters.token ? filters.token.id.toString() : undefined,
+				fiat_amount: filters.fiatAmount ? filters.fiatAmount.toString() : undefined,
+				//chain_id: filters.chain ? filters.chain : undefined
+			};
 
-		const search = Object.keys(params)
-			.filter((key) => !!params[key])
-			.reduce((obj, key) => {
-				const newObject = obj;
-				newObject[key] = params[key] as string;
-				return newObject;
-			}, {} as { [key: string]: string });
+			const search = Object.keys(params)
+				.filter((key) => !!params[key])
+				.reduce((obj, key) => {
+					const newObject = obj;
+					newObject[key] = params[key] as string;
+					return newObject;
+				}, {} as { [key: string]: string });
 
-		const searchParams = new URLSearchParams(search);
-		fetch(`/api/getLists?${searchParams.toString()}`, {
+			const searchParams = new URLSearchParams(search);
+			const response = await fetch(`/api/getLists?${searchParams.toString()}`, {
 				headers: {
 					Authorization: `Bearer ${getAuthToken()}`
 				}
-			})
-				.then((res) => res.json())
-				.then((response) => {
-					const { data,meta }:{data:List[];meta:PaginationMeta} = response?.data;
-					setPaginationMeta(meta);
-					const toBuyers = data.filter((list) => list.type === 'SellList');
-					const toSellers = data.filter((list) => list.type === 'BuyList');
-					setSellSideLists(toSellers);
-					setBuySideLists(toBuyers);
-					setLists(toBuyers);
-					setLoading(false);
-				});
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to fetch lists');
+			}
+
+			const data: ListsResponse = await response.json();
+			setPaginationMeta(data.data.meta);
+			const toBuyers = data.data.data.filter((list: List) => list.type === 'SellList');
+			const toSellers = data.data.data.filter((list: List) => list.type === 'BuyList');
+			setSellSideLists(toSellers);
+			setBuySideLists(toBuyers);
+			setLists(type === 'Buy' ? toBuyers : toSellers);
+		} catch (error) {
+			console.error('Error fetching lists:', error);
+			// Add error state handling if needed
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	useEffect(() => {
@@ -129,7 +146,12 @@ const HomePage = () => {
 					<Loading />
 				) : lists.length > 0 ? (
 					<div className="py-4">
-						<ListsTable lists={lists} hideLowAmounts />
+						<ListsTable 
+							lists={lists} 
+							hideLowAmounts={hideLowAmounts}
+							fiatAmount={filters.fiatAmount}
+							tokenAmount={filters.amount}
+						/>
 						{!!lists.length && !!paginationMeta && paginationMeta.total_pages > 1 && (
 							<Pagination
 								length={lists.length}

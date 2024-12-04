@@ -73,8 +73,18 @@ const MarginSwitcher = ({
 	listPriceSource,
 	onUpdatePriceSource
 }: Props) => {
-	const [priceSource, setPriceSource] = useState<PriceSource>(listPriceSource || currency.default_price_source);
+	console.log('listPriceSource:', listPriceSource); // Debug
+	console.log('priceSources:', priceSources); // Debug
+
+	const [priceSource, setPriceSource] = useState<PriceSource>(
+		// If listPriceSource exists and is valid, use it, otherwise use default
+		listPriceSource && priceSources.some(p => p.api_id === listPriceSource)
+				? listPriceSource 
+				: currency.default_price_source
+);
+
 	const selectPriceSource = (ps: OptionPriceSource) => {
+		console.log('selecting new price source:', ps.api_id); // Debug
 		setPriceSource(ps.api_id);
 		onUpdatePriceSource(ps.api_id);
 	};
@@ -113,7 +123,7 @@ const MarginSwitcher = ({
 					<Select
 						label="Market Price Source"
 						options={priceSources}
-						selected={priceSources.find((p) => p.api_id === priceSource)}
+						selected={priceSources.find((p) => p.api_id === priceSource) || priceSources[0]}
 						onSelect={(o) => selectPriceSource(o as OptionPriceSource)}
 					/>
 				)}

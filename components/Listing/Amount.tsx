@@ -4,204 +4,217 @@ import { useFormErrors } from 'hooks';
 import { Errors, Resolver } from 'models/errors';
 import { FiatCurrency, List, Token } from 'models/types';
 import React, { useEffect, useState } from 'react';
-
+import { COINGECKO_SUPPORTED_CURRENCIES, CoingeckoSupportedCurrency } from 'constants/coingeckoSupportedCurrencies';
+import { minkeApi } from '@/pages/api/utils/utils';
 import { ListStepProps } from './Listing.types';
 import StepLayout from './StepLayout';
-import axios from 'axios';
-import { minkeApi } from '@/pages/api/utils/utils';
 
 const Amount = ({ list, updateList }: ListStepProps) => {
-	const {
-		token,
-		currency,
-		totalAvailableAmount,
-		limitMin,
-		limitMax,
-		marginType = 'fixed',
-		margin: savedMargin,
-		type,
-		priceSource
-	} = list;
-	
-	const percentage = marginType === 'percentage';
-	const [percentageMargin, setPercentageMargin] = useState<number>(percentage ? savedMargin || 1 : 1);
-	const [fixedMargin, setFixedMargin] = useState<number | undefined>(percentage ? undefined : savedMargin);
-	const [price, setPrice] = useState<number | undefined>();
+    const {
+        token,
+        currency,
+        totalAvailableAmount,
+        limitMin,
+        limitMax,
+        marginType = 'fixed',
+        margin: savedMargin,
+        type,
+        priceSource
+    } = list;
+    
+    const percentage = marginType === 'percentage';
+    const [percentageMargin, setPercentageMargin] = useState<number>(percentage ? savedMargin || 1 : 1);
+    const [fixedMargin, setFixedMargin] = useState<number | undefined>(percentage ? undefined : savedMargin);
+    const [price, setPrice] = useState<number | undefined>();
 
-	const { errors, clearErrors, validate } = useFormErrors();
+    const { errors, clearErrors, validate } = useFormErrors();
 
-	const margin = percentage ? percentageMargin : fixedMargin;
+    const margin = percentage ? percentageMargin : fixedMargin;
 
-	const updateValue = (obj: any) => {
-		clearErrors(Object.keys(obj));
-		updateList({ ...list, ...obj });
-	};
+    const updateValue = (obj: any) => {
+        clearErrors(Object.keys(obj));
+        updateList({ ...list, ...obj });
+    };
 
-	const updateMargin = (m: number) => {
-		clearErrors(['margin']);
-		if (percentage) {
-			setPercentageMargin(m);
-		} else {
-			setFixedMargin(m);
-		}
-		updateValue({ margin: m });
-	};
+    const updateMargin = (m: number) => {
+        clearErrors(['margin']);
+        if (percentage) {
+            setPercentageMargin(m);
+        } else {
+            setFixedMargin(m);
+        }
+        updateValue({ margin: m });
+    };
 
-	const resolver: Resolver = () => {
-		const total = totalAvailableAmount || 0;
-		const min = limitMin || 0;
-		const max = limitMax || 0;
+    const resolver: Resolver = () => {
+        const total = totalAvailableAmount || 0;
+        const min = limitMin || 0;
+        const max = limitMax || 0;
 
-		const error: Errors = {};
+        const error: Errors = {};
 
-		const { minimum_amount: minimumAmount } = token as Token;
+        const { minimum_amount: minimumAmount } = token as Token;
 
-		if (!!minimumAmount && total < Number(minimumAmount)) {
-			error.totalAvailableAmount = `Should be bigger or equals to ${minimumAmount} ${token!.name}`;
-		}
+        if (!!minimumAmount && total < Number(minimumAmount)) {
+            error.totalAvailableAmount = `Should be bigger or equals to ${minimumAmount} ${token!.name}`;
+        }
 
-		if (total <= 0) {
-			error.totalAvailableAmount = 'Should be bigger than 0';
-		}
+        if (total <= 0) {
+            error.totalAvailableAmount = 'Should be bigger than 0';
+        }
 
-		if (!!limitMax && min > max) {
-			error.limitMin = 'Should be smaller than the max';
-		}
+        if (!!limitMax && min > max) {
+            error.limitMin = 'Should be smaller than the max';
+        }
 
-		const fiatTotal = total * price!;
+        const fiatTotal = total * price!;
 
-		if (!!limitMin && min > fiatTotal) {
-			error.limitMin = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${
-				currency!.name
-			}`;
-		}
+        if (!!limitMin && min > fiatTotal) {
+            error.limitMin = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
+        }
 
-		if (!percentage && (margin || 0) <= 0) {
-			error.margin = 'Should be bigger than zero';
-		}
+        if (!percentage && (margin || 0) <= 0) {
+            error.margin = 'Should be bigger than zero';
+        }
 
-		return error;
-	};
+        return error;
+    };
 
-	const onProceed = () => {
-		if (validate(resolver)) {
-			updateValue({ step: list.step + 1 });
-		}
-	};
+    useEffect(() => {
+        if (!token || !currency) return;
 
-	const onSelectType = (t: List['margin_type']) => {
-		const m = t === 'fixed' ? fixedMargin : percentageMargin;
-		updateValue({ marginType: t, margin: m });
-	};
+        const currencyLower = currency.name.toLowerCase() as CoingeckoSupportedCurrency;
+        const isCoingeckoSupported = COINGECKO_SUPPORTED_CURRENCIES.includes(currencyLower);
+        
+        // If currency not supported by Coingecko, force Binance price source
+        if (!isCoingeckoSupported && !priceSource?.startsWith('binance')) {
+            updateValue({ priceSource: 'binance_median' });
+            return;
+        }
 
-	useEffect(() => {
-		if (!token || !currency) return;
-		const { coingecko_id: coingeckoId } = token as Token;
-		let tokenName = token.name;
-		if(tokenName==='USDC')tokenName='usd-coin';
-		else if(tokenName==='USDT')tokenName='tether';
+        if (priceSource?.startsWith('binance')) {
+            // Convert type from "BuyList"/"SellList" to "BUY"/"SELL"
+            const binanceType = type.replace('List', '').toUpperCase();
+            
+            // Binance pricing
+            minkeApi.get(`/api/prices`, {
+                params: {
+                    token: token.name.toUpperCase(),
+                    fiat: currency.name.toUpperCase(),
+                    source: priceSource,
+                    type: binanceType  // Now sends "BUY" instead of "BUYLIST"
+                }
+            })
+            .then((res) => res.data.data)
+            .then((data) => {
+                if (Object.keys(data).length > 0) {
+                    setPrice(data[token.name][currency.name]);
+                }
+            });
+        } else {
+            // Coingecko pricing
+            const { coingecko_id: coingeckoId } = token as Token;
+            let tokenName = token.name;
+            if (tokenName === 'USDC') tokenName = 'usd-coin';
+            else if (tokenName === 'USDT') tokenName = 'tether';
 
-		minkeApi.get(`/api/prices?token=${coingeckoId}&fiat=${currency.name.toLowerCase()}`)
-			.then((res) => res.data.data)
-			.then((data) => {
-				if(Object.keys(data).length>0) setPrice(data[coingeckoId || token.name][currency.name.toLowerCase()]);
+            minkeApi.get(`/api/prices?token=${coingeckoId}&fiat=${currency.name.toLowerCase()}`)
+                .then((res) => res.data.data)
+                .then((data) => {
+                    if (Object.keys(data).length > 0) {
+                        setPrice(data[coingeckoId || token.name][currency.name.toLowerCase()]);
+                    }
+                });
+        }
+    }, [token, currency, priceSource, type]);
 
-				// need to change this
-				// const firstKey = Object.keys(data[token.name])[0]; // Get the first key
-				// const value = data.tether[firstKey];				
-				// setPrice(value);
-			});
-	}, [token, currency, priceSource, type]);
+    useEffect(() => {
+        if (price) {
+            if (fixedMargin === undefined) {
+                setFixedMargin(price);
+                if (!percentage) updateMargin(price);
+            }
+        }
+    }, [fixedMargin, percentage, price]);
 
-	useEffect(() => {
-		if (price) {
-			if (fixedMargin === undefined) {
-				setFixedMargin(price);
-				if (!percentage) updateMargin(price);
-			}
-		}
-	}, [fixedMargin, percentage, price]);
+    useEffect(() => {
+        if (price && marginType === 'fixed') {
+            updateMargin(price);
+        }
+    }, [price]);
 
-	useEffect(() => {
-		if (price && marginType === 'fixed') {
-			updateMargin(price);
-		}
-	}, [price]);
+    const onProceed = () => {
+        if (validate(resolver)) {
+            updateValue({ step: list.step + 1 });
+        }
+    };
 
-	if (!token || !currency) return <Loading />;
+    const onSelectType = (t: List['margin_type']) => {
+        const m = t === 'fixed' ? fixedMargin : percentageMargin;
+        updateValue({ marginType: t, margin: m });
+    };
 
-	return (
-		<StepLayout onProceed={onProceed}>
-			<Input
-				label={
-					type === 'BuyList' ? 'Enter total amount of crypto to buy' : 'Enter total available crypto amount'
-				}
-				addOn={<span className="text-gray-500 sm:text-sm mr-3">{token.name}</span>}
-				id="totalAvailableAmount"
-				value={totalAvailableAmount}
-				onChangeNumber={(n) => updateValue({ totalAvailableAmount: n })}
-				type="decimal"
-				required
-				decimalScale={18}
-				error={errors.totalAvailableAmount}
-			/>
-			<div>
-				<Label title="Enter fiat order limit" />
-				<div className="flex flex-row gap-x-8 -mt-6">
-					<Input
-						placeholder="100"
-						label="Min:"
-						addOn={<span className="text-gray-500 sm:text-sm mr-3">{currency.name}</span>}
-						id="limitMin"
-						type="decimal"
-						value={limitMin}
-						onChangeNumber={(n) => updateValue({ limitMin: n })}
-						error={errors.limitMin}
-					/>
-					<Input
-						placeholder="1000"
-						label="Max:"
-						addOn={<span className="text-gray-500 sm:text-sm mr-3">{currency.name}</span>}
-						id="limitMax"
-						type="decimal"
-						value={limitMax}
-						onChangeNumber={(n) => updateValue({ limitMax: n })}
-					/>
-				</div>
-			</div>
+    if (!token || !currency) return <Loading />;
 
-			<Label title="Set Price" />
-			<div className="mb-4">
-				<span className="text-sm text-gray-600">
-					Set how you want to price {type === 'BuyList' ? 'the' : 'your'} crypto. At a fixed price or above or
-					below the market price.
-				</span>
-			</div>
-			<MarginSwitcher
-				selected={marginType}
-				onSelect={onSelectType}
-				currency={currency as FiatCurrency}
-				token={token as Token}
-				margin={margin}
-				updateMargin={updateMargin}
-				error={errors.margin}
-				price={price}
-				listPriceSource={priceSource}
-				onUpdatePriceSource={(ps) => updateValue({ priceSource: ps })}
-			/>
+    return (
+        <StepLayout onProceed={onProceed}>
+            <Input
+                label={type === 'BuyList' ? 'Enter total amount of crypto to buy' : 'Enter total available crypto amount'}
+                addOn={<span className="text-gray-500 sm:text-sm mr-3">{token.name}</span>}
+                id="totalAvailableAmount"
+                value={totalAvailableAmount}
+                onChangeNumber={(n) => updateValue({ totalAvailableAmount: n })}
+                type="decimal"
+                required
+                decimalScale={18}
+                error={errors.totalAvailableAmount}
+            />
+            <div>
+                <Label title="Enter fiat order limit" />
+                <div className="flex flex-row gap-x-8 -mt-6">
+                    <Input
+                        placeholder="100"
+                        label="Min:"
+                        addOn={<span className="text-gray-500 sm:text-sm mr-3">{currency.name}</span>}
+                        id="limitMin"
+                        type="decimal"
+                        value={limitMin}
+                        onChangeNumber={(n) => updateValue({ limitMin: n })}
+                        error={errors.limitMin}
+                    />
+                    <Input
+                        placeholder="1000"
+                        label="Max:"
+                        addOn={<span className="text-gray-500 sm:text-sm mr-3">{currency.name}</span>}
+                        id="limitMax"
+                        type="decimal"
+                        value={limitMax}
+                        onChangeNumber={(n) => updateValue({ limitMax: n })}
+                    />
+                </div>
+            </div>
 
-			{/* <div className="w-full flex flex-row justify-between mb-8">
-				<div>
-					<div>Lowest price</div>
-					<div className="text-xl font-bold">25.9 {currency.name}</div>
-				</div>
-				<div>
-					<div>Highest price</div>
-					<div className="text-xl font-bold">25.9 {currency.name}</div>
-				</div>
-			</div> */}
-		</StepLayout>
-	);
+            <Label title="Set Price" />
+            <div className="mb-4">
+                <span className="text-sm text-gray-600">
+                    Set how you want to price {type === 'BuyList' ? 'the' : 'your'} crypto. At a fixed price or above or
+                    below the market price.
+                </span>
+            </div>
+            <MarginSwitcher
+                selected={marginType}
+                onSelect={onSelectType}
+                currency={currency as FiatCurrency}
+                token={token as Token}
+                margin={margin}
+                updateMargin={updateMargin}
+                error={errors.margin}
+                price={price}
+                listPriceSource={priceSource}
+                onUpdatePriceSource={(ps) => updateValue({ priceSource: ps })}
+            />
+        </StepLayout>
+    );
 };
 
 export default Amount;
