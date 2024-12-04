@@ -9,7 +9,7 @@ import { GetServerSideProps } from 'next';
 import ErrorPage from 'next/error';
 import React, { useEffect, useState } from 'react';
 import { useAccount } from 'hooks';
-import { COINGECKO_SUPPORTED_CURRENCIES } from 'constants/coingeckoSupportedCurrencies';
+import { COINGECKO_SUPPORTED_CURRENCIES, CoingeckoSupportedCurrency } from 'constants/coingeckoSupportedCurrencies';
 import { priceSourceMap, PriceSourceNumber, priceSourceToNumber } from 'constants/priceSourceMap';
 
 
@@ -79,7 +79,13 @@ const priceSourceNumber = typeof rawPriceSource === 'string'
 
 console.log('Converted to number:', priceSourceNumber);
 
-const finalPriceSource = priceSourceMap[priceSourceNumber as PriceSourceNumber] || 'binance_median';
+const currencyLower = currency?.name.toLowerCase() as CoingeckoSupportedCurrency;
+const isCoingeckoSupported = COINGECKO_SUPPORTED_CURRENCIES.includes(currencyLower);
+
+// If currency not supported by Coingecko, force Binance price source regardless of DB value
+const finalPriceSource = !isCoingeckoSupported 
+    ? 'binance_median'
+    : (priceSourceMap[priceSourceNumber as PriceSourceNumber] || 'binance_median');
 
 console.log('Final mapped price source:', finalPriceSource);
 

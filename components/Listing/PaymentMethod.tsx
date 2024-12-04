@@ -19,41 +19,60 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	
 	const [paymentMethodCreation, setPaymentMethodCreation] = useState<UIPaymentMethod>();	
 
+	const [apiPaymentMethods, setApiPaymentMethods] = useState<PaymentMethodType[]>([]);
+	const [newPaymentMethods, setNewPaymentMethods] = useState<UIPaymentMethod[]>([]);
+	const [isLoading, setLoading] = useState(false);
+
 	const onProceed = () => {
 		if (paymentMethods.length > 0) {
 			const filteredPaymentMethods = paymentMethods.map((pm) => {
-				// Check if pm.bank and pm.bank.id are defined
 				const bankId = pm.bank?.id;
-				if (pm.id && newPaymentMethods.find((npm) => npm.id === pm.id)) {
+				if (pm.id && newPaymentMethods?.find((npm) => npm.id === pm.id)) {
 					return { ...pm, id: undefined, bank_id: bankId };
 				}
 				return { ...pm, bank_id: bankId };
 			});
+
 			if (type === 'SellList') {
 				updateList({ ...list, ...{ step: list.step + 1, paymentMethods: filteredPaymentMethods } });
 			} else {
-				if(list?.id){
-					const updatedBankList=listPaymentMethods?.map((value)=>value.bank);
-					//console.log("Here is updated bank list",updatedBankList);
-					// @ts-ignore
-					updateList({...list,...{ step: list.step + 1, banks: updatedBankList }});
-				}else{
-					updateList({
-						...list,
-						...{ step: list.step + 1, banks: filteredPaymentMethods.map((pm) => pm.bank as Bank) }
-					});
-				}
+				// For BuyList, ensure we're always sending bank objects in the correct format
+				const bankList = list?.id 
+					? listPaymentMethods
+						.map((value) => value.bank)
+						.filter((bank): bank is Bank => bank !== undefined)
+						.map(bank => ({
+							id: bank.id,
+							name: bank.name,
+							icon: bank.icon,
+							account_info_schema: bank.account_info_schema,
+							color: bank.color
+						}))
+					: filteredPaymentMethods
+						.map((pm) => pm.bank)
+						.filter((bank): bank is Bank => bank !== undefined)
+						.map(bank => ({
+							id: bank.id,
+							name: bank.name,
+							icon: bank.icon,
+							account_info_schema: bank.account_info_schema,
+							color: bank.color
+						}));
+
+				updateList({
+					...list,
+					...{ 
+						step: list.step + 1, 
+						banks: bankList
+					}
+				});
 			}
 		}
 	};
 
-
-	const [apiPaymentMethods, setApiPaymentMethods] = useState<PaymentMethodType[]>();
-	const [newPaymentMethods, setNewPaymentMethods] = useState<UIPaymentMethod[]>([]);
-	const [isLoading, setLoading] = useState(false);
 	const updatePaymentMethods = (pms: UIPaymentMethod[]) => {
 		setPaymentMethodCreation(undefined);
-		updateList({ ...list, ...{ paymentMethods: pms } });
+		updateList({ ...list, paymentMethods: pms });
 	};
 
 	const togglePaymentMethod = (pm: UIPaymentMethod) => {
@@ -113,14 +132,17 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					addNewPaymentMethod();
 				}
 			} else {
-				//@ts-ignore
-				const savedPaymentMethods = list?.bank?.map((bank) => ({
+				// Fix the bank mapping issue
+				const savedPaymentMethods = list.banks?.map((bank) => ({
 					bank,
-					id: new Date().getTime() + bank.id,
+					id: new Date().getTime() + (bank.id || 0),
 					values: {}
-				}));
-				updatePaymentMethods(savedPaymentMethods);
-				setNewPaymentMethods(savedPaymentMethods);		
+				})) || [];
+				
+				if (savedPaymentMethods.length) {
+					updatePaymentMethods(savedPaymentMethods);
+					setNewPaymentMethods(savedPaymentMethods);
+				}
 			}
 
 			setApiPaymentMethods([]);
@@ -128,39 +150,26 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			return;
 		}
 
-		// fetch(`/api/payment-methods?currency_id=${currency!.id}`, {
-		// 	headers: {
-		// 		Authorization: `Bearer ${getAuthToken()}`
-		// 	}
-		// })
-		// 	.then((res) => res.json())
-		// 	.then((data) => {
-		// 		setApiPaymentMethods(data);
-		// 		if (paymentMethods.length === 0) {
-		// 			updatePaymentMethods(data);
-		// 		}
-
-		// 		// add as a new payment method if the paymentMethod is not inside data
-		// 		setNewPaymentMethods(paymentMethods.filter((pm) => !data.find((d: UIPaymentMethod) => d.id === pm.id)));
-		// 		setLoading(false);
-		// 	});
-		minkeApi.get(`/api/banks?currency_id=${currency!.id}`, {
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`
-			}
-		})
-			.then((res) => {return res.data.data;})
-			.then((data) => {	
-				setApiPaymentMethods(data);
-				// if (paymentMethods.length === 0) {
-				// 	updatePaymentMethods(data);
-				// }
-
-				// add as a new payment method if the paymentMethod is not inside data
-				setNewPaymentMethods(paymentMethods.filter((pm) => !data.find((d: UIPaymentMethod) => d.id === pm.id)));
-				setLoading(false);
-			});
-	}, [address, currency, type]);
+		// Handle SellList case
+		if (currency?.id) {
+			minkeApi.get(`/api/banks?currency_id=${currency.id}`, {
+				headers: {
+					Authorization: `Bearer ${getAuthToken()}`
+				}
+			})
+				.then((res) => res.data.data)
+				.then((data) => {    
+					setApiPaymentMethods(data || []);
+					setNewPaymentMethods(paymentMethods.filter((pm) => 
+						!data?.find((d: UIPaymentMethod) => d.id === pm.id)
+					));
+					setLoading(false);
+				})
+				.catch(() => {
+					setLoading(false);
+				});
+		}
+	}, [address, currency, type, list.id, list.banks]);
 
 	const addNewPaymentMethod = () => {
 		setPaymentMethodCreation({} as UIPaymentMethod);
