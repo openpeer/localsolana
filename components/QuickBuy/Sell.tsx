@@ -53,7 +53,7 @@ const Sell = ({ lists, updateLists, onSeeOptions, onLoading }: SellProps) => {
 	"fee",
 	false
 );
-console.log(fee,loadingContract);
+//console.log(fee,loadingContract);
   // Fallback fee calculation
   const fallbackFee = tokenAmount
     ? (BigInt(tokenAmount * 10 ** (token?.decimals || 0)) * BigInt(10 ** (token?.decimals || 0)) * BigInt(5)) /

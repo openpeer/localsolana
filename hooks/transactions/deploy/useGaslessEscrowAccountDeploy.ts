@@ -1,20 +1,11 @@
-import { sign } from "./../../../node_modules/tweetnacl/nacl.d";
-import {
-  Connection,
-  PublicKey,
-  Transaction,
-  SystemProgram,
-} from "@solana/web3.js";
+// hooks/transactions/deploy/useGaslessEscrowAccountDeploy.ts
+
+import { PublicKey } from "@solana/web3.js";
 import { useState } from "react";
-import {
-  useDynamicContext,
-  useSmartWallets,
-} from "@dynamic-labs/sdk-react-core";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import useShyft from "../useShyft";
 import useLocalSolana from "../useLocalSolana";
-import { signTransaction } from "viem/accounts";
-import CreateEscrowAccount from "@/components/Buy/EscrowButton/CreateEscrowAccount";
-import { list } from "postcss";
+import useHelius from "../useHelius";
 
 interface UseGaslessEscrowAccountDeployProps {
   orderId: string;
@@ -50,7 +41,8 @@ const useGaslessEscrowAccountDeploy = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const { primaryWallet } = useDynamicContext();
-  const { sendTransactionWithShyft, getAccountInfo } = useShyft();
+  const { sendTransactionWithShyft } = useShyft();
+
   const {
     getEscrowPDA,
     createEscrowSol,
@@ -59,52 +51,45 @@ const useGaslessEscrowAccountDeploy = ({
     createEscrowTokenBuyer,
   } = useLocalSolana();
 
+  const { getAccountInfo } = useHelius();
+
   const deploy = async () => {
-    if (!primaryWallet?.isConnected) return;
+    if (!primaryWallet?.isConnected) {
+      console.error("Primary wallet is not connected");
+      return;
+    }
 
     setIsLoading(true);
 
     try {
       const escrowPDA = await getEscrowPDA(orderId);
-      console.log(escrowPDA?.toBase58());
+      //console.log("Escrow PDA:", escrowPDA?.toBase58());
+
+      // Validate Escrow Account Existence using Helius
       const status = await getAccountInfo(escrowPDA?.toBase58() ?? "");
-      if (status == null || status == undefined) {
-        if (tokenAddress == PublicKey.default.toBase58()) {
-          const transaction = fromWallet
-            ? await createEscrowSol(
-                orderId,
-                time,
-                amount * 10 ** tokenDecimal,
-                buyer,
-                seller,
-                PublicKey.default.toBase58(),
-                instantEscrow
-              )
-            : await createEscrowSolBuyer(
-                orderId,
-                time,
-                amount * 10 ** tokenDecimal,
-                buyer,
-                seller,
-                PublicKey.default.toBase58(),
-                instantEscrow
-              );
-          const finalTx = await sendTransactionWithShyft(
-            transaction,
-            isLocalSigningRequired
-          );
-          console.log(`Status ${status}`);
-          if (finalTx !== undefined) {
-            setIsLoading(false);
-            setIsSuccess(true);
-            updateData({ hash: escrowPDA?.toBase58() });
-          } else {
-            console.error("error", finalTx);
-            setIsLoading(false);
-            setIsSuccess(false);
-          }
-        } else {
-          const transaction = fromWallet
+      if (!status) {
+        const transaction =
+          tokenAddress === PublicKey.default.toBase58()
+            ? fromWallet
+              ? await createEscrowSol(
+                  orderId,
+                  time,
+                  amount * 10 ** tokenDecimal,
+                  buyer,
+                  seller,
+                  PublicKey.default.toBase58(),
+                  instantEscrow
+                )
+              : await createEscrowSolBuyer(
+                  orderId,
+                  time,
+                  amount * 10 ** tokenDecimal,
+                  buyer,
+                  seller,
+                  PublicKey.default.toBase58(),
+                  instantEscrow
+                )
+            : fromWallet
             ? await createEscrowToken(
                 orderId,
                 time,
@@ -127,33 +112,36 @@ const useGaslessEscrowAccountDeploy = ({
                 instantEscrow,
                 fromWallet
               );
-          if (transaction == null) {
-            setIsLoading(false);
-            setIsSuccess(false);
-            return;
-          }
-          const finalTx = await sendTransactionWithShyft(
-            transaction,
-            isLocalSigningRequired
-          );
-          console.log(`Status ${status}`);
-          if (finalTx !== undefined) {
-            setIsLoading(false);
-            setIsSuccess(true);
-            updateData({ hash: escrowPDA?.toBase58() });
-          } else {
-            console.error("error", finalTx);
-            setIsLoading(false);
-            setIsSuccess(false);
-          }
+
+        if (!transaction) {
+          console.error("Failed to create escrow transaction");
+          setIsLoading(false);
+          setIsSuccess(false);
+          return;
+        }
+
+        // Use Shyft for transaction relaying
+        const finalTx = await sendTransactionWithShyft(
+          transaction,
+          isLocalSigningRequired,
+          orderId
+        );
+
+        if (finalTx) {
+          //console.log("Transaction successful, Escrow PDA:", escrowPDA?.toBase58());
+          updateData({ hash: escrowPDA?.toBase58() });
+          setIsSuccess(true);
+        } else {
+          console.error("Transaction relaying failed", finalTx);
+          setIsSuccess(false);
         }
       } else {
-        setIsLoading(false);
-        setIsSuccess(true);
+        //console.log("Escrow account already exists, PDA:", escrowPDA?.toBase58());
         updateData({ hash: escrowPDA?.toBase58() });
+        setIsSuccess(true);
       }
     } catch (error) {
-      console.error("Deployment failed", error);
+      console.error("Deployment failed:", error);
       setIsSuccess(false);
     } finally {
       setIsLoading(false);

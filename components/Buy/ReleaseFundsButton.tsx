@@ -46,23 +46,23 @@ const ReleaseFundsButton = ({
 		releaseFund?.();
 	};
 
-	// useTransactionFeedback({
-	// 	hash: data?.hash,
-	// 	isSuccess,
-	// 	Link: <TransactionLink hash={data?.hash} />,
-	// 	description: 'Released the funds'
-	// });
+	useTransactionFeedback({
+		hash: data?.hash,
+		isSuccess,
+		Link: <TransactionLink hash={data?.hash} />,
+		description: 'Released the funds'
+	});
 
 	useEffect(() => {
 		if (releaseConfirmed) {
 			onReleaseFunds();
 		}
 	}, [releaseConfirmed]);
-	useEffect(()=>{
-		if(isSuccess && data){
-            updateTrade();
-		}
-	},[ isSuccess]);
+	// useEffect(()=>{
+	// 	if(isSuccess && data){
+    //         //updateTrade();
+	// 	}
+	// },[ isSuccess]);
     const updateTrade = async () => {
 		const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
 			method: 'POST',

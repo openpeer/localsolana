@@ -1,51 +1,44 @@
 {
-	"env": {
-		"browser": true,
-		"es2021": true
-	},
-	"extends": ["next/core-web-vitals"],
-	"parser": "@typescript-eslint/parser",
-	"parserOptions": {
-		"ecmaFeatures": {
-			"jsx": true
-		},
-		"ecmaVersion": "latest",
-		"sourceType": "module",
-		"project": "./tsconfig.json"
-	},
-	"plugins": ["react", "@typescript-eslint"],
-	"ignorePatterns": ["next.config.js", "postcss.config.js", "tailwind.config.js", "lib/**/*.js"],
-	"rules": {
-		// Disable all style rules
-		"indent": "off",
-		"@typescript-eslint/indent": "off",
-		"no-tabs": "off",
-		"@typescript-eslint/comma-dangle": "off",
-		"react/jsx-indent": "off",
-		"react/jsx-indent-props": "off",
-		"max-len": "off",
-		"import/order": "off",
-
-		// Disable React-specific rules
-		"react/react-in-jsx-scope": "off",
-		"react/jsx-key": "off",
-		"react/jsx-boolean-value": "off",
-		"react/no-unescaped-entities": "off",
-		"react/button-has-type": "off",
-		"react/jsx-curly-brace-presence": "off",
-		"react/no-unused-prop-types": "off",
-		"react/jsx-props-no-spreading": "off",
-		"react/require-default-props": "off",
-		"react/jsx-no-bind": "off",
-		"react-hooks/exhaustive-deps": "off",
-
-		// Disable other rules
-		"import/no-extraneous-dependencies": "off",
-		"import/extensions": "off",
-		"import/no-cycle": "off",
-		"import/no-duplicates": "off",
-		
-		// Keep only essential Next.js rules
-		"@next/next/no-html-link-for-pages": "error"
-	}
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "next/core-web-vitals"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": [
+    "react",
+    "@typescript-eslint"
+  ],
+  "ignorePatterns": [
+    "next.config.js",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "lib/**/*.js"
+  ],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "react/react-in-jsx-scope": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off"
+  }
 }

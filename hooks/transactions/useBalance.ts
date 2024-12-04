@@ -26,7 +26,25 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
         }
         if(tokenAddress == PublicKey.default.toBase58()){
         const balance = await getWalletBalance(walletAddress);
-        setBalance(balance); // Convert lamports to SOL
+        //console.log("Here is my actual balance",balance);
+        // Fetch the account's rent exemption requirement
+        const accountInfo = await connection.getAccountInfo(new PublicKey(walletAddress));
+        if (!accountInfo) {
+          throw new Error('Account not found or invalid');
+        }
+    
+        const rentExemptAmount = await connection.getMinimumBalanceForRentExemption(
+          accountInfo.data.length // Account data size
+        );
+    
+        if(balance!=null){
+        // Calculate usable balance (convert lamports to SOL)
+        const usableBalance = (balance - rentExemptAmount/1e9);
+        //console.log("Here is my usable balance",usableBalance);
+        setBalance(usableBalance<0?0:usableBalance); // Convert lamports to SOL
+        }else{
+          setBalance(0);
+        }
       }else{
         const balance = await getTokenBalance(walletAddress,tokenAddress);
         setBalance(balance);
@@ -51,7 +69,7 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
 
     
   }, [walletAddress,connection]);
-  // console.log("Here is my balance",balance, loadingBalance, error);
+  // //console.log("Here is my balance",balance, loadingBalance, error);
 
   return { balance, loadingBalance, error };
 };

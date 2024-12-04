@@ -27,7 +27,7 @@ const BuyPage = ({ id }: { id: number }) => {
 			.then((res) => res.json())
 			.then((res)=> res.data)
 			.then((data) => {
-				console.log('list is ',data);
+				//console.log('list is ',data);
 				data.margin_type = data.margin_type === 1 ? 'percentage' : 'fixed';
 				setOrder({
 					...order,
@@ -61,7 +61,7 @@ const BuyPage = ({ id }: { id: number }) => {
 		setShowFilters(!showFilters);
 	};
 
-	console.log('Step is',step);
+	//console.log('Step is',step);
 
 	return (
 		<div className="pt-4 md:pt-6 bg-white">

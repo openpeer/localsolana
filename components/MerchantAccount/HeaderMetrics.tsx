@@ -80,7 +80,7 @@ const VerifiedIcon = () => (
 const HeaderMetrics = ({ user, verificationOpen }: HeaderMetricsProps) => {
 	const { trades, createdAt: createdAt, name, twitter, address, completion_rate: completionRate } = user;
 	const date = new Date(createdAt);
-	console.log(`Date: ${JSON.stringify(user)}`);
+	//console.log(`Date: ${JSON.stringify(user)}`);
 	const [walletAge, setWalletAge] = useState<string>();
 	const [verificationModal, setVerificationModal] = useState(verificationOpen);
 	// const { chain } = useNetwork();

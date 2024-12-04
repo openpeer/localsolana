@@ -32,7 +32,7 @@ const DepositFundsButton = ({ token, tokenAmount, contract, disabled,onFundsDepo
 			setModalOpen(true);
 			return;
 		}
-		console.log('Contract address',contract);
+		//console.log('Contract address',contract);
 		await depositFunds?.();
 		onFundsDeposited();
 	};
@@ -43,12 +43,12 @@ const DepositFundsButton = ({ token, tokenAmount, contract, disabled,onFundsDepo
 		}
 	}, [depositConfirmed]);
 
-	// useTransactionFeedback({
-	// 	hash: data?.hash,
-	// 	isSuccess,
-	// 	Link: <TransactionLink hash={data?.hash} />,
-	// 	description: 'Deposited funds'
-	// });
+	useTransactionFeedback({
+		hash: data?.hash || '',
+		isSuccess,
+		Link: <TransactionLink hash={data?.hash || ''} />,
+		description: 'Deposited funds'
+	});
 
 	return (
 		<>

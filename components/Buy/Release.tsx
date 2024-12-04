@@ -25,7 +25,7 @@ const Release = ({ order }: BuyStepProps) => {
 		true
 	);
 	if(escrowData){
-	console.log('Escrow Data',escrowData?.amount?.toString(),escrowData?.openPeerFee?.toString());
+	//console.log('Escrow Data',escrowData?.amount?.toString(),escrowData?.openPeerFee?.toString());
 	}
 
 	return (

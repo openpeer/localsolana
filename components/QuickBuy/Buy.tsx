@@ -96,7 +96,7 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 	}, [token]);
 
 	const onChangeFiat = (val: number | undefined) => {
-		console.log("Fiat Change");
+		//console.log("Fiat Change");
 		if(fiatAmount===val)return;
 		setFiatAmount(val);
 		if (val && token && currency) {
@@ -105,7 +105,7 @@ const Buy = ({ lists, updateLists, onSeeOptions, onLoading }: BuyProps) => {
 	};
 
 	const onChangeToken = (val: number | undefined) => {
-		console.log("Token Change");
+		//console.log("Token Change");
 		if(tokenAmount===val)return;
 		setTokenAmount(val);
 		if (val && token && currency) {

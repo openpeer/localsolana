@@ -43,7 +43,7 @@ const useGaslessDeploy = () => {
 
     try {
       const escrowStatePDA =  getEscrowStatePDA(primaryWallet?.address);
-      console.log(escrowStatePDA?.toBase58());
+      //console.log(escrowStatePDA?.toBase58());
       //const status = await getAccountInfo(escrowStatePDA?.toBase58() ?? "");
       var result = null;
       //if (status == null || status == undefined) {
@@ -51,13 +51,13 @@ const useGaslessDeploy = () => {
           primaryWallet?.address
         );
         result = await sendTransactionWithShyft(transaction,false);
-        console.log(`Shyft Transaction result: ${result}`);
+        //console.log(`Shyft Transaction result: ${result}`);
      // }
       if ( result==undefined || result == null) {
-        console.log(`Status ${status}`);
+        ////console.log(`Status ${status}`);
         setIsSuccess(false);
       } else {
-        console.log(`Status ${result}`);
+        //console.log(`Status ${result}`);
         updateData({ hash: result ?? undefined, escrowPDA: escrowStatePDA?.toBase58() || "" });
         setIsSuccess(true);
       }

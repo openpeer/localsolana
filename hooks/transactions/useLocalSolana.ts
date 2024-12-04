@@ -128,7 +128,7 @@ const useLocalSolana = () => {
     if (!program || !provider || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
-    console.log("Here buyer", buyer, "seller", seller);
+    //console.log("Here buyer", buyer, "seller", seller);
     const tx = new Transaction().add(
       await program.methods
         .createEscrowSol(
@@ -160,7 +160,7 @@ const useLocalSolana = () => {
     if (!program || !provider || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
-    console.log("Here buyer", buyer, "seller", seller);
+    //console.log("Here buyer", buyer, "seller", seller);
     const tx = new Transaction().add(
       await program.methods
         .createEscrowSolBuyer(
@@ -356,10 +356,10 @@ const useLocalSolana = () => {
           })
           .instruction()
       );
-      console.log("Got Transaction");
+      //console.log("Got Transaction");
       return tx;
     } catch (err) {
-      console.log("Error", err);
+      //console.log("Error", err);
     }
   };
 

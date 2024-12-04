@@ -25,7 +25,7 @@ const EscrowFundsButton = ({
 	const amount = tokenAmount;
 	const [modalOpen, setModalOpen] = useState(false);
 	const [escrowConfirmed, setEscrowConfirmed] = useState(false);
-	console.log('UUID is ',uuid);
+	//console.log('UUID is ',uuid);
 
 	const { isLoading, isSuccess, data, escrowFunds, isFetching } = useGaslessEscrow({
 		orderID: uuid!,

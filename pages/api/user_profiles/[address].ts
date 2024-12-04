@@ -4,8 +4,8 @@ import { User } from 'models/types';
 import { minkeApi } from 'pages/api/utils/utils';
 
 const fetchUser = async (address: string, token: string): Promise<User> => {
-    console.log(`Fetching user profile for address: ${address}`);
-    console.log('Headers:', { Authorization: `Bearer ${token}` });
+    //console.log(`Fetching user profile for address: ${address}`);
+    //console.log('Headers:', { Authorization: `Bearer ${token}` });
 
     const { data } = await minkeApi.get(`/user_profiles/${address}`, {
         headers: {
@@ -68,8 +68,8 @@ export default async function handler(
     const { query, method, body, headers } = req;
     const { address } = query;
 
-    console.log(`Incoming ${method} request for address: ${address}`);
-    console.log('Request body:', body);
+    //console.log(`Incoming ${method} request for address: ${address}`);
+    //console.log('Request body:', body);
 
     const authHeader = headers.authorization;
 
