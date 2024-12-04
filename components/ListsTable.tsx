@@ -162,7 +162,10 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 						accept_only_verified: acceptOnlyVerified
 					} = list;
 
-					const effectivePrice = calculatedPrice;
+					const effectivePrice = Number(calculatedPrice) || 0;
+					const escrowedAmount = Number(amount) || 0;
+					const priceDifferencePercentage = 100;
+					const instantEscrow = escrowType === 'instant';
 
 					// @ts-ignore
 
@@ -175,10 +178,6 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 
 					// const priceDifferencePercentage =
 					// tokenSpotPrice && price ? (price / tokenSpotPrice) * 100 - 100 : 0;
-
-					const priceDifferencePercentage = 100;
-					const instantEscrow = escrowType === 'instant';
-					let escrowedAmount = amount;
 
 					// try {
 					// 	if (instantEscrow && !isLoading && data) {
