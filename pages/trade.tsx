@@ -73,9 +73,17 @@ const HomePage = () => {
 			}
 
 			const data: ListsResponse = await response.json();
-			setPaginationMeta(data.data.meta);
+
+			console.log('Raw API Response:', response);
+			console.log('Parsed Response:', data);
+			console.log('JSON.stringify of response:', JSON.stringify(data));
+
+
 			const toBuyers = data.data.data.filter((list: List) => list.type === 'SellList');
 			const toSellers = data.data.data.filter((list: List) => list.type === 'BuyList');
+			console.log('Filtered toBuyers:', toBuyers);
+			console.log('Filtered toSellers:', toSellers);
+			setPaginationMeta(data.data.meta);
 			setSellSideLists(toSellers);
 			setBuySideLists(toBuyers);
 			setLists(type === 'Buy' ? toBuyers : toSellers);
@@ -86,6 +94,8 @@ const HomePage = () => {
 			setLoading(false);
 		}
 	};
+
+	
 
 	useEffect(() => {
 		resetPage();
@@ -98,8 +108,10 @@ const HomePage = () => {
 
 	useEffect(() => {
 		if (type === 'Buy') {
+			console.log('Setting Buy lists:', buySideLists);
 			setLists(buySideLists);
 		} else {
+			console.log('Setting Sell lists:', sellSideLists);
 			setLists(sellSideLists);
 		}
 	}, [type, buySideLists, sellSideLists]);

@@ -23,6 +23,13 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	const [newPaymentMethods, setNewPaymentMethods] = useState<UIPaymentMethod[]>([]);
 	const [isLoading, setLoading] = useState(false);
 
+	const existing = (apiPaymentMethods || []).map((apiPaymentMethod) => {
+		const updated = paymentMethods.find((m) => m.id === apiPaymentMethod.id);
+		return updated || apiPaymentMethod;
+	});
+	
+	const listPaymentMethods = [...existing, ...newPaymentMethods];
+
 	const onProceed = () => {
 		if (paymentMethods.length > 0) {
 			const filteredPaymentMethods = paymentMethods.map((pm) => {
@@ -36,28 +43,33 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			if (type === 'SellList') {
 				updateList({ ...list, ...{ step: list.step + 1, paymentMethods: filteredPaymentMethods } });
 			} else {
-				// For BuyList, ensure we're always sending bank objects in the correct format
-				const bankList = list?.id 
-					? listPaymentMethods
-						.map((value) => value.bank)
-						.filter((bank): bank is Bank => bank !== undefined)
-						.map(bank => ({
-							id: bank.id,
-							name: bank.name,
-							icon: bank.icon,
-							account_info_schema: bank.account_info_schema,
-							color: bank.color
-						}))
-					: filteredPaymentMethods
-						.map((pm) => pm.bank)
-						.filter((bank): bank is Bank => bank !== undefined)
-						.map(bank => ({
-							id: bank.id,
-							name: bank.name,
-							icon: bank.icon,
-							account_info_schema: bank.account_info_schema,
-							color: bank.color
-						}));
+				const bankList = listPaymentMethods
+					.map(pm => {
+						if (!pm.bank) return null;
+						
+						const isBank = (bank: any): bank is Bank => 
+							'color' in bank && 'account_info_schema' in bank;
+						
+						const bank = pm.bank;
+						if (isBank(bank)) {
+							return {
+								id: bank.id,
+								name: bank.name,
+								icon: bank.icon,
+								color: bank.color,
+								account_info_schema: bank.account_info_schema
+							} as Bank;
+						} else {
+							return {
+								id: bank.id,
+								name: bank.name,
+								icon: bank.icon,
+								color: 'gray',
+								account_info_schema: []
+							} as Bank;
+						}
+					})
+					.filter((bank): bank is Bank => bank !== null);
 
 				updateList({
 					...list,
@@ -91,9 +103,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 
 	const savePaymentMethodCreation = () => {
 		if (paymentMethodCreation) {
-			// edition - can be editing an existing payment method or a new one
 			if (paymentMethodCreation.id) {
-				// if existing, update it in the payment methods list
 				const index = paymentMethods.findIndex((pm) => pm.id === paymentMethodCreation.id);
 				if (index >= 0) {
 					updatePaymentMethods([
@@ -103,7 +113,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					]);
 				}
 
-				// if new, update it in the new payment methods list
 				const newPaymentMethodIndex = newPaymentMethods.findIndex((pm) => pm.id === paymentMethodCreation.id);
 				if (newPaymentMethodIndex >= 0) {
 					setNewPaymentMethods([
@@ -113,7 +122,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					]);
 				}
 			} else {
-				// creation - add it to the new payment methods list and to the selected payment methods list
 				const newPaymentMethod = { ...paymentMethodCreation, ...{ id: new Date().getTime() } };
 				setNewPaymentMethods([...(newPaymentMethods || []), newPaymentMethod]);
 				updatePaymentMethods([...paymentMethods, newPaymentMethod]);
@@ -132,7 +140,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					addNewPaymentMethod();
 				}
 			} else {
-				// Fix the bank mapping issue
 				const savedPaymentMethods = list.banks?.map((bank) => ({
 					bank,
 					id: new Date().getTime() + (bank.id || 0),
@@ -150,7 +157,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			return;
 		}
 
-		// Handle SellList case
 		if (currency?.id) {
 			minkeApi.get(`/api/banks?currency_id=${currency.id}`, {
 				headers: {
@@ -179,18 +185,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 		return <Loading />;
 	}
 
-
-	const existing = (apiPaymentMethods || []).map((apiPaymentMethod) => {
-		const updated = paymentMethods.find((m) => m.id === apiPaymentMethod.id);
-		if (updated) {
-			return updated;
-		}
-
-		return apiPaymentMethod;
-	});
-	
-	const listPaymentMethods = [...existing, ...newPaymentMethods];
-	//('Payment methods list',listPaymentMethods);
 	return (
 		<StepLayout
 			onProceed={paymentMethodCreation === undefined && paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id).length > 0 ? onProceed : undefined}
