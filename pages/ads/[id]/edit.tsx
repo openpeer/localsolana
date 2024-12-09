@@ -24,6 +24,7 @@ const EditTrade = ({ id }: { id: number }) => {
     const { address } = useAccount();
 
     useEffect(() => {
+        console.log('Fetching list with ID:', id);
         fetch(`/api/lists/${id}`, {
             headers: {
                 Authorization: `Bearer ${getAuthToken()}`
@@ -31,13 +32,15 @@ const EditTrade = ({ id }: { id: number }) => {
         })
             .then((res) => {
                 if (!res.ok) {
+                    console.error('API Response not OK:', res.status, res.statusText);
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
                 return res.json();
             })
             .then((data1) => {
                 const data = data1.data;
-                console.log(data);
+                console.log('Raw API Response:', data1);
+                console.log('Extracted data:', data);
                 
                 if (!data) {
                     console.error('No data received from API');
@@ -63,31 +66,48 @@ const EditTrade = ({ id }: { id: number }) => {
                     price_source: rawPriceSource = 1
                 } = data;
 
-                setList(data);
+                console.log('Destructured values:', {
+                    fiatCurrency,
+                    token,
+                    marginType,
+                    paymentMethods,
+                    banks
+                });
 
-                console.log('Raw DB price source:', rawPriceSource, typeof rawPriceSource);
+                setList(data);
 
                 const currency = fiatCurrency ? {
                     ...fiatCurrency,
                     name: fiatCurrency.code
                 } : null;
 
-                // Convert string price source to number if needed
-const priceSourceNumber = typeof rawPriceSource === 'string' 
-? priceSourceToNumber[rawPriceSource] 
-: Number(rawPriceSource);
+                console.log('Processed payment methods:', Array.isArray(paymentMethods) 
+                    ? paymentMethods 
+                    : (paymentMethods ? [paymentMethods] : []));
+                
+                console.log('Processed banks:', Array.isArray(banks) 
+                    ? banks 
+                    : (banks ? [banks] : []));
 
-console.log('Converted to number:', priceSourceNumber);
+                console.log('Raw DB price source:', rawPriceSource, typeof rawPriceSource);
 
-const currencyLower = currency?.name.toLowerCase() as CoingeckoSupportedCurrency;
-const isCoingeckoSupported = COINGECKO_SUPPORTED_CURRENCIES.includes(currencyLower);
+                const currencyLower = currency?.name.toLowerCase() as CoingeckoSupportedCurrency;
+                const isCoingeckoSupported = COINGECKO_SUPPORTED_CURRENCIES.includes(currencyLower);
 
-// If currency not supported by Coingecko, force Binance price source regardless of DB value
-const finalPriceSource = !isCoingeckoSupported 
-    ? 'binance_median'
-    : (priceSourceMap[priceSourceNumber as PriceSourceNumber] || 'binance_median');
+                // Initialize with a default value
+                let finalPriceSource = 'binance_median';
 
-console.log('Final mapped price source:', finalPriceSource);
+                // Only attempt to map if we have a valid rawPriceSource
+                if (rawPriceSource !== undefined && rawPriceSource !== null) {
+                    if (!isCoingeckoSupported) {
+                        finalPriceSource = 'binance_median';
+                    } else {
+                        const mappedSource = priceSourceMap[rawPriceSource as PriceSourceNumber];
+                        finalPriceSource = mappedSource || 'binance_median';
+                    }
+                }
+
+                console.log('Final mapped price source:', finalPriceSource);
 
                 const ui: UIList = {
                     ...data,
@@ -97,9 +117,12 @@ console.log('Final mapped price source:', finalPriceSource);
                     fiatCurrencyId: currency?.id,
                     marginType: marginType === 0 ? 'fixed' : 'percentage',
                     totalAvailableAmount: Number(totalAvailableAmount),
+                    total_available_amount: String(totalAvailableAmount),
                     limitMin: limitMin ? Number(limitMin) : undefined,
                     limitMax: limitMax ? Number(limitMax) : undefined,
-                    paymentMethods: Array.isArray(paymentMethods) ? paymentMethods : (paymentMethods ? [paymentMethods] : []),
+                    paymentMethods: Array.isArray(paymentMethods) 
+                        ? paymentMethods 
+                        : (paymentMethods ? [paymentMethods] : []),
                     terms: terms || '',
                     margin: margin ? Number(margin) : undefined,
                     depositTimeLimit: depositTimeLimit ? Number(depositTimeLimit) : 0,
@@ -110,6 +133,7 @@ console.log('Final mapped price source:', finalPriceSource);
                     banks: Array.isArray(banks) ? banks : (banks ? [banks] : []),
                     priceSource: finalPriceSource
                 };
+                console.log('Final UI List object:', ui);
                 setUiList(ui);
             })
             .catch((error) => {
