@@ -2,9 +2,21 @@ import { Option } from 'components/Select/Select.types';
 import { Bank, List, PaymentMethod, PriceSource, User } from 'models/types';
 
 export interface UIPaymentMethod {
-	id: number | undefined;
-	bank: Option | undefined;
-	values: PaymentMethod['values'];
+	id?: number;
+	bank?: Bank;
+	values: Record<string, string>;
+	payment_method_id?: string;
+	bank_id?: string;
+}
+
+export interface BankPaymentMethod {
+	bank_id: string;
+	values: Record<string, string>;
+}
+
+export interface DirectPaymentMethod {
+	payment_method_id: string;
+	values: Record<string, string>;
 }
 
 export interface UIList {
@@ -18,8 +30,8 @@ export interface UIList {
 	totalAvailableAmount: number | undefined;
 	marginType: List['margin_type'];
 	margin: number | undefined;
-	limitMin: number | undefined;
-	limitMax: number | undefined;
+	limitMin: number | null;
+	limitMax: number | null;
 	paymentMethods: UIPaymentMethod[];
 	terms?: string | undefined;
 	user?: User;
@@ -30,6 +42,7 @@ export interface UIList {
 	escrowType: List['escrow_type'];
 	banks: Bank[];
 	priceSource: PriceSource | undefined;
+	price?: number;
 }
 
 export interface ListStepProps {
