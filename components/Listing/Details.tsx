@@ -8,7 +8,7 @@ import { FiatCurrency, Token, User } from "models/types";
 import Checkbox from "components/Checkbox/Checkbox";
 import dynamic from "next/dynamic";
 import Label from "../Label/Label";
-import { ListStepProps } from "./Listing.types";
+import { ListStepProps, BankPaymentMethod, DirectPaymentMethod } from "./Listing.types";
 import StepLayout from "./StepLayout";
 import FundEscrow from "./FundEscrow";
 import "react-quill/dist/quill.snow.css";
@@ -55,38 +55,77 @@ const Details = ({ list, updateList }: ListStepProps) => {
   // @ts-ignore
   const createList = async () => {
     const escrowVal = escrowType === "manual" ? 0 : 1;
-
+    
     if (isAuthenticated) {
-      const result = await fetch(
-        list.id ? `/api/list_management/${list.id}` : "/api/createList",
-        {
-          method: list.id ? "PUT" : "POST",
-          body: JSON.stringify(
-            snakecaseKeys(
-              {
-                ...list,
-                ...{ bankIds: (list.id)?(list.banks||[]):(list.banks || []).map((b) => b.id) },
-                marginType: list.marginType === "fixed" ? 0 : 1,
-                seller_address: address,
-                escrowType: escrowVal,
-                price: list.marginType === "fixed" ? list.margin : null, 
-                bank_id: 16,
-                priceSource: priceSourceToNumber[list.priceSource as string] || 0
-              },
-              { deep: true }
-            )
-          ),
-          headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+        // Format payment methods based on list type
+        const paymentMethodsData = type === 'BuyList' 
+            ? list.paymentMethods.map(pm => ({
+                bank_id: pm.bank_id,
+                values: pm.values
+              }))
+            : list.paymentMethods.map(pm => ({
+                payment_method_id: pm.payment_method_id,
+                values: pm.values
+              }));
 
-      const apiResult = await result.json();
-      if (apiResult!.data!.id) {
-        router.push(`/${address}`);
-      }
+        const formattedData = {
+            ...list,
+            payment_methods: type === 'BuyList' 
+                ? (paymentMethodsData as BankPaymentMethod[]).map(pm => ({
+                    bank_id: pm.bank_id,
+                    values: pm.values
+                }))
+                : (paymentMethodsData as DirectPaymentMethod[]).map(pm => ({
+                    payment_method_id: pm.payment_method_id,
+                    values: pm.values
+                })),
+            margin_type: list.marginType === "fixed" ? 0 : 1,
+            seller_address: address,
+            escrowType: escrowVal,
+            margin: list.marginType === "fixed" ? 0 : list.margin,
+            price: list.marginType === "fixed" ? list.price : null,
+            priceSource: priceSourceToNumber[list.priceSource as string] || 0,
+            total_available_amount: list.totalAvailableAmount 
+                ? String(list.totalAvailableAmount)
+                : undefined,
+            limit_min: list.limitMin ? String(list.limitMin) : undefined,
+            limit_max: list.limitMax ? String(list.limitMax) : undefined
+        };
+
+        console.log('Pre-submission list data:', list);
+        console.log('Formatted data:', formattedData);
+
+        // Remove any undefined values and the marginType field
+        const cleanedData = Object.fromEntries(
+            Object.entries(formattedData)
+                .filter(([_, v]) => v !== undefined)
+                .filter(([k]) => k !== 'marginType')
+        );
+
+        console.log('Cleaned data before sending:', cleanedData);
+
+        const result = await fetch(
+            list.id ? `/api/list_management/${list.id}` : "/api/createList",
+            {
+                method: list.id ? "PUT" : "POST",
+                body: JSON.stringify(
+                    snakecaseKeys(cleanedData, { deep: true })
+                ),
+                headers: {
+                    Authorization: `Bearer ${getAuthToken()}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        const apiResult = await result.json();
+        console.log('API Response:', apiResult);
+        
+        if (apiResult?.data?.id) {
+            router.push(`/${address}`);
+        } else {
+            console.error('Failed to create/update list:', apiResult);
+        }
     }
   };
 
