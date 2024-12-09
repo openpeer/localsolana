@@ -40,10 +40,15 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         clearErrors(['margin']);
         if (percentage) {
             setPercentageMargin(m);
+            updateValue({ margin: m });
         } else {
             setFixedMargin(m);
+            updateValue({ 
+                margin: 0,
+                price: m,  // Ensure price is set for fixed pricing
+                marginType: 'fixed'
+            });
         }
-        updateValue({ margin: m });
     };
 
     const resolver: Resolver = () => {
@@ -86,13 +91,19 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         const currencyLower = currency.name.toLowerCase() as CoingeckoSupportedCurrency;
         const isCoingeckoSupported = COINGECKO_SUPPORTED_CURRENCIES.includes(currencyLower);
         
-        // If currency not supported by Coingecko, force Binance price source
-        if (!isCoingeckoSupported && !priceSource?.startsWith('binance')) {
-            updateValue({ priceSource: 'binance_median' });
+        // Validate current price source
+        const currentSource = list.priceSource || 'binance_median';
+        const validSource = !isCoingeckoSupported && !currentSource.startsWith('binance')
+            ? 'binance_median'
+            : currentSource;
+
+        // Update if source changed
+        if (validSource !== currentSource) {
+            updateValue({ priceSource: validSource });
             return;
         }
 
-        if (priceSource?.startsWith('binance')) {
+        if (validSource.startsWith('binance')) {
             // Convert type from "BuyList"/"SellList" to "BUY"/"SELL"
             const binanceType = type.replace('List', '').toUpperCase();
             
@@ -101,7 +112,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                 params: {
                     token: token.name.toUpperCase(),
                     fiat: currency.name.toUpperCase(),
-                    source: priceSource,
+                    source: validSource,
                     type: binanceType  // Now sends "BUY" instead of "BUYLIST"
                 }
             })
@@ -126,7 +137,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                     }
                 });
         }
-    }, [token, currency, priceSource, type]);
+    }, [token, currency, list.priceSource]);
 
     useEffect(() => {
         if (price) {
@@ -178,7 +189,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                         addOn={<span className="text-gray-500 sm:text-sm mr-3">{currency.name}</span>}
                         id="limitMin"
                         type="decimal"
-                        value={limitMin}
+                        value={list.limitMin ?? undefined}
                         onChangeNumber={(n) => updateValue({ limitMin: n })}
                         error={errors.limitMin}
                     />
@@ -188,7 +199,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                         addOn={<span className="text-gray-500 sm:text-sm mr-3">{currency.name}</span>}
                         id="limitMax"
                         type="decimal"
-                        value={limitMax}
+                        value={list.limitMax ?? undefined}
                         onChangeNumber={(n) => updateValue({ limitMax: n })}
                     />
                 </div>
