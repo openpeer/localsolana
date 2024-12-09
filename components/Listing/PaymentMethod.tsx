@@ -12,12 +12,22 @@ import StepLayout from './StepLayout';
 import PaymentMethodForm from './PaymentMethodForm';
 import { minkeApi } from '@/pages/api/utils/utils';
 
+type BankPaymentMethod = {
+	bank_id: string;
+	values: Record<string, string>;
+};
+
+type DirectPaymentMethod = {
+	payment_method_id: string;
+	values: Record<string, string>;
+};
+
 const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	const { address } = useAccount();
 
 	const { currency, paymentMethods = [], type, banks = [] } = list;
 	
-	const [paymentMethodCreation, setPaymentMethodCreation] = useState<UIPaymentMethod>();	
+	const [paymentMethodCreation, setPaymentMethodCreation] = useState<UIPaymentMethod | null>(null);
 
 	const [apiPaymentMethods, setApiPaymentMethods] = useState<PaymentMethodType[]>([]);
 	const [newPaymentMethods, setNewPaymentMethods] = useState<UIPaymentMethod[]>([]);
@@ -30,174 +40,212 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	
 	const listPaymentMethods = [...existing, ...newPaymentMethods];
 
-	const onProceed = () => {
-		if (paymentMethods.length > 0) {
-			const filteredPaymentMethods = paymentMethods.map((pm) => {
-				const bankId = pm.bank?.id;
-				if (pm.id && newPaymentMethods?.find((npm) => npm.id === pm.id)) {
-					return { ...pm, id: undefined, bank_id: bankId };
+	useEffect(() => {
+		if (isLoading) return;
+		
+		setLoading(true);
+		if (type === 'BuyList') {
+			if (list.id && list.paymentMethods?.length) {
+				interface APIPaymentMethod {
+					id: string;
+					name: string;
+					color: string;
+					imageUrl?: string;
+					image?: string;
+					account_info_schema: any[];
 				}
-				return { ...pm, bank_id: bankId };
-			});
 
-			if (type === 'SellList') {
-				updateList({ ...list, ...{ step: list.step + 1, paymentMethods: filteredPaymentMethods } });
+				const apiPaymentMethods = list.paymentMethods as unknown as APIPaymentMethod[];
+				const savedPaymentMethods: UIPaymentMethod[] = apiPaymentMethods.map(pm => ({
+					id: Number(pm.id),
+					bank: {
+						id: Number(pm.id),
+						name: pm.name,
+						color: pm.color,
+						icon: pm.imageUrl || pm.image || '',
+						account_info_schema: pm.account_info_schema || []
+					} as Bank,
+					values: {}
+				}));
+				
+				setNewPaymentMethods(savedPaymentMethods);
+				if (JSON.stringify(list.paymentMethods) !== JSON.stringify(savedPaymentMethods)) {
+					updateList({
+						...list,
+						banks: savedPaymentMethods.map(pm => pm.bank).filter((bank): bank is Bank => bank !== undefined),
+						paymentMethods: savedPaymentMethods
+					});
+				}
+				setPaymentMethodCreation(null);
+			} else if (!list.id && paymentMethods.length > 0) {
+				setNewPaymentMethods(paymentMethods);
+				setPaymentMethodCreation(null);
 			} else {
-				const bankList = listPaymentMethods
-					.map(pm => {
-						if (!pm.bank) return null;
-						
-						const isBank = (bank: any): bank is Bank => 
-							'color' in bank && 'account_info_schema' in bank;
-						
-						const bank = pm.bank;
-						if (isBank(bank)) {
-							return {
-								id: bank.id,
-								name: bank.name,
-								icon: bank.icon,
-								color: bank.color,
-								account_info_schema: bank.account_info_schema
-							} as Bank;
-						} else {
-							return {
-								id: bank.id,
-								name: bank.name,
-								icon: bank.icon,
-								color: 'gray',
-								account_info_schema: []
-							} as Bank;
-						}
-					})
-					.filter((bank): bank is Bank => bank !== null);
+				addNewPaymentMethod();
+			}
+			setApiPaymentMethods([]);
+		}
+		setLoading(false);
+	}, [list.id, type]);
+
+	const onProceed = () => {
+		if (type === 'BuyList') {
+			const bankList = listPaymentMethods
+				.map(pm => pm.bank)
+				.filter((bank): bank is Bank => bank !== null && bank !== undefined);
+
+			if (bankList.length > 0) {
+				const formattedPaymentMethods: UIPaymentMethod[] = bankList.map(bank => ({
+					id: Number(bank.id),
+					bank: bank,
+					values: {}
+				}));
 
 				updateList({
 					...list,
-					...{ 
-						step: list.step + 1, 
-						banks: bankList
-					}
+					step: list.step + 1,
+					banks: bankList,
+					paymentMethods: formattedPaymentMethods,
+					limitMin: list.limitMin === undefined ? null : list.limitMin,
+					limitMax: list.limitMax === undefined ? null : list.limitMax
+				});
+				return;
+			}
+		} else {
+			if (paymentMethods.length > 0) {
+				const formattedPaymentMethods: UIPaymentMethod[] = paymentMethods.map(pm => ({
+					id: pm.id,
+					bank: pm.bank,
+					values: pm.values || {}
+				}));
+
+				updateList({
+					...list,
+					step: list.step + 1,
+					paymentMethods: formattedPaymentMethods,
+					limitMin: list.limitMin === undefined ? null : list.limitMin,
+					limitMax: list.limitMax === undefined ? null : list.limitMax
 				});
 			}
 		}
 	};
 
 	const updatePaymentMethods = (pms: UIPaymentMethod[]) => {
-		setPaymentMethodCreation(undefined);
-		updateList({ ...list, paymentMethods: pms });
+		setPaymentMethodCreation(null);
+		
+		if (type === 'BuyList') {
+			const bankBasedPayments: UIPaymentMethod[] = pms.map(pm => ({
+				id: pm.id,
+				bank: pm.bank,
+				values: pm.values || {}
+			}));
+			
+			updateList({
+				...list,
+				banks: pms.map(pm => pm.bank).filter((bank): bank is Bank => bank !== undefined),
+				paymentMethods: bankBasedPayments
+			});
+		} else {
+			const paymentMethodBasedPayments: UIPaymentMethod[] = pms.map(pm => ({
+				id: pm.id,
+				bank: pm.bank,
+				values: pm.values || {}
+			}));
+			
+			updateList({
+				...list,
+				paymentMethods: paymentMethodBasedPayments
+			});
+		}
 	};
 
-	const togglePaymentMethod = (pm: UIPaymentMethod) => {
-		const index = paymentMethods.findIndex((m) => m === pm);
+	const togglePaymentMethod = (pm: PaymentMethodType | UIPaymentMethod) => {
+		const uiPaymentMethod: UIPaymentMethod = {
+			id: pm.id,
+			bank: pm.bank,
+			values: Object.entries(pm.values || {}).reduce((acc, [key, value]) => ({
+				...acc,
+				[key]: String(value)
+			}), {})
+		};
+
+		const index = paymentMethods.findIndex((m) => m.id === uiPaymentMethod.id);
 		if (index >= 0) {
 			updatePaymentMethods([...paymentMethods.slice(0, index), ...paymentMethods.slice(index + 1)]);
 		} else {
-			updatePaymentMethods([...paymentMethods, pm]);
+			updatePaymentMethods([...paymentMethods, uiPaymentMethod]);
 		}
 	};
 
-	const enableEdit = (e: React.MouseEvent<HTMLElement>, pm: UIPaymentMethod) => {
+	const enableEdit = (e: React.MouseEvent, pm: PaymentMethodType | UIPaymentMethod) => {
 		e.stopPropagation();
-		setPaymentMethodCreation(pm);
+		const uiPaymentMethod: UIPaymentMethod = {
+			id: pm.id,
+			bank: pm.bank,
+			values: Object.entries(pm.values || {}).reduce((acc, [key, value]) => ({
+				...acc,
+				[key]: String(value)
+			}), {})
+		};
+		setPaymentMethodCreation(uiPaymentMethod);
 	};
 
 	const savePaymentMethodCreation = () => {
-		if (paymentMethodCreation) {
-			if (paymentMethodCreation.id) {
-				const index = paymentMethods.findIndex((pm) => pm.id === paymentMethodCreation.id);
-				if (index >= 0) {
-					updatePaymentMethods([
-						...paymentMethods.slice(0, index),
-						paymentMethodCreation,
-						...paymentMethods.slice(index + 1)
-					]);
-				}
+		if (!paymentMethodCreation) return;
 
-				const newPaymentMethodIndex = newPaymentMethods.findIndex((pm) => pm.id === paymentMethodCreation.id);
-				if (newPaymentMethodIndex >= 0) {
-					setNewPaymentMethods([
-						...newPaymentMethods.slice(0, newPaymentMethodIndex),
-						paymentMethodCreation,
-						...newPaymentMethods.slice(newPaymentMethodIndex + 1)
-					]);
-				}
-			} else {
-				const newPaymentMethod = { ...paymentMethodCreation, ...{ id: new Date().getTime() } };
-				setNewPaymentMethods([...(newPaymentMethods || []), newPaymentMethod]);
-				updatePaymentMethods([...paymentMethods, newPaymentMethod]);
-			}
+		const newPaymentMethod: UIPaymentMethod = {
+			...paymentMethodCreation,
+			id: paymentMethodCreation.id || Number(new Date().getTime()),
+			bank: paymentMethodCreation.bank
+		};
+
+		if (paymentMethodCreation.id) {
+			const updatedPaymentMethods = paymentMethods.map(pm => 
+				pm.id === paymentMethodCreation.id ? newPaymentMethod : pm
+			);
+			updatePaymentMethods(updatedPaymentMethods);
+
+			setNewPaymentMethods(prev => 
+				prev.map(pm => pm.id === paymentMethodCreation.id ? newPaymentMethod : pm)
+			);
+		} else {
+			updatePaymentMethods([...paymentMethods, newPaymentMethod]);
+			setNewPaymentMethods(prev => [...prev, newPaymentMethod]);
 		}
-		
+		setPaymentMethodCreation(null);
 	};
-
-	useEffect(() => {
-		setLoading(true);
-		if (type === 'BuyList') {
-			if (!list.id) {
-				if (paymentMethods.length > 0) {
-					setNewPaymentMethods(paymentMethods);
-				} else {
-					addNewPaymentMethod();
-				}
-			} else {
-				const savedPaymentMethods = list.banks?.map((bank) => ({
-					bank,
-					id: new Date().getTime() + (bank.id || 0),
-					values: {}
-				})) || [];
-				
-				if (savedPaymentMethods.length) {
-					updatePaymentMethods(savedPaymentMethods);
-					setNewPaymentMethods(savedPaymentMethods);
-				}
-			}
-
-			setApiPaymentMethods([]);
-			setLoading(false);
-			return;
-		}
-
-		if (currency?.id) {
-			minkeApi.get(`/api/banks?currency_id=${currency.id}`, {
-				headers: {
-					Authorization: `Bearer ${getAuthToken()}`
-				}
-			})
-				.then((res) => res.data.data)
-				.then((data) => {    
-					setApiPaymentMethods(data || []);
-					setNewPaymentMethods(paymentMethods.filter((pm) => 
-						!data?.find((d: UIPaymentMethod) => d.id === pm.id)
-					));
-					setLoading(false);
-				})
-				.catch(() => {
-					setLoading(false);
-				});
-		}
-	}, [address, currency, type, list.id, list.banks]);
 
 	const addNewPaymentMethod = () => {
-		setPaymentMethodCreation({} as UIPaymentMethod);
+		setPaymentMethodCreation({
+			id: undefined,
+			bank: {
+				id: 0,
+				name: '',
+				icon: '',
+				color: '#000000',
+				account_info_schema: []
+			} as Bank,
+			values: {}
+		});
 	};
+
+	const canProceed = paymentMethods.length > 0;
 
 	if (isLoading) {
 		return <Loading />;
 	}
 
 	return (
-		<StepLayout
-			onProceed={paymentMethodCreation === undefined && paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id).length > 0 ? onProceed : undefined}
-		>
+		<StepLayout onProceed={canProceed ? onProceed : undefined}>
 			<h2 className="text-xl mt-8 mb-2">Payment Methods</h2>
 			<p>{type === 'SellList' ? 'Choose how you want to pay' : 'Choose how you want to receive your money'}</p>
 			{listPaymentMethods.map(
 				(pm) =>
 					pm.bank && (
 						<div
-							key={pm.id}
+							key={`payment-method-${pm.id}`}
 							className={`${
-								paymentMethods.findIndex((m) => m === pm) >= 0
+								paymentMethods.findIndex((m) => m.id === pm.id) >= 0
 									? 'border-2 border-purple-900'
 									: 'border-2 border-slate-200'
 							} w-full flex flex-col bg-gray-100 mt-8 py-4 p-8 rounded-md cursor-pointer`}
@@ -244,20 +292,17 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 						</div>
 					)
 			)}
-			{paymentMethodCreation !== undefined ? (
+			{paymentMethodCreation ? (
 				<PaymentMethodForm
-					currencyId={currency!.id}
-					paymentMethod={paymentMethodCreation}
-					updatePaymentMethod={setPaymentMethodCreation}
-					onFinish={savePaymentMethodCreation}
+					currencyId={currency?.id || 0}
 					type={type}
-					bankIds={[
-						...paymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id),
-						...newPaymentMethods.filter((pm) => pm.bank?.id).map((pm) => pm.bank!.id)
-					]}
+					paymentMethod={paymentMethodCreation}
+					updatePaymentMethod={(pm) => setPaymentMethodCreation(pm)}
+					onFinish={savePaymentMethodCreation}
+					bankIds={listPaymentMethods.map(pm => pm.bank?.id).filter((id): id is number => id !== undefined)}
 				/>
 			) : (
-				<div>
+				<div className="mt-4">
 					<Button title="Add New Payment Method +" outlined onClick={addNewPaymentMethod} />
 				</div>
 			)}
