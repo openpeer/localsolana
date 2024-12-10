@@ -34,11 +34,13 @@ const Option = ({ type, title, description, selected, onClick }: OptionProps) =>
 		<div className="ml-3 flex h-5 items-center">
 			<input
 				id={title}
+				name="list-type"
 				aria-describedby={title}
 				type="radio"
 				className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
 				value={type}
 				checked={selected}
+				onChange={() => onClick(type)}
 			/>
 		</div>
 	</div>
@@ -50,6 +52,7 @@ const ListType = ({ updateList, list }: ListStepProps) => {
 	const { address } = useAccount();
 	const [user, setUser] = useState<User | null>();
 	const escrowSetting = type === 'BuyList' ? 'manual' : (escrowType as UIList['escrowType']);
+	
 
 	const onProceed = () => {
 		updateList({
