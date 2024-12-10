@@ -20,31 +20,61 @@ const useLocalSolana = () => {
   const [myWallet, setMyWallet] = useState<SolanaWallet | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    
     const initializeProgram = async () => {
-      const connection = new Connection(CURRENT_NETWORK_URL, "confirmed");
-      if (!primaryWallet) {
-        console.error("Wallet is not there");
-        return;
-      }
-      if (!isSolanaWallet(primaryWallet)) {
-        return;
-      }
-      //@ts-ignore
-      const provider = new AnchorProvider(connection, primaryWallet, {
-        commitment: "processed",
-      });
-      const program = new Program<LocalSolanaMigrate>(
-        idl as LocalSolanaMigrate,
-        provider
-      );
+      try {
+        // Wait for DOM to be fully ready
+        await new Promise(resolve => {
+          if (document.readyState === 'complete') {
+            resolve(true);
+          } else {
+            window.addEventListener('load', resolve);
+          }
+        });
+        
+        if (!mounted) return;
+        
+        if (!primaryWallet) {
+          return;
+        }
 
-      setProvider(provider);
-      setProgram(program);
-      setMyWallet(primaryWallet);
-      setConnection(connection);
+        if (!isSolanaWallet(primaryWallet)) {
+          console.warn("Not a Solana wallet");
+          return;
+        }
+
+        // Initialize connection first
+        const connection = new Connection(CURRENT_NETWORK_URL, "confirmed");
+        if (!mounted) return;
+        setConnection(connection);
+
+        // Initialize provider and program
+        //@ts-ignore
+        const provider = new AnchorProvider(connection, primaryWallet, {
+          commitment: "processed",
+          preflightCommitment: "processed"
+        });
+        
+        const program = new Program<LocalSolanaMigrate>(
+          idl as LocalSolanaMigrate,
+          provider
+        );
+
+        if (!mounted) return;
+        setProvider(provider);
+        setProgram(program);
+        setMyWallet(primaryWallet);
+      } catch (error) {
+        console.error("Failed to initialize Solana program:", error);
+      }
     };
 
     initializeProgram();
+
+    return () => {
+      mounted = false;
+    };
   }, [primaryWallet]);
 
   const initialiseSolanaAccount = async (address: string) => {
