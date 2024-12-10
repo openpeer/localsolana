@@ -49,6 +49,7 @@ const Summary = ({ list }: SummaryProps) => {
 					width={441}
 					height={385}
 					className="rounded-xl overflow-hidden md:ml-8 my-8 md:p-4 m-auto"
+					priority={true}
 				/>
 			</div>
 		);
