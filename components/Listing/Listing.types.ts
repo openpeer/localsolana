@@ -29,6 +29,7 @@ export interface UIList {
 	fiatCurrencyId: number | undefined;
 	totalAvailableAmount: number | undefined;
 	marginType: List['margin_type'];
+	calculatedPrice?: number;
 	margin: number | undefined;
 	limitMin: number | null;
 	limitMax: number | null;
