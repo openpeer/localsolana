@@ -4,7 +4,11 @@ import { useFormErrors } from 'hooks';
 import { Errors, Resolver } from 'models/errors';
 import { FiatCurrency, List, Token } from 'models/types';
 import React, { useEffect, useState } from 'react';
-import { COINGECKO_SUPPORTED_CURRENCIES, CoingeckoSupportedCurrency } from 'constants/coingeckoSupportedCurrencies';
+import { 
+    COINGECKO_SUPPORTED_CURRENCIES, 
+    isCoinGeckoSupported,
+    isBinanceSupported
+} from 'constants/coingeckoSupportedCurrencies';
 import { minkeApi } from '@/pages/api/utils/utils';
 import { ListStepProps } from './Listing.types';
 import StepLayout from './StepLayout';
@@ -88,16 +92,29 @@ const Amount = ({ list, updateList }: ListStepProps) => {
     useEffect(() => {
         if (!token || !currency) return;
 
-        const currencyLower = currency.name.toLowerCase() as CoingeckoSupportedCurrency;
-        const isCoingeckoSupported = COINGECKO_SUPPORTED_CURRENCIES.includes(currencyLower);
+        const currencyCode = currency.name.toUpperCase();
         
-        // Validate current price source
+        // Check currency support
+        const isCoingeckoSupported = isCoinGeckoSupported(currencyCode);
+        const binanceSupported = isBinanceSupported(currencyCode);
+        
+        // For Binance-only currencies (like VES), force binance_median
+        if (!isCoingeckoSupported && binanceSupported) {
+            const forcedSource = 'binance_median';
+            if (list.priceSource !== forcedSource) {
+                updateValue({ priceSource: forcedSource });
+            }
+            return;
+        }
+        
+        // For other currencies, keep existing logic
         const currentSource = list.priceSource || 'binance_median';
-        const validSource = !isCoingeckoSupported && !currentSource.startsWith('binance')
-            ? 'binance_median'
-            : currentSource;
+        const validSource = isCoingeckoSupported 
+            ? currentSource 
+            : binanceSupported 
+                ? 'binance_median'
+                : currentSource;
 
-        // Update if source changed
         if (validSource !== currentSource) {
             updateValue({ priceSource: validSource });
             return;
@@ -220,7 +237,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                 margin={margin}
                 updateMargin={updateMargin}
                 error={errors.margin}
-                price={price}
+                price={list.calculatedPrice || price}
                 listPriceSource={priceSource}
                 onUpdatePriceSource={(ps) => updateValue({ priceSource: ps })}
             />
