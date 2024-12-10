@@ -10,6 +10,7 @@ export interface UIPaymentMethod {
 }
 
 export interface BankPaymentMethod {
+	bank: Bank;
 	bank_id: string;
 	values: Record<string, string>;
 }
