@@ -54,7 +54,9 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
   // @ts-ignore
   const createList = async () => {
-    const escrowVal = escrowType === "manual" ? 0 : 1;
+    const escrowVal = type === 'BuyList' 
+        ? 0  // Buy lists should always be manual (0)
+        : (escrowType === "manual" ? 0 : 1);  // Sell lists can be either
     
     if (isAuthenticated) {
         // Format payment methods based on list type
@@ -71,11 +73,11 @@ const Details = ({ list, updateList }: ListStepProps) => {
         const formattedData = {
             ...list,
             payment_methods: type === 'BuyList' 
-                ? (paymentMethodsData as BankPaymentMethod[]).map(pm => ({
-                    bank_id: pm.bank_id,
+                ? (list.paymentMethods as BankPaymentMethod[]).map(pm => ({
+                    bank_id: pm.bank.id,
                     values: pm.values
                 }))
-                : (paymentMethodsData as DirectPaymentMethod[]).map(pm => ({
+                : (list.paymentMethods as DirectPaymentMethod[]).map(pm => ({
                     payment_method_id: pm.payment_method_id,
                     values: pm.values
                 })),
