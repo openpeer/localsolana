@@ -108,7 +108,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         }
         
         // For other currencies, keep existing logic
-        const currentSource = list.priceSource || 'binance_median';
+        const currentSource = String(list.priceSource || 'binance_median');
         const validSource = isCoingeckoSupported 
             ? currentSource 
             : binanceSupported 
@@ -119,6 +119,8 @@ const Amount = ({ list, updateList }: ListStepProps) => {
             updateValue({ priceSource: validSource });
             return;
         }
+        
+        console.log("validSource", validSource)
 
         if (validSource.startsWith('binance')) {
             // Convert type from "BuyList"/"SellList" to "BUY"/"SELL"
