@@ -7,4 +7,15 @@ export const COINGECKO_SUPPORTED_CURRENCIES = [
   "vnd", "zar", "xdr", "xag", "xau", "bits", "sats"
 ] as const;
 
+export const BINANCE_SUPPORTED_CURRENCIES = [
+  "COP", "VES", "PEN", "KES", "MAD", "EGP"
+] as const;
+
 export type CoingeckoSupportedCurrency = typeof COINGECKO_SUPPORTED_CURRENCIES[number];
+export type BinanceSupportedCurrency = typeof BINANCE_SUPPORTED_CURRENCIES[number];
+
+export const isCoinGeckoSupported = (currency: string): boolean => 
+  COINGECKO_SUPPORTED_CURRENCIES.includes(currency.toLowerCase() as CoingeckoSupportedCurrency);
+
+export const isBinanceSupported = (currency: string): boolean => 
+  BINANCE_SUPPORTED_CURRENCIES.includes(currency.toUpperCase() as BinanceSupportedCurrency);
