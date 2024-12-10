@@ -14,7 +14,7 @@ import StepLayout from './StepLayout';
 
 const Setup = ({ list, updateList }: ListStepProps) => {
 	//const { chain: connectedChain } = useNetwork();
-	const { token, currency, type, chainId } = list;
+	const { token, currency, type } = list;
 	const [lastToken, setLastToken] = useState<Option | undefined>(token);
 	const [lastCurrency, setLastCurrency] = useState<Option | undefined>(currency);
 	const { errors, clearErrors, validate } = useFormErrors();
@@ -32,17 +32,17 @@ const Setup = ({ list, updateList }: ListStepProps) => {
 
 
 	useEffect(() => {
+		if (!lastToken && !lastCurrency) return;
+		
 		updateList({
 			...list,
-			...{
-				currency: lastCurrency,
-				fiatCurrencyId: lastCurrency?.id,
-				token: lastToken,
-				tokenId: lastToken?.id,
-				margin: list.marginType === 'fixed' ? undefined : list.margin,
-				//chainId: chain?.id || list.chainId,
-				priceSource: (lastCurrency as FiatCurrency)?.default_price_source
-			}
+			currency: lastCurrency,
+			fiatCurrencyId: lastCurrency?.id,
+			token: lastToken,
+			tokenId: lastToken?.id,
+			margin: list.marginType === 'fixed' ? undefined : list.margin,
+			//chainId: chain?.id || list.chainId,
+			priceSource: (lastCurrency as FiatCurrency)?.default_price_source
 		});
 	}, [lastToken, lastCurrency]);
 
@@ -60,7 +60,7 @@ const Setup = ({ list, updateList }: ListStepProps) => {
 
 	const onProceed = () => {
 		if (validate(resolver)) {
-			updateList({ ...list, ...{ step: list.step + 1 } });
+			updateList({ ...list, step: list.step + 1 });
 		}
 	};
 
