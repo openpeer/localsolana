@@ -1,5 +1,5 @@
 import { Button, Loading } from 'components';
-import { useAccount } from 'hooks';
+import { useAccount, useUserProfile } from 'hooks';
 import { Bank, PaymentMethod as PaymentMethodType } from 'models/types';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -23,6 +23,7 @@ type DirectPaymentMethod = {
 };
 
 const PaymentMethod = ({ list, updateList }: ListStepProps) => {
+	const { user } = useUserProfile({});
 	const { address } = useAccount();
 
 	const { currency, paymentMethods = [], type, banks = [] } = list;
@@ -41,41 +42,23 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	const listPaymentMethods = [...existing, ...newPaymentMethods];
 
 	useEffect(() => {
-		if (isLoading) return;
+		if (isLoading || !user?.id) return;
 		
 		setLoading(true);
 		if (type === 'BuyList') {
 			if (list.id && list.paymentMethods?.length) {
-				interface APIPaymentMethod {
-					id: string;
-					name: string;
-					color: string;
-					imageUrl?: string;
-					image?: string;
-					account_info_schema: any[];
-				}
-
-				const apiPaymentMethods = list.paymentMethods as unknown as APIPaymentMethod[];
-				const savedPaymentMethods: UIPaymentMethod[] = apiPaymentMethods.map(pm => ({
+				const savedPaymentMethods: UIPaymentMethod[] = list.paymentMethods.map(pm => ({
 					id: Number(pm.id),
-					bank: {
-						id: Number(pm.id),
-						name: pm.name,
-						color: pm.color,
-						icon: pm.imageUrl || pm.image || '',
-						account_info_schema: pm.account_info_schema || []
-					} as Bank,
-					values: {}
+					bank: pm.bank,
+					values: pm.values || {}
 				}));
 				
 				setNewPaymentMethods(savedPaymentMethods);
-				if (JSON.stringify(list.paymentMethods) !== JSON.stringify(savedPaymentMethods)) {
-					updateList({
-						...list,
-						banks: savedPaymentMethods.map(pm => pm.bank).filter((bank): bank is Bank => bank !== undefined),
-						paymentMethods: savedPaymentMethods
-					});
-				}
+				updateList({
+					...list,
+					banks: savedPaymentMethods.map(pm => pm.bank).filter((bank): bank is Bank => bank !== undefined),
+					paymentMethods: savedPaymentMethods
+				});
 				setPaymentMethodCreation(null);
 			} else if (!list.id && paymentMethods.length > 0) {
 				setNewPaymentMethods(paymentMethods);
@@ -84,9 +67,37 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 				addNewPaymentMethod();
 			}
 			setApiPaymentMethods([]);
+		} else {
+			// For SellList
+			minkeApi.get(`/api/getPaymentMethods/${user.id}`, {
+				headers: {
+					Authorization: `Bearer ${getAuthToken()}`,
+					"Content-Type": "application/json",
+				}
+			})
+				.then(response => {
+					console.log('API Response:', response);
+					
+					const paymentMethodsData = Array.isArray(response.data) ? response.data : 
+											 Array.isArray(response.data?.data) ? response.data.data : 
+											 [];
+					
+					setApiPaymentMethods(paymentMethodsData);
+					if (paymentMethods.length === 0) {
+						updatePaymentMethods(paymentMethodsData);
+					}
+					
+					const newPms = paymentMethods.filter(pm => 
+						!paymentMethodsData.some((d: PaymentMethodType) => d.id === pm.id)
+					);
+					setNewPaymentMethods(newPms);
+				})
+				.catch(error => {
+					console.error('Error fetching payment methods:', error);
+				})
+				.finally(() => setLoading(false));
 		}
-		setLoading(false);
-	}, [list.id, type]);
+	}, [list.id, type, user?.id]);
 
 	const onProceed = () => {
 		if (type === 'BuyList') {
@@ -95,29 +106,26 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 				.filter((bank): bank is Bank => bank !== null && bank !== undefined);
 
 			if (bankList.length > 0) {
-				const formattedPaymentMethods: UIPaymentMethod[] = bankList.map(bank => ({
-					id: Number(bank.id),
-					bank: bank,
-					values: {}
-				}));
-
 				updateList({
 					...list,
 					step: list.step + 1,
 					banks: bankList,
-					paymentMethods: formattedPaymentMethods,
-					limitMin: list.limitMin === undefined ? null : list.limitMin,
-					limitMax: list.limitMax === undefined ? null : list.limitMax
+					paymentMethods: bankList.map(bank => ({
+						id: Number(new Date().getTime()),
+						bank,
+						values: {},
+					} as UIPaymentMethod))
 				});
 				return;
 			}
 		} else {
 			if (paymentMethods.length > 0) {
-				const formattedPaymentMethods: UIPaymentMethod[] = paymentMethods.map(pm => ({
-					id: pm.id,
-					bank: pm.bank,
-					values: pm.values || {}
-				}));
+				const formattedPaymentMethods = paymentMethods
+					.filter(pm => pm.bank)
+					.map(pm => ({
+						bank_id: String(pm.bank?.id),
+						values: pm.values || {}
+					} as BankPaymentMethod));
 
 				updateList({
 					...list,
@@ -196,7 +204,8 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 		const newPaymentMethod: UIPaymentMethod = {
 			...paymentMethodCreation,
 			id: paymentMethodCreation.id || Number(new Date().getTime()),
-			bank: paymentMethodCreation.bank
+			bank: paymentMethodCreation.bank,
+			values: paymentMethodCreation.values || {}
 		};
 
 		if (paymentMethodCreation.id) {
@@ -204,14 +213,21 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 				pm.id === paymentMethodCreation.id ? newPaymentMethod : pm
 			);
 			updatePaymentMethods(updatedPaymentMethods);
-
-			setNewPaymentMethods(prev => 
-				prev.map(pm => pm.id === paymentMethodCreation.id ? newPaymentMethod : pm)
-			);
+			
+			const newIndex = newPaymentMethods.findIndex(pm => pm.id === paymentMethodCreation.id);
+			if (newIndex >= 0) {
+				setNewPaymentMethods([
+					...newPaymentMethods.slice(0, newIndex),
+					newPaymentMethod,
+					...newPaymentMethods.slice(newIndex + 1)
+				]);
+			}
 		} else {
-			updatePaymentMethods([...paymentMethods, newPaymentMethod]);
-			setNewPaymentMethods(prev => [...prev, newPaymentMethod]);
+			const updatedPaymentMethods = [...paymentMethods, newPaymentMethod];
+			updatePaymentMethods(updatedPaymentMethods);
+			setNewPaymentMethods([...newPaymentMethods, newPaymentMethod]);
 		}
+		
 		setPaymentMethodCreation(null);
 	};
 
@@ -294,7 +310,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			)}
 			{paymentMethodCreation ? (
 				<PaymentMethodForm
-					currencyId={currency?.id || 0}
+					currencyId={currency!.id || 0}
 					type={type}
 					paymentMethod={paymentMethodCreation}
 					updatePaymentMethod={(pm) => setPaymentMethodCreation(pm)}
