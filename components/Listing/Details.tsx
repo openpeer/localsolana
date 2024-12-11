@@ -21,6 +21,8 @@ import { watch } from "fs";
 import FriendlySelector from 'components/FriendlySelector';
 import FriendlyTime from 'components/FriendlyTime';
 import { priceSourceToNumber } from 'constants/priceSourceMap';
+import { minkeApi } from '@/pages/api/utils/utils';
+
 
 
 const QuillEditor = dynamic(() => import("react-quill"), { ssr: false });
@@ -55,78 +57,54 @@ const Details = ({ list, updateList }: ListStepProps) => {
   // @ts-ignore
   const createList = async () => {
     const escrowVal = type === 'BuyList' 
-        ? 0  // Buy lists should always be manual (0)
-        : (escrowType === "manual" ? 0 : 1);  // Sell lists can be either
+        ? 0
+        : (escrowType === "manual" ? 0 : 1);
     
     if (isAuthenticated) {
-        // Format payment methods based on list type
-        const paymentMethodsData = type === 'BuyList' 
-            ? list.paymentMethods.map(pm => ({
-                bank_id: pm.bank_id,
-                values: pm.values
-              }))
-            : list.paymentMethods.map(pm => ({
-                payment_method_id: pm.payment_method_id,
-                values: pm.values
-              }));
+        try {
+            console.log("Payment Methods before formatting:", list.paymentMethods);
+            
+            const formattedPaymentMethods = list.paymentMethods;
 
-        const formattedData = {
-            ...list,
-            payment_methods: type === 'BuyList' 
-                ? (list.paymentMethods as BankPaymentMethod[]).map(pm => ({
-                    bank_id: pm.bank.id,
-                    values: pm.values
-                }))
-                : (list.paymentMethods as DirectPaymentMethod[]).map(pm => ({
-                    payment_method_id: pm.payment_method_id,
-                    values: pm.values
-                })),
-            margin_type: list.marginType === "fixed" ? 0 : 1,
-            seller_address: address,
-            escrowType: escrowVal,
-            margin: list.marginType === "fixed" ? 0 : list.margin,
-            price: list.marginType === "fixed" ? list.price : null,
-            priceSource: priceSourceToNumber[list.priceSource as string] || 0,
-            total_available_amount: list.totalAvailableAmount 
-                ? String(list.totalAvailableAmount)
-                : undefined,
-            limit_min: list.limitMin ? String(list.limitMin) : undefined,
-            limit_max: list.limitMax ? String(list.limitMax) : undefined
-        };
+            console.log("Formatted Payment Methods:", formattedPaymentMethods);
 
-        console.log('Pre-submission list data:', list);
-        console.log('Formatted data:', formattedData);
+            const formattedData = {
+                ...list,
+                payment_methods: formattedPaymentMethods,
+                margin_type: list.marginType === "fixed" ? 0 : 1,
+                seller_address: address,
+                escrowType: escrowVal,
+                margin: list.marginType === "fixed" ? 0 : list.margin,
+                price: list.marginType === "fixed" ? list.price : null,
+                priceSource: priceSourceToNumber[list.priceSource as string] || 0,
+                total_available_amount: list.totalAvailableAmount 
+                    ? String(list.totalAvailableAmount)
+                    : undefined,
+                limit_min: list.limitMin ? String(list.limitMin) : undefined,
+                limit_max: list.limitMax ? String(list.limitMax) : undefined
+            };
 
-        // Remove any undefined values and the marginType field
-        const cleanedData = Object.fromEntries(
-            Object.entries(formattedData)
-                .filter(([_, v]) => v !== undefined)
-                .filter(([k]) => k !== 'marginType')
-        );
+            console.log("Final formatted data:", formattedData);
 
-        console.log('Cleaned data before sending:', cleanedData);
-
-        const result = await fetch(
-            list.id ? `/api/list_management/${list.id}` : "/api/createList",
-            {
-                method: list.id ? "PUT" : "POST",
-                body: JSON.stringify(
-                    snakecaseKeys(cleanedData, { deep: true })
-                ),
-                headers: {
-                    Authorization: `Bearer ${getAuthToken()}`,
-                    "Content-Type": "application/json",
-                },
+            const result = await minkeApi.post(
+                list.id ? `/api/list_management/${list.id}` : "/api/createList",
+                snakecaseKeys(formattedData, { deep: true }),
+                {
+                    headers: {
+                        Authorization: `Bearer ${getAuthToken()}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            
+            if (result.status === 200 && (result.data?.data?.id || result.data?.id)) {
+                router.push(`/${address}`);
+            } else {
+                console.error('Failed to create/update list:', result);
             }
-        );
-
-        const apiResult = await result.json();
-        console.log('API Response:', apiResult);
-        
-        if (apiResult?.data?.id) {
-            router.push(`/${address}`);
-        } else {
-            console.error('Failed to create/update list:', apiResult);
+        } catch (error: any) {
+            console.error('Error creating list:', error);
+            console.error('Error details:', error.response?.data);
         }
     }
   };
