@@ -1,4 +1,3 @@
-
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 import Loading from 'components/Loading/Loading';
 import { FiatCurrency } from 'models/types';
@@ -26,37 +25,34 @@ const CurrencySelect = ({
 	const [search, setSearch] = useState('');
 
 	useEffect(() => {
-    const fetchCurrencyByLocation = async () => {
-        if (selectByLocation && currencies) {
-            try {
-                const response = await fetch('https://ipapi.co/currency/');
-                const currency = await response.text();
+		const fetchCurrencyByLocation = async () => {
+			if (selectByLocation && currencies) {
+				try {
+					const response = await fetch('https://ipapi.co/currency/');
+					if (!response.ok) throw new Error('Currency API response not ok');
+					const currency = await response.text();
 
-                if (currency) {
-                    const toSelect = currencies.find((c) => c.code === currency);
-                    if (toSelect) {
-                        onSelect(toSelect);
-                    }
-                }
+					if (currency) {
+						const toSelect = currencies.find((c) => c.code === currency);
+						if (toSelect) {
+							onSelect(toSelect);
+							return;
+						}
+					}
+				} catch (e) {
+					console.warn('Currency API failed, falling back to defaults:', e);
+				}
 
-                if (selectTheFirst && !selected && currencies[0]) {
-                    onSelect(currencies[0]);
-                }
-            } catch (e) {
-                console.error('Currency API', e);
-                const ngnCurrency = currencies.find((c) => c.code === 'NGN');
-                if (ngnCurrency) {
-                    onSelect(ngnCurrency);
-                }
-            }
-        }
-    };
-    fetchCurrencyByLocation();
-}, [currencies]);
+				if (selectTheFirst && !selected && currencies[0]) {
+					onSelect(currencies[0]);
+				}
+			}
+		};
+		fetchCurrencyByLocation();
+	}, [currencies, selectByLocation, selectTheFirst, selected, onSelect]);
 
 	useEffect(() => {
 		setLoading(true);
-		// minkeApi.get('/api/currencies', {
 		minkeApi.get('/api/fiatCurrencies', {
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`
@@ -77,6 +73,10 @@ const CurrencySelect = ({
 				} else if (selectTheFirst && !selected && filtered[0]) {
 					onSelect(filtered[0]);
 				}
+				setLoading(false);
+			})
+			.catch((error) => {
+				console.error('Error fetching currencies:', error);
 				setLoading(false);
 			});
 	}, []);
