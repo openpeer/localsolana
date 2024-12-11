@@ -1,4 +1,3 @@
-
 import { Network } from '@shyft-to/js';
 import { UIList } from 'components/Listing/Listing.types';
 import { List, Token } from 'models/types';
@@ -75,4 +74,18 @@ export function getStatusString(status: number): string {
 const ORDER_STATUS_MAPPING_TO_NUMBER: { [key: string]: number } = Object.fromEntries(
 	Object.entries(ORDER_STATUS_MAPPING).map(([key, value]) => [value, Number(key)])
 );
+
+export const formatNumberWithCommas = (num: number): string => {
+  // Handle edge cases
+  if (isNaN(num) || !isFinite(num)) return '0.00';
+  
+  // Convert to fixed 2 decimal places and split into whole/decimal parts
+  const parts = num.toFixed(2).split('.');
+  
+  // Add commas to the whole number part
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  
+  // Rejoin with decimal part
+  return parts.join('.');
+};
 

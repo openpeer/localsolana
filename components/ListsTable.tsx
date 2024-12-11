@@ -14,6 +14,7 @@ import Token from './Token/Token';
 import FriendlyTime from './FriendlyTime';
 import { getStatusStringList } from '@/utils';
 import HiddenBadge from './HiddenBadge';
+import { formatNumberWithCommas } from '@/utils';
 
 interface ListsTableProps {
     lists: List[];
@@ -206,7 +207,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                                                             <span className="mb-2">
                                                                 <div className="flex flex-row items-center">
                                                                     <span className="pr-1 text-sm text-gray-800">
-                                                                        {fiatSymbol} {effectivePrice.toFixed(2)} per
+                                                                        {fiatSymbol} {formatNumberWithCommas(effectivePrice)} per
                                                                     </span>
                                                                     <span className="text-sm text-gray-800">
                                                                         {symbol}
@@ -305,7 +306,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                                     <div className="flex flex-row space-x-2">
                                         <Flag name={countries[countryCode!]} size={24} />
                                         <span className="flex flex-col">
-                                            {fiatSymbol} {effectivePrice.toFixed(2)} per {symbol}
+                                            {fiatSymbol} {formatNumberWithCommas(effectivePrice)} per {symbol}
                                             {priceDifferencePercentage <= 5 && (
                                                 <div
                                                     className={`flex flex-row items-center justify-start space-x-1 text-${
