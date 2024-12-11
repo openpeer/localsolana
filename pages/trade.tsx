@@ -195,11 +195,30 @@ const HomePage = () => {
 	);
 };
 
-export const getServerSideProps: GetServerSideProps = async () => ({
-	props: {
-		title: 'Trade P2P',
-		disableAuthentication: true
+export const getServerSideProps: GetServerSideProps = async () => {
+	try {
+		return {
+			props: {
+				title: 'Trade P2P',
+				disableAuthentication: true,
+				initialLists: [],
+				initialMeta: {
+					current_page: 1,
+					total_pages: 0,
+					total_count: 0
+				}
+			}
+		};
+	} catch (error) {
+		console.error('Error in getServerSideProps:', error);
+		return {
+			props: {
+				title: 'Trade P2P',
+				disableAuthentication: true,
+				error: 'Failed to load initial data'
+			}
+		};
 	}
-});
+};
 
 export default HomePage;
