@@ -24,30 +24,39 @@ const CurrencySelect = ({
 	const [isLoading, setLoading] = useState(false);
 	const [search, setSearch] = useState('');
 
+	const selectDefaultCurrency = (availableCurrencies: FiatCurrency[]) => {
+		if (selectTheFirst && !selected && availableCurrencies[0]) {
+			onSelect(availableCurrencies[0]);
+		}
+	};
+
 	useEffect(() => {
 		const fetchCurrencyByLocation = async () => {
-			if (selectByLocation && currencies) {
-				try {
-					const response = await fetch('https://ipapi.co/currency/');
-					if (!response.ok) throw new Error('Currency API response not ok');
-					const currency = await response.text();
+			if (!selectByLocation || !currencies) return;
 
-					if (currency) {
-						const toSelect = currencies.find((c) => c.code === currency);
-						if (toSelect) {
-							onSelect(toSelect);
-							return;
-						}
-					}
-				} catch (e) {
-					console.warn('Currency API failed, falling back to defaults:', e);
-				}
+			try {
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 2000);
 
-				if (selectTheFirst && !selected && currencies[0]) {
-					onSelect(currencies[0]);
+				const response = await fetch('https://ipapi.co/currency/', {
+					signal: controller.signal
+				});
+				clearTimeout(timeoutId);
+
+				if (!response.ok) return;
+				
+				const currency = await response.text();
+				const toSelect = currencies.find((c) => c.code === currency);
+				
+				if (toSelect) {
+					onSelect(toSelect);
+					return;
 				}
+			} catch (e) {
+				selectDefaultCurrency(currencies);
 			}
 		};
+
 		fetchCurrencyByLocation();
 	}, [currencies, selectByLocation, selectTheFirst, selected, onSelect]);
 
@@ -63,20 +72,20 @@ const CurrencySelect = ({
 				setRawCurrencies(data);
 				const filtered: FiatCurrency[] = data.map((c: FiatCurrency) => ({ ...c, ...{ name: c.code } }));
 				setCurrencies(filtered);
-				if (selectedIdOnLoad) {
-					if (!selected) {
-						const toSelect = filtered.find(({ id }) => String(id) === selectedIdOnLoad);
-						if (toSelect && !selected) {
-							onSelect(toSelect);
-						}
+				
+				if (selectedIdOnLoad && !selected) {
+					const toSelect = filtered.find(({ id }) => String(id) === selectedIdOnLoad);
+					if (toSelect) {
+						onSelect(toSelect);
 					}
-				} else if (selectTheFirst && !selected && filtered[0]) {
-					onSelect(filtered[0]);
+				} else {
+					selectDefaultCurrency(filtered);
 				}
-				setLoading(false);
 			})
 			.catch((error) => {
 				console.error('Error fetching currencies:', error);
+			})
+			.finally(() => {
 				setLoading(false);
 			});
 	}, []);
