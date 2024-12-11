@@ -13,5 +13,5 @@ export const priceSourceToNumber = Object.entries(priceSourceMap).reduce((acc, [
   return acc;
 }, {} as Record<string, number>);
 
-console.log('Price source map:', priceSourceMap);
-console.log('Price source to number:', priceSourceToNumber);
+// console.log('Price source map:', priceSourceMap);
+// console.log('Price source to number:', priceSourceToNumber);
