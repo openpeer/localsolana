@@ -15,10 +15,11 @@ export interface BankPaymentMethod {
 	values: Record<string, string>;
 }
 
-export interface DirectPaymentMethod {
+export type DirectPaymentMethod = {
 	payment_method_id: string;
+	bank: Bank;
 	values: Record<string, string>;
-}
+};
 
 export interface UIList {
 	id: number | undefined;
