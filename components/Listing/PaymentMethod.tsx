@@ -225,7 +225,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 				color: '#000000',
 				account_info_schema: []
 			} as Bank,
-			values: {}
+			values: {},
 		});
 	};
 
@@ -277,7 +277,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 										const { account_info_schema: schemaInfo } = pm.bank as Bank;
 										const field = schemaInfo.find((f) => f.id === key);
 										const value = (pm.values || {})[key];
-										if (!value) return <></>;
+										if (!value) return null;
 
 										return (
 											<div className="mb-2" key={key}>
