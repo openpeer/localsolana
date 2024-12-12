@@ -262,7 +262,15 @@ const MarginSwitcher = ({
 					<Option label="Floating" selected={selected === 'percentage'} onSelect={onSelect} />
 				</div>
 			</div>
-			<Label title={selected === 'fixed' ? 'Price' : 'Margin (% above market)'} />
+			<Label title={selected === 'fixed' ? 'Price' : 'Margin (% above or below market)'} />
+{selected !== 'fixed' && (
+    <div className="mb-4">
+        <span className="text-sm text-gray-600">
+				Select + or - and enter a value to set your price above or below the market rate. For example, +5% means your price will float 5% above market price.
+        </span>
+    </div>
+)}
+			
 			<>
 				{selected === 'fixed' ? (
 					isLoadingPrice ? (
@@ -280,12 +288,17 @@ const MarginSwitcher = ({
 					)
 				) : (
 					<Selector 
-						value={percentageMargin ?? 1}
-						suffix="%" 
-						updateValue={handleMarginUpdate}
-						error={error}
-						allowNegative 
-					/>
+    value={(percentageMargin ? (percentageMargin - 1) * 100 : 0)}
+    suffix="%" 
+    updateValue={(value) => {
+        handleMarginUpdate(1 + (value/100));
+    }}
+    error={error}
+    decimals={0}
+    showPlusMinus={true}
+    allowNegative={true}
+    initialSign={percentageMargin !== undefined ? (percentageMargin >= 1 ? '+' : '-') : ''} 
+/>
 				)}
 
 				{currency.allow_binance_rates && token.allow_binance_rates && (

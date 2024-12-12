@@ -14,6 +14,8 @@ interface SelectorProps {
 	decimals?: number;
 	minValue?: number;
 	maxValue?: number;
+	showPlusMinus?: boolean;
+	initialSign?: '+' | '-' | ''; 
 }
 
 const Selector = ({
@@ -26,7 +28,9 @@ const Selector = ({
 	changeableAmount = 0.01,
 	decimals = 2,
 	minValue,
-	maxValue
+	maxValue,
+	showPlusMinus = false,
+	initialSign = ''
 }: SelectorProps) => {
 	const changeAmount = (newAmount: number) => {
 		if (maxValue !== undefined && newAmount >= maxValue) {
@@ -48,29 +52,37 @@ const Selector = ({
 	};
 
 	return (
-		<div className="flex flex-row justify-between items-center bg-gray-100 my-8 py-4 p-8 border-2 border-slate-200 rounded-md">
-			{allowNegative || value > 0 ? (
-				<Button title="-" minimal onClick={() => changeAmount(value - changeableAmount)} />
-			) : (
-				<div />
-			)}
-			<div className="flex flex-col">
-				<div className="flex flex-row justify-center items-center text-xl font-bold mb-2">
+		<div className="flex flex-row items-center bg-gray-100 my-8 p-4 border-2 border-slate-200 rounded-md">
+			<div className="w-full flex justify-center">
+				<div className="flex items-center gap-2">
+					{showPlusMinus && (
+						<select 
+							className="bg-transparent border-none outline-none"
+							value={initialSign || ''}
+							onChange={(e) => {
+								if (e.target.value === '') return;
+								const isPositive = e.target.value === '+';
+								const absValue = Math.abs(value);
+								changeAmount(isPositive ? absValue : -absValue);
+							}}
+						>
+							<option value="">Select</option>
+							<option value="+">+</option>
+							<option value="-">-</option>
+						</select>
+					)}
 					<NumericFormat
-						value={value}
+						value={Math.abs(value)}
 						onValueChange={onValueChange}
-						className="bg-white w-1/3 text-center rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm placeholder:text-slate-400 mr-2"
+						className="bg-white w-24 text-center rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm placeholder:text-slate-400"
 						allowedDecimalSeparators={[',', '.']}
 						decimalScale={decimals}
 						inputMode="decimal"
-						allowNegative={allowNegative}
+						allowNegative={allowNegative && !showPlusMinus}
 					/>
-					{suffix}
+					<span>{suffix}</span>
 				</div>
-				{!!error && <p className="text-center mt-2 text-sm text-red-600">{error}</p>}
-				<div className="text-sm text-center">{underValue}</div>
 			</div>
-			<Button title="+" minimal onClick={() => changeAmount(value + changeableAmount)} />
 		</div>
 	);
 };
