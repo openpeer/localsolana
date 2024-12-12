@@ -109,6 +109,22 @@ const EditTrade = ({ id }: { id: number }) => {
 
                 console.log('Final mapped price source:', finalPriceSource);
 
+                const processedPaymentMethods = Array.isArray(paymentMethods) 
+                    ? paymentMethods.map(pm => ({
+                        id: Number(pm.id),
+                        name: pm.name,
+                        color: pm.color,
+                        values: pm.values || {},
+                        bank: pm.bank
+                    }))
+                    : (paymentMethods ? [{
+                        id: Number(paymentMethods.id),
+                        name: paymentMethods.name,
+                        color: paymentMethods.color,
+                        values: paymentMethods.values || {},
+                        bank: paymentMethods.bank
+                    }] : []);
+
                 const ui: UIList = {
                     ...data,
                     step: 1,
@@ -120,9 +136,7 @@ const EditTrade = ({ id }: { id: number }) => {
                     total_available_amount: String(totalAvailableAmount),
                     limitMin: limitMin ? Number(limitMin) : undefined,
                     limitMax: limitMax ? Number(limitMax) : undefined,
-                    paymentMethods: Array.isArray(paymentMethods) 
-                        ? paymentMethods 
-                        : (paymentMethods ? [paymentMethods] : []),
+                    paymentMethods: processedPaymentMethods,
                     terms: terms || '',
                     margin: margin ? Number(margin) : undefined,
                     depositTimeLimit: depositTimeLimit ? Number(depositTimeLimit) : 0,

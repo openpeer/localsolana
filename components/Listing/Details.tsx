@@ -65,7 +65,6 @@ const Details = ({ list, updateList }: ListStepProps) => {
             console.log("Payment Methods before formatting:", list.paymentMethods);
             
             const formattedPaymentMethods = list.paymentMethods;
-
             console.log("Formatted Payment Methods:", formattedPaymentMethods);
 
             const formattedData = {
@@ -87,7 +86,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
             console.log("Final formatted data:", formattedData);
 
             const result = await minkeApi.post(
-                list.id ? `/api/list_management/${list.id}` : "/api/createList",
+                list.id ? `/list_management/${list.id}` : "/createList",
                 snakecaseKeys(formattedData, { deep: true }),
                 {
                     headers: {
