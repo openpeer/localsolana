@@ -4,6 +4,21 @@ import { CacheResponse, ParsedCacheEntry } from '../types/cache';
 import { minkeApi } from '@/pages/api/utils/utils';
 import { PriceGrid } from '@/components/CacheInspector/PriceGrid';
 
+// Utility function to format numbers with commas and proper decimal places
+const formatNumber = (value: number): string => {
+  // Handle numbers less than 1
+  if (value < 1) {
+    return value.toPrecision(6);
+  }
+  
+  // For larger numbers, use toLocaleString with appropriate decimal places
+  const decimalPlaces = value >= 1000 ? 0 : 2;
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  });
+};
+
 export default function CacheInspector() {
   const [cacheData, setCacheData] = useState<ParsedCacheEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,19 +28,39 @@ export default function CacheInspector() {
     try {
       const response = await minkeApi.get<CacheResponse>('/api/prices/cache/inspect');
       const parsed = Object.entries(response.data.data).map(([key, data]) => {
+        // Handle synthetic SOL calculations
+        if (key.startsWith('_solanaCalculations')) {
+          const [, , token, currency, type] = key.split('/');
+          return {
+            token: token.toLowerCase(),
+            currency: currency.toLowerCase(),
+            type: type as 'BUY' | 'SELL',
+            value: data.value as number,
+            formattedValue: formatNumber(data.value as number),
+            timeLeft: data.timeLeft,
+            source: 'synthetic'
+          } satisfies ParsedCacheEntry;
+        }
+
+        // Existing price handling
         const [, token, currency, type] = key.split('/');
         const isBinance = !key.includes('prices/') || type;
         
-        // Ensure value is correctly typed based on source
         const value = isBinance && Array.isArray(data.value) 
           ? data.value as [number, number, number] 
           : data.value as number;
+
+        // Format the value(s)
+        const formattedValue = Array.isArray(value)
+          ? value.map(v => formatNumber(v)).join(' / ')
+          : formatNumber(value);
 
         return {
           token: token.toLowerCase(),
           currency: currency.toLowerCase(),
           type: type as 'BUY' | 'SELL' | undefined,
           value,
+          formattedValue,
           timeLeft: data.timeLeft,
           source: isBinance ? 'binance' : 'coingecko'
         } satisfies ParsedCacheEntry;
@@ -83,6 +118,12 @@ export default function CacheInspector() {
           }>
             Binance Prices
           </Tab>
+          <Tab className={({ selected }) =>
+            `w-full rounded-lg py-2.5 text-sm font-medium leading-5
+             ${selected ? 'bg-white shadow text-blue-700' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
+          }>
+            Synthetic SOL Prices
+          </Tab>
         </Tab.List>
         
         <Tab.Panels className="mt-2">
@@ -94,6 +135,11 @@ export default function CacheInspector() {
           <Tab.Panel>
             <PriceGrid 
               entries={filteredData.filter(entry => entry.source === 'binance')} 
+            />
+          </Tab.Panel>
+          <Tab.Panel>
+            <PriceGrid 
+              entries={filteredData.filter(entry => entry.source === 'synthetic')} 
             />
           </Tab.Panel>
         </Tab.Panels>

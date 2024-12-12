@@ -6,6 +6,11 @@ interface PriceGridProps {
   entries: ParsedCacheEntry[];
 }
 
+const getStatusIndicator = (timeLeft: number) => {
+  const color = getStatusColor(timeLeft);
+  return <span className={`inline-block w-3 h-3 rounded-full ${color}`}>●</span>;
+};
+
 export const PriceGrid = ({ entries }: PriceGridProps) => {
   const stats = useMemo(() => ({
     totalEntries: entries.length,
@@ -47,49 +52,29 @@ export const PriceGrid = ({ entries }: PriceGridProps) => {
 
       {/* Price Grid */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full table-auto">
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Token
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Currency
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Time Left
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
+              <th className="px-4 py-2">Token</th>
+              <th className="px-4 py-2">Currency</th>
+              <th className="px-4 py-2">Price</th>
+              <th className="px-4 py-2">Time Left</th>
+              <th className="px-4 py-2">Status</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {entries.map((entry, index) => (
               <tr key={`${entry.token}-${entry.currency}-${entry.type}-${index}`}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {entry.token.toUpperCase()}
+                <td className="border px-4 py-2">{entry.token.toUpperCase()}</td>
+                <td className="border px-4 py-2">
+                  {entry.type ? `${entry.currency.toUpperCase()} ${entry.type}` : entry.currency.toUpperCase()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {entry.currency.toUpperCase()}
-                  {entry.type && ` (${entry.type})`}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {Array.isArray(entry.value) 
-                    ? `${entry.value[0]} | ${entry.value[1]} | ${entry.value[2]}`
-                    : entry.value.toFixed(6)
-                  }
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="border px-4 py-2">{entry.formattedValue}</td>
+                <td className="border px-4 py-2">
                   {formatTimeLeft(entry.timeLeft)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(entry.timeLeft)}`}>
-                    ●
-                  </span>
+                <td className="border px-4 py-2">
+                  {getStatusIndicator(entry.timeLeft)}
                 </td>
               </tr>
             ))}
