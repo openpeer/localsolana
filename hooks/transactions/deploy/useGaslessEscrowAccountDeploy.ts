@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import useShyft from "../useShyft";
 import useLocalSolana from "../useLocalSolana";
-import useHelius from "../useHelius";
+// import useHelius from "../useHelius";
 
 interface UseGaslessEscrowAccountDeployProps {
   orderId: string;
@@ -51,7 +51,7 @@ const useGaslessEscrowAccountDeploy = ({
     createEscrowTokenBuyer,
   } = useLocalSolana();
 
-  const { getAccountInfo } = useHelius();
+  const { getAccountInfo } = useShyft();
 
   const deploy = async () => {
     if (!primaryWallet?.isConnected) {

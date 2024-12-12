@@ -13,7 +13,7 @@ import useLocalSolana from "../useLocalSolana";
 import { web3 } from "@coral-xyz/anchor";
 import useShyft from "../useShyft";
 //import { Shyft } from '@shyft-to/js';
-import useHelius from "../useHelius";
+// import useHelius from "../useHelius";
 
 
 interface Data {
@@ -31,7 +31,7 @@ const useGaslessDepositFunds = ({
 
   const { primaryWallet } = useDynamicContext();
   const { sendTransactionWithShyft, shyft } = useShyft();
-  const { getAccountInfo } = useHelius()
+  const { getAccountInfo } = useShyft()
   const { depositFundsToLocalSolana } = useLocalSolana();
 
   if (!primaryWallet?.address) {

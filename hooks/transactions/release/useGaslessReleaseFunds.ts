@@ -8,7 +8,7 @@ import { PublicKey } from '@solana/web3.js';
 import { UseEscrowTransactionProps } from '../types';
 import useLocalSolana from '../useLocalSolana';
 import useShyft from '../useShyft';
-import useHelius from '../useHelius';
+// import useHelius from '../useHelius';
 
 interface Data {
 	hash?: string;
@@ -23,7 +23,7 @@ const useGaslessReleaseFunds = ({ orderID, buyer, token, seller }: UseEscrowTran
 	const{shyft,sendTransactionWithShyft} = useShyft();
 
 	const { releaseFunds, getEscrowPDA } = useLocalSolana();
-	const { getAccountInfo, connection } = useHelius();
+	const { getAccountInfo, connection } = useShyft();
 
 	if (!shyft || connection === null) {
 		console.error("Shyft or connection not initialized");

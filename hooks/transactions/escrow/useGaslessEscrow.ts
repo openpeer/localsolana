@@ -8,7 +8,7 @@ import { UseGaslessEscrowFundsProps } from "../types";
 import { PublicKey } from "@solana/web3.js";
 import useShyft from "../useShyft";
 import useLocalSolana from "../useLocalSolana";
-import useHelius from "../useHelius"; // Added Helius integration
+// import useHelius from "../useHelius"; // Added Helius integration
 
 interface Data {
   hash?: string;
@@ -30,7 +30,7 @@ const useGaslessEscrow = ({
 
   const { address } = useAccount();
   const { depositFundsEscrow, getEscrowPDA } = useLocalSolana();
-  const { getAccountInfo } = useHelius(); // Using Helius for account validation
+  const { getAccountInfo } = useShyft(); // Using Helius for account validation
   const { shyft, sendTransactionWithShyft } = useShyft();
 
   if (!shyft) {

@@ -5,7 +5,7 @@ import { useAccount } from 'hooks';
 import useShyft from './useShyft';
 import useLocalSolana from './useLocalSolana';
 import { PublicKey } from '@solana/web3.js';
-import useHelius from './useHelius'; // Added Helius integration
+// import useHelius from './useHelius'; // Added Helius integration
 
 
 interface Data {
@@ -20,7 +20,7 @@ const useOpenDispute = ({ orderID }: {orderID:string}) => {
 	const { address } = useAccount();
 	const { shyft,sendTransactionWithShyft } = useShyft();
 	const {openDispute} = useLocalSolana();
-	const { getAccountInfo } = useHelius();
+	const { getAccountInfo } = useShyft();
 
   if (!address) {
     console.error("Address not available. Cannot open dispute.");

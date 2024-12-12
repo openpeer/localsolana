@@ -12,7 +12,7 @@ import { ErrorBoundary, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { UseDepositFundsProps } from "./types";
 import useLocalSolana from "./useLocalSolana";
 import useShyft from "./useShyft";
-import useHelius from './useHelius';
+// import useHelius from './useHelius';
 
 interface Data {
   hash?: string;
@@ -30,7 +30,7 @@ const useWithdrawFunds = ({
   const { primaryWallet } = useDynamicContext();
   const { sendTransactionWithShyft, shyft } = useShyft();
   const { withdrawFundsFromLocalSolana } = useLocalSolana();
-  const { getTokenBalance, getWalletBalance } = useHelius();
+  const { getTokenBalance, getWalletBalance } = useShyft();
 
   if (!primaryWallet?.address) {
       return {
@@ -42,19 +42,19 @@ const useWithdrawFunds = ({
       };
   }
 
-  const checkBalance = async () => {
-      try {
-          if (token.address === PublicKey.default.toBase58()) {
-              const balance = await getWalletBalance(primaryWallet.address);
-              return balance !== null && balance >= amount;
-          }
-          const tokenBalance = await getTokenBalance(primaryWallet.address, token.address);
-          return tokenBalance?.balance ? tokenBalance.balance >= amount : false;
-      } catch (error) {
-          console.error("Error checking balance:", error);
-          return false;
-      }
-  };
+const checkBalance = async () => {
+    try {
+        if (token.address === PublicKey.default.toBase58()) {
+            const balance = await getWalletBalance(primaryWallet.address);
+            return balance !== null && balance >= amount;
+        }
+        const tokenBalanceResponse = await getTokenBalance(primaryWallet.address, token.address);
+        return tokenBalanceResponse !== null && tokenBalanceResponse >= amount;
+    } catch (error) {
+        console.error("Error checking balance:", error);
+        return false;
+    }
+};
 
   const withdrawFunds = async () => {
       if (!primaryWallet?.address) {

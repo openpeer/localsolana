@@ -121,11 +121,10 @@ const TokenRow = ({
 
   return (
     <tr className="hover:bg-gray-50">
-      <div className="mt-2 flex flex-col text-gray-500 lg:hidden">
-        <div className="fw-full lex flex-col space-y-4">
+      <td className="mt-2 text-gray-500 lg:hidden">
+        <div className="fw-full flex flex-col space-y-4">
           <div className="flex flex-row items-center space-x-1">
             <TokenImage size={24} token={token} />
-
             <span className="text-sm">{token.symbol}</span>
             <span className="text-sm">{balance} {token.symbol}</span>
           </div>
@@ -142,7 +141,7 @@ const TokenRow = ({
             />
           </span>
         </div>
-      </div>
+      </td>
       <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
         <div className="flex flex-row items-center space-x-1">
           <TokenImage size={24} token={token} />
