@@ -357,9 +357,15 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                             </td>
                             <td className="hidden text-right py-4 pr-4 lg:table-cell">
                                 {isSeller ? (
-                                    <EditListButtons list={list} />
+                                    <>
+                                        <EditListButtons list={list} />
+                                        <div className="text-xs text-gray-400 -mt-5 text-center">ID: {id}</div>
+                                    </>
                                 ) : (
-                                    <BuyButton fiatAmount={fiatAmount} tokenAmount={tokenAmount} list={list} />
+                                    <>
+                                        <BuyButton fiatAmount={fiatAmount} tokenAmount={tokenAmount} list={list} />
+                                        <div className="text-xs text-gray-400 mt-1 text-center">ID: {id}</div>
+                                    </>
                                 )}
                             </td>
                         </tr>
