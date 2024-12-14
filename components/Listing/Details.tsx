@@ -62,10 +62,13 @@ const Details = ({ list, updateList }: ListStepProps) => {
     
     if (isAuthenticated) {
         try {
-            console.log("Payment Methods before formatting:", list.paymentMethods);
+            // Log initial state
+            console.log("List ID:", list.id);
+            console.log("List Type:", type);
+            console.log("Payment Methods at start:", list.paymentMethods);
             
             const formattedPaymentMethods = list.paymentMethods;
-            console.log("Formatted Payment Methods:", formattedPaymentMethods);
+            console.log("Payment Methods after formatting:", formattedPaymentMethods);
 
             const formattedData = {
                 ...list,
@@ -83,7 +86,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 limit_max: list.limitMax ? String(list.limitMax) : undefined
             };
 
-            console.log("Final formatted data:", formattedData);
+            console.log("Final data being sent to API:", formattedData);
 
             const result = await minkeApi.post(
                 list.id ? `/list_management/${list.id}` : "/createList",
@@ -96,10 +99,12 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 }
             );
             
-            if (result.status === 200 && (result.data?.data?.id || result.data?.id)) {
-                router.push(`/${address}`);
+            console.log("API Response:", result);
+
+            if (result.status === 200) {
+                console.log("Update successful");
             } else {
-                console.error('Failed to create/update list:', result);
+                console.error("Update failed:", result);
             }
         } catch (error: any) {
             console.error('Error creating list:', error);

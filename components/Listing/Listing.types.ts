@@ -8,7 +8,14 @@ export interface UIPaymentMethod {
 	payment_method_id?: string;
 	bank_id?: string;
 	color?: string;
-  name?: string;
+	name?: string;
+	account_info_schema?: Array<{
+		label: string;
+		id: string;
+		required: boolean;
+	}>;
+	image?: string;
+	imageUrl?: string;
 }
 
 export interface BankPaymentMethod {

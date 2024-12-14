@@ -23,10 +23,12 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         marginType = 'fixed',
         margin: savedMargin,
         type,
-        priceSource
+        priceSource,
+        calculatedPrice
     } = list;
     
     const percentage = marginType === 'percentage';
+    console.log("MARGIN TYPE:", marginType)
     const [percentageMargin, setPercentageMargin] = useState<number>(percentage ? savedMargin || 1 : 1);
     const [fixedMargin, setFixedMargin] = useState<number | undefined>(percentage ? undefined : savedMargin);
     const [price, setPrice] = useState<number | undefined>();
@@ -34,25 +36,23 @@ const Amount = ({ list, updateList }: ListStepProps) => {
     const { errors, clearErrors, validate } = useFormErrors();
 
     const margin = percentage ? percentageMargin : fixedMargin;
+    console.log("MARGIN:", margin)
 
     const updateValue = (obj: any) => {
-        clearErrors(Object.keys(obj));
+        console.log("Before update:", list);
         updateList({ ...list, ...obj });
+        console.log("After update:", { ...list, ...obj });
     };
 
     const updateMargin = (m: number) => {
+        console.log("Updating margin to:", m);
         clearErrors(['margin']);
         if (percentage) {
             setPercentageMargin(m);
-            updateValue({ margin: m });
         } else {
             setFixedMargin(m);
-            updateValue({ 
-                margin: 0,
-                price: m,  // Ensure price is set for fixed pricing
-                marginType: 'fixed'
-            });
         }
+        updateValue({ margin: m });
     };
 
     const resolver: Resolver = () => {
@@ -63,34 +63,53 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         const error: Errors = {};
 
         const { minimum_amount: minimumAmount } = token as Token;
+        // console.log("TOKEN", token);
 
-        if (!!minimumAmount && total < Number(minimumAmount)) {
+        console.log("Total:", total, "Min:", min, "Max:", max, "Minimum Amount:", minimumAmount);
+
+        if (minimumAmount !== null && total < Number(minimumAmount)) {
             error.totalAvailableAmount = `Should be bigger or equals to ${minimumAmount} ${token!.name}`;
+            console.log("Error: Total available amount is less than minimum amount");
         }
 
         if (total <= 0) {
             error.totalAvailableAmount = 'Should be bigger than 0';
+            console.log("Error: Total available amount should be bigger than 0");
         }
 
         if (!!limitMax && min > max) {
             error.limitMin = 'Should be smaller than the max';
+            console.log("Error: Min limit should be smaller than max limit");
         }
 
-        const fiatTotal = total * price!;
+        console.log("Price before fiatTotal calculation:", price);
+        const fiatTotal = total * (calculatedPrice || 0);
+        console.log("Fiat Total:", fiatTotal);
 
         if (!!limitMin && min > fiatTotal) {
             error.limitMin = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
+            console.log("Error: Min limit should be smaller than fiat total");
         }
 
-        if (!percentage && (margin || 0) <= 0) {
-            error.margin = 'Should be bigger than zero';
+        if (percentage) {
+            if ((margin || 0) <= 0) {
+                error.margin = 'Should be bigger than zero';
+                console.log("Error: Margin should be bigger than zero for percentage pricing");
+            }
+        } else {
+            if (!calculatedPrice || calculatedPrice <= 0) {
+                error.margin = 'Price should be set for fixed pricing';
+                console.log("Error: Price should be set for fixed pricing");
+            }
         }
 
+        console.log("Errors before return:", error);
         return error;
     };
 
     useEffect(() => {
         if (!token || !currency) return;
+        console.log("Fetching price for token:", token.name, "and currency:", currency.name);
 
         const currencyCode = currency.name.toUpperCase();
         
@@ -120,42 +139,31 @@ const Amount = ({ list, updateList }: ListStepProps) => {
             return;
         }
         
-        console.log("validSource", validSource)
+        console.log("validSource", validSource);
 
-        if (validSource.startsWith('binance')) {
-            // Convert type from "BuyList"/"SellList" to "BUY"/"SELL"
-            const binanceType = type.replace('List', '').toUpperCase();
-            
-            // Binance pricing
-            minkeApi.get(`/api/prices`, {
-                params: {
-                    token: token.name.toUpperCase(),
-                    fiat: currency.name.toUpperCase(),
-                    source: validSource,
-                    type: binanceType  // Now sends "BUY" instead of "BUYLIST"
-                }
-            })
-            .then((res) => res.data.data)
-            .then((data) => {
-                if (Object.keys(data).length > 0) {
-                    setPrice(data[token.name][currency.name]);
-                }
-            });
-        } else {
-            // Coingecko pricing
-            const { coingecko_id: coingeckoId } = token as Token;
-            let tokenName = token.name;
-            if (tokenName === 'USDC') tokenName = 'usd-coin';
-            else if (tokenName === 'USDT') tokenName = 'tether';
-
-            minkeApi.get(`/api/prices?token=${coingeckoId}&fiat=${currency.name.toLowerCase()}`)
-                .then((res) => res.data.data)
-                .then((data) => {
-                    if (Object.keys(data).length > 0) {
-                        setPrice(data[coingeckoId || token.name][currency.name.toLowerCase()]);
-                    }
-                });
-        }
+        // Fetch the price
+        minkeApi.get(`/api/prices`, {
+            params: {
+                token: token.name.toUpperCase(),
+                fiat: currency.name.toUpperCase(),
+                source: validSource,
+                type: type.replace('List', '').toUpperCase()
+            }
+        })
+        .then((res) => {
+            console.log("Price API response:", res.data);
+            return res.data.data;
+        })
+        .then((data) => {
+            if (Object.keys(data).length > 0) {
+                const fetchedPrice = data[token.name][currency.name];
+                console.log("Fetched price:", fetchedPrice);
+                setPrice(fetchedPrice);
+            }
+        })
+        .catch((error) => {
+            console.error("Error fetching price:", error);
+        });
     }, [token, currency, list.priceSource]);
 
     useEffect(() => {
@@ -174,8 +182,15 @@ const Amount = ({ list, updateList }: ListStepProps) => {
     }, [price]);
 
     const onProceed = () => {
-        if (validate(resolver)) {
+        console.log("Proceed button clicked");
+        const isValid = validate(resolver);
+        console.log("Validation result:", isValid);
+        if (isValid) {
+            console.log("Current step:", list.step);
             updateValue({ step: list.step + 1 });
+            console.log("Updated step:", list.step + 1);
+        } else {
+            console.log("Validation errors:", errors);
         }
     };
 

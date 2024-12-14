@@ -62,7 +62,7 @@ const EditTrade = ({ id }: { id: number }) => {
                     chain_id: chainId,
                     accept_only_verified: acceptOnlyVerified,
                     escrow_type: escrowType,
-                    bank: banks,
+                    banks: banks,
                     price_source: rawPriceSource = 1
                 } = data;
 
@@ -109,21 +109,21 @@ const EditTrade = ({ id }: { id: number }) => {
 
                 console.log('Final mapped price source:', finalPriceSource);
 
-                const processedPaymentMethods = Array.isArray(paymentMethods) 
-                    ? paymentMethods.map(pm => ({
-                        id: Number(pm.id),
-                        name: pm.name,
-                        color: pm.color,
-                        values: pm.values || {},
-                        bank: pm.bank
-                    }))
-                    : (paymentMethods ? [{
-                        id: Number(paymentMethods.id),
-                        name: paymentMethods.name,
-                        color: paymentMethods.color,
-                        values: paymentMethods.values || {},
-                        bank: paymentMethods.bank
-                    }] : []);
+                // const processedPaymentMethods = Array.isArray(paymentMethods) 
+                //     ? paymentMethods.map(pm => ({
+                //         id: Number(pm.id),
+                //         name: pm.name,
+                //         color: pm.color,
+                //         values: pm.values || {},
+                //         bank: pm.bank
+                //     }))
+                //     : (paymentMethods ? [{
+                //         id: Number(paymentMethods.id),
+                //         name: paymentMethods.name,
+                //         color: paymentMethods.color,
+                //         values: paymentMethods.values || {},
+                //         bank: paymentMethods.bank
+                //     }] : []);
 
                 const ui: UIList = {
                     ...data,
@@ -136,7 +136,7 @@ const EditTrade = ({ id }: { id: number }) => {
                     total_available_amount: String(totalAvailableAmount),
                     limitMin: limitMin ? Number(limitMin) : undefined,
                     limitMax: limitMax ? Number(limitMax) : undefined,
-                    paymentMethods: processedPaymentMethods,
+                    paymentMethods: paymentMethods,
                     terms: terms || '',
                     margin: margin ? Number(margin) : undefined,
                     depositTimeLimit: depositTimeLimit ? Number(depositTimeLimit) : 0,
@@ -144,7 +144,8 @@ const EditTrade = ({ id }: { id: number }) => {
                     chainId,
                     acceptOnlyVerified,
                     escrowType,
-                    banks: Array.isArray(banks) ? banks : (banks ? [banks] : []),
+                    // banks: Array.isArray(banks) ? banks : (banks ? [banks] : []),
+                    banks: banks,
                     priceSource: finalPriceSource
                 };
                 console.log('Final UI List object:', ui);

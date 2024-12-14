@@ -94,9 +94,17 @@ export interface AccountFieldValue {
 export interface Bank {
 	id: number;
 	name: string;
-	icon: string;
-	account_info_schema: AccountField[];
 	color: string;
+	account_info_schema: Array<{
+		label: string;
+		id: string;
+		required: boolean;
+	}>;
+	image?: string;
+	imageUrl?: string;
+	icon?: string;
+	createdAt?: string;
+	updatedAt?: string;
 }
 
 export interface PaymentMethod {
