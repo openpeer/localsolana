@@ -289,7 +289,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	 * - Proceed button (if conditions met)
 	 */
 	return (
-		<StepLayout onProceed={canProceed ? onProceed : undefined}>
+		<StepLayout onProceed={paymentMethodCreation ? undefined : (canProceed ? onProceed : undefined)}>
 			<h2 className="text-xl mt-8 mb-2">Payment Methods</h2>
 			<p>{type === 'SellList' ? 'Choose how you want to pay' : 'Choose how you want to receive your money'}</p>
 			{isDataReady && listPaymentMethods.map((pm) => (

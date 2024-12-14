@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { Bank } from 'models/types';
 import Input from 'components/Input/Input';
 import BankSelect from 'components/Select/BankSelect';
-import StepLayout from './StepLayout';
 import { UIPaymentMethod } from './Listing.types';
 import { Option } from 'components/Select/Select.types';
+import Button from 'components/Button/Button';
 
 interface SchemaField {
 	id: string;
@@ -69,16 +69,19 @@ const PaymentMethodForm = ({
 	};
 
 	return (
-		<StepLayout onProceed={onFinish}>
-			<div className="mt-8 space-y-4 bg-white p-6 rounded-lg shadow-sm">
-				<BankSelect
-					currencyId={currencyId}
-					selected={paymentMethod.bank}
-					onSelect={handleBankSelect}
-					error={undefined}
-				/>
+		<div className="mt-8 space-y-6">
+			<div className="bg-white p-6 rounded-lg shadow-sm">
+				<div className="mb-6">
+					<BankSelect
+						currencyId={currencyId}
+						selected={paymentMethod.bank}
+						onSelect={handleBankSelect}
+						error={undefined}
+					/>
+				</div>
+				
 				{paymentMethod.bank?.account_info_schema.map((field: SchemaField) => (
-					<div key={field.id} className="mt-4">
+					<div key={field.id} className="mb-4">
 						<Input
 							id={field.id}
 							label={field.label}
@@ -90,7 +93,10 @@ const PaymentMethodForm = ({
 					</div>
 				))}
 			</div>
-		</StepLayout>
+			<div className="flex justify-end">
+				<Button onClick={onFinish} title="Save Payment Method" />
+			</div>
+		</div>
 	);
 };
 
