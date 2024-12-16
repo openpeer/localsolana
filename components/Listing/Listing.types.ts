@@ -55,6 +55,7 @@ export interface UIList {
 	banks: Bank[];
 	priceSource: PriceSource | undefined;
 	price?: number;
+	status: number;
 }
 
 export interface ListStepProps {
