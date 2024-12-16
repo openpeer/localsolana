@@ -56,53 +56,81 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
   // @ts-ignore
   const createList = async () => {
-    const escrowVal = type === 'BuyList' 
-        ? 0
-        : (escrowType === "manual" ? 0 : 1);
+    const escrowVal = type === 'BuyList' ? 0 : (escrowType === "manual" ? 0 : 1);
     
     if (isAuthenticated) {
         try {
-            // Log initial state
             console.log("List ID:", list.id);
-            console.log("List Type:", type);
-            console.log("Payment Methods at start:", list.paymentMethods);
             
-            const formattedPaymentMethods = list.paymentMethods;
-            console.log("Payment Methods after formatting:", formattedPaymentMethods);
+            // Transform payment methods to simpler structure
+            const simplifiedPaymentMethods = list.paymentMethods?.map(pm => ({
+                bank_id: pm.id
+            })) || [];
 
+            // Format data to match expected API structure
             const formattedData = {
-                ...list,
-                payment_methods: formattedPaymentMethods,
+                id: list.id,
+                type: list.type,
+                status: list.status,
+                seller_id: user?.id,
+                token_id: Number(list.tokenId),
+                fiat_currency_id: Number(list.fiatCurrencyId),
                 margin_type: list.marginType === "fixed" ? 0 : 1,
-                seller_address: address,
-                escrowType: escrowVal,
                 margin: list.marginType === "fixed" ? 0 : list.margin,
-                price: list.marginType === "fixed" ? list.price : null,
-                priceSource: priceSourceToNumber[list.priceSource as string] || 0,
-                total_available_amount: list.totalAvailableAmount 
-                    ? String(list.totalAvailableAmount)
-                    : undefined,
-                limit_min: list.limitMin ? String(list.limitMin) : undefined,
-                limit_max: list.limitMax ? String(list.limitMax) : undefined
+                total_available_amount: Number(list.totalAvailableAmount),
+                limit_min: Number(list.limitMin),
+                limit_max: Number(list.limitMax),
+                deposit_time_limit: list.depositTimeLimit,
+                payment_time_limit: list.paymentTimeLimit,
+                terms: list.terms,
+                chain_id: list.chainId,
+                accept_only_verified: list.acceptOnlyVerified,
+                escrow_type: escrowVal,
+                price_source: priceSourceToNumber[list.priceSource as string],
+                price: list.price || list.calculatedPrice,
+                automatic_approval: true,
+                payment_methods: simplifiedPaymentMethods
             };
+
+            // Add validation to ensure required values exist
+            if (!user?.id) {
+                throw new Error('User ID not found');
+            }
+            if (list.price === undefined && list.calculatedPrice === undefined) {
+                throw new Error('Price is required');
+            }
+            if (list.priceSource === undefined) {
+                throw new Error('Price source is required');
+            }
+
+            // Add validation for price_source conversion
+            if (formattedData.price_source === undefined) {
+                throw new Error(`Invalid price source: ${list.priceSource}`);
+            }
 
             console.log("Final data being sent to API:", formattedData);
 
-            const result = await minkeApi.post(
-                list.id ? `/list_management/${list.id}` : "/createList",
-                snakecaseKeys(formattedData, { deep: true }),
-                {
-                    headers: {
-                        Authorization: `Bearer ${getAuthToken()}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-            
-            console.log("API Response:", result);
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+            const result = await fetch(`/api/list_management/${list.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${getAuthToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formattedData)
+            });
+
+            try {
+                const responseBody = await result.text();
+                console.log("Response body:", responseBody);
+            } catch (e) {
+                console.error("Error reading response body:", e);
+            }
 
             if (result.status === 200) {
                 console.log("Update successful");
+                router.push('/ads');
             } else {
                 console.error("Update failed:", result);
             }
