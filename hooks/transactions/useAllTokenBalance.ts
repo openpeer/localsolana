@@ -6,7 +6,11 @@ import useShyft from './useShyft';
 import { TokenBalance } from '@shyft-to/js';
 
 
-export const useAllTokenBalance = (walletAddress: string, watch?: boolean) => {
+export const useAllTokenBalance = (
+  address: string, 
+  watch = false,
+  refreshTrigger = 0
+) => {
   const [balances, setBalances] = useState<TokenBalance[] | null>(null);
   const [loadingBalance, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +29,7 @@ export const useAllTokenBalance = (walletAddress: string, watch?: boolean) => {
             return
         }
         ////console.log("Here is my balance",);
-        const balance = await getAllTokenBalance(walletAddress);
+        const balance = await getAllTokenBalance(address);
         ////console.log("Here is my balance",balance);
         setBalances(balance);
         setLoading(false);
@@ -37,7 +41,7 @@ export const useAllTokenBalance = (walletAddress: string, watch?: boolean) => {
       }
     };
 
-    if (walletAddress) {
+    if (address) {
       fetchBalance();
     }
     if(watch){
@@ -49,7 +53,7 @@ export const useAllTokenBalance = (walletAddress: string, watch?: boolean) => {
     }
 
     
-  }, [walletAddress,connection]);
+  }, [address,connection,refreshTrigger]);
   // //console.log("Here is my balance",balance, loadingBalance, error);
 
   return { balances, loadingBalance, error };

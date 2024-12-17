@@ -175,6 +175,7 @@ const MyEscrows = () => {
   const { user, fetchUserProfile } = useUserProfile({});
   const [lastVersion, setLastVersion] = useState(0);
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // deposit withdraw params
   const [action, setAction] = useState<"Deposit" | "Withdraw">("Deposit");
@@ -187,30 +188,45 @@ const MyEscrows = () => {
     true
   );
 
+  // Add refresh function
+  const refreshBalances = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  // Fetch tokens
   useEffect(() => {
     setLoading(true);
     const fetchTokens = async () => {
-      // change it later
-
-      minkeApi
-        .get(`/api/admin/tokens`, {
+      try {
+        const response = await minkeApi.get(`/api/admin/tokens`, {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
           },
-        })
-        .then((res) => {
-         //console.log('Tokens are', res.data.data);
-          setTokens(res.data.data);
-          setLoading(false);
         });
+        setTokens(response.data.data);
+      } catch (error) {
+        console.error("Failed to fetch tokens:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTokens();
-  }, []);
+  }, [refreshTrigger]); // Add refreshTrigger to dependencies
 
-
-   const {balances,loadingBalance,error} = useAllTokenBalance(user?.contract_address || '',false);
-   const {balance} = useBalance(user?.contract_address || '',PublicKey.default.toBase58(),false);
+  // Use refreshTrigger in balance hooks
+  const {balances, loadingBalance, error} = useAllTokenBalance(
+    user?.contract_address || '', 
+    false,
+    refreshTrigger // Pass as dependency
+  );
+  
+  const {balance} = useBalance(
+    user?.contract_address || '',
+    PublicKey.default.toBase58(),
+    false,
+    refreshTrigger // Pass as dependency
+  );
 
   const needToDeploy = escrowData == null;
   const onSelectToken = (t: Token, c: string, a: "Withdraw" | "Deposit") => {
@@ -223,7 +239,15 @@ const MyEscrows = () => {
     setToken(undefined);
     setContract(undefined);
     setAction("Deposit");
-    //router.reload();
+    refreshBalances(); // Refresh balances when returning
+  };
+
+  // Update DeploySellerContract implementation
+  const handleContractAddress = (address: string | undefined) => {
+    if (address) {
+      fetchUserProfile();
+      refreshBalances();
+    }
   };
 
   // if(loadingBalance){
@@ -253,11 +277,7 @@ const MyEscrows = () => {
               <div className="mt-4 mb-4 px-4">
                 <DeploySellerContract
                   label="Create LocalSolana Account"
-                  setContractAddress={function (
-                    address: string | undefined
-                  ): void {
-                    throw new Error("Function not implemented.");
-                  }}
+                  setContractAddress={handleContractAddress}
                 />
               </div>
             )}

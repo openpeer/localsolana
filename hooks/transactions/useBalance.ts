@@ -5,7 +5,12 @@ import useLocalSolana from './useLocalSolana';
 import useShyft from './useShyft';
 
 
-export const useBalance = (walletAddress: string, tokenAddress: string, watch?: boolean) => {
+export const useBalance = (
+  address: string,
+  tokenAddress: string,
+  watch = false,
+  refreshTrigger = 0
+) => {
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,17 +23,17 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
       setError(null);
 
       try {
-        const publicKey = new PublicKey(walletAddress);
+        const publicKey = new PublicKey(address);
         if(!connection){
             setError("Connection not established");
             setLoading(false);
             return
         }
         if(tokenAddress == PublicKey.default.toBase58()){
-        const balance = await getWalletBalance(walletAddress);
+        const balance = await getWalletBalance(address);
         //console.log("Here is my actual balance",balance);
         // Fetch the account's rent exemption requirement
-        const accountInfo = await connection.getAccountInfo(new PublicKey(walletAddress));
+        const accountInfo = await connection.getAccountInfo(new PublicKey(address));
         if (!accountInfo) {
           throw new Error('Account not found or invalid');
         }
@@ -46,7 +51,7 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
           setBalance(0);
         }
       }else{
-        const balance = await getTokenBalance(walletAddress,tokenAddress);
+        const balance = await getTokenBalance(address,tokenAddress);
         setBalance(balance);
       }
       } catch (err: any) {
@@ -56,7 +61,7 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
       }
     };
 
-    if (walletAddress) {
+    if (address) {
       fetchBalance();
     }
     if(watch){
@@ -68,7 +73,7 @@ export const useBalance = (walletAddress: string, tokenAddress: string, watch?: 
     }
 
     
-  }, [walletAddress,connection]);
+  }, [address, tokenAddress, refreshTrigger]);
   // //console.log("Here is my balance",balance, loadingBalance, error);
 
   return { balance, loadingBalance, error };

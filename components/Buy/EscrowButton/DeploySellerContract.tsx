@@ -36,12 +36,18 @@ const DeploySellerContract = ({
 
   useEffect(() => {
     console.log('in use effect of DeploySellerContract',isSuccess,data);
-      if (isSuccess && !prevIsSuccessRef.current && (data?.escrowPDA!='')) {
-		console.log('in use effect of DeploySellerContract',data);
-          prevIsSuccessRef.current = true;
-          setContractAddress(data?.escrowPDA);
-      }
-  }, [ isSuccess,data]);
+    if (isSuccess && !prevIsSuccessRef.current && (data?.escrowPDA!='')) {
+      console.log('in use effect of DeploySellerContract',data);
+      prevIsSuccessRef.current = true;
+      setContractAddress(data?.escrowPDA);
+    }
+  }, [isSuccess,data]);
+
+  useEffect(() => {
+    if (isSuccess && data?.escrowPDA) {
+      setContractAddress(data.escrowPDA);
+    }
+  }, [isSuccess, data?.escrowPDA, setContractAddress]);
 
   return (
     <Button

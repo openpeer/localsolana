@@ -37,32 +37,63 @@ const useGaslessDeploy = () => {
   } = useLocalSolana();
 
   const deploy = async () => {
-    if (!primaryWallet?.isConnected) return;
+    if (!primaryWallet?.isConnected) {
+      console.log("Primary wallet not connected", primaryWallet);
+      return;
+    }
 
     setIsLoading(true);
 
     try {
-      const escrowStatePDA =  getEscrowStatePDA(primaryWallet?.address);
-      //console.log(escrowStatePDA?.toBase58());
-      //const status = await getAccountInfo(escrowStatePDA?.toBase58() ?? "");
-      var result = null;
-      //if (status == null || status == undefined) {
-        const transaction = await initialiseSolanaAccount(
-          primaryWallet?.address
-        );
-        result = await sendTransactionWithShyft(transaction,false);
-        //console.log(`Shyft Transaction result: ${result}`);
-     // }
-      if ( result==undefined || result == null) {
-        ////console.log(`Status ${status}`);
+      console.log("Starting deployment with wallet address:", primaryWallet.address);
+      
+      const escrowStatePDA = getEscrowStatePDA(primaryWallet?.address);
+      if (!escrowStatePDA) {
+        console.error("Failed to generate escrowStatePDA");
+        setIsSuccess(false);
+        return;
+      }
+      console.log("Generated escrowStatePDA:", escrowStatePDA.toBase58());
+      
+      console.log("Initializing Solana account...");
+      const transaction = await initialiseSolanaAccount(primaryWallet?.address);
+      if (!transaction) {
+        console.error("Failed to create initialization transaction");
+        setIsSuccess(false);
+        return;
+      }
+      console.log("Generated transaction:", {
+        feePayer: transaction.feePayer?.toBase58(),
+        recentBlockhash: transaction.recentBlockhash,
+        instructions: transaction.instructions.length
+      });
+      
+      console.log("Sending transaction to Shyft...");
+      const result = await sendTransactionWithShyft(transaction, false);
+      console.log("Shyft transaction result:", result);
+
+      if (!result) {
+        console.log("Transaction failed - no result");
         setIsSuccess(false);
       } else {
-        //console.log(`Status ${result}`);
-        updateData({ hash: result ?? undefined, escrowPDA: escrowStatePDA?.toBase58() || "" });
+        console.log("Transaction succeeded:", {
+          hash: result,
+          escrowPDA: escrowStatePDA.toBase58()
+        });
+        updateData({ 
+          hash: result, 
+          escrowPDA: escrowStatePDA.toBase58() 
+        });
         setIsSuccess(true);
       }
     } catch (error) {
-      console.error("Deployment failed", error);
+      console.error("Deployment failed with error:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack
+        });
+      }
       setIsSuccess(false);
     } finally {
       setIsLoading(false);

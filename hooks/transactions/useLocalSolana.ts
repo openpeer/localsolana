@@ -45,13 +45,13 @@ const useLocalSolana = () => {
         }
 
         // Initialize connection first
-        const connection = new Connection(CURRENT_NETWORK_URL, "confirmed");
-        if (!mounted) return;
-        setConnection(connection);
+        const newConnection = await initConnection();
+        if (!mounted || !newConnection) return;
+        setConnection(newConnection);
 
         // Initialize provider and program
         //@ts-ignore
-        const provider = new AnchorProvider(connection, primaryWallet, {
+        const provider = new AnchorProvider(newConnection, primaryWallet, {
           commitment: "processed",
           preflightCommitment: "processed"
         });
@@ -76,6 +76,20 @@ const useLocalSolana = () => {
       mounted = false;
     };
   }, [primaryWallet]);
+
+  const initConnection = async (retries = 3): Promise<Connection | null> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const connection = new Connection(CURRENT_NETWORK_URL);
+        await connection.getVersion(); // Test the connection
+        return connection;
+      } catch (error) {
+        if (i === retries - 1) return null;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    return null;
+  };
 
   const initialiseSolanaAccount = async (address: string) => {
     const walletAddress = primaryWallet?.address;
