@@ -88,17 +88,20 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 accept_only_verified: list.acceptOnlyVerified,
                 escrow_type: escrowVal,
                 price_source: priceSourceToNumber[list.priceSource as string],
-                price: list.price || list.calculatedPrice,
+                price: list.marginType === "fixed" ? (list.price || list.calculatedPrice) : null,
                 automatic_approval: true,
                 payment_methods: simplifiedPaymentMethods
             };
 
-            // Add validation to ensure required values exist
+            // Modify validation for price
             if (!user?.id) {
                 throw new Error('User ID not found');
             }
-            if (list.price === undefined && list.calculatedPrice === undefined) {
-                throw new Error('Price is required');
+            if (list.marginType === "fixed" && list.price === undefined && list.calculatedPrice === undefined) {
+                throw new Error('Price is required for fixed rate listings');
+            }
+            if (list.marginType === "percentage" && (list.margin === undefined || list.margin === 0)) {
+                throw new Error('Margin is required for floating rate listings');
             }
             if (list.priceSource === undefined) {
                 throw new Error('Price source is required');
@@ -180,7 +183,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
 	}, [contracts, sellerContract]);
 
   useEffect(() => {
-    if (contractError) {
+    if (contractError && !contractError.toString().includes("Unable to find LocalSolana account")) {
       console.error('Contract read error:', contractError);
     }
     if (balanceError) {
@@ -188,7 +191,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
     }
   }, [contractError, balanceError]);
 
-  if ((!needToDeploy && balance == null) || user === undefined) {
+  if ((!needToDeploy && balance == null && !contractError) || user === undefined) {
     return <Loading />;
   }
 
