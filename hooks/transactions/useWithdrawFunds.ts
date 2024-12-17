@@ -45,10 +45,10 @@ const useWithdrawFunds = ({
 const checkBalance = async () => {
     try {
         if (token.address === PublicKey.default.toBase58()) {
-            const balance = await getWalletBalance(primaryWallet.address);
+            const balance = await getWalletBalance(contract);
             return balance !== null && balance >= amount;
         }
-        const tokenBalanceResponse = await getTokenBalance(primaryWallet.address, token.address);
+        const tokenBalanceResponse = await getTokenBalance(contract, token.address);
         return tokenBalanceResponse !== null && tokenBalanceResponse >= amount;
     } catch (error) {
         console.error("Error checking balance:", error);
