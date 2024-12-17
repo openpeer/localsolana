@@ -325,7 +325,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                                 </div>
                             </td>
                             <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-                                {(!!min || !!max) && `${fiatSymbol} ${min || 10} - ${fiatSymbol}${max || '∞'}`}
+                                {(!!min || !!max) && `${min ? `${fiatSymbol} ${min} ` : ''}- ${fiatSymbol}${max ?? '∞'}`}
                             </td>
                             <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
                                 {!!(paymentTimeLimit && Number(paymentTimeLimit) > 0) && (
