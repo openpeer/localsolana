@@ -19,7 +19,9 @@ const ApproveTokenButton = ({
     const [isSuccess, setIsSuccess] = useState(false);
     const [allowance, setAllowance] = useState<bigint | null>(null);
 
-    const connection = new Connection(clusterApiUrl('mainnet-beta')); // Adjust the cluster as needed
+    const connection = new Connection(
+        process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl('devnet')
+    );
 
     const approveToken = async () => {
         if (!primaryWallet?.address) return;

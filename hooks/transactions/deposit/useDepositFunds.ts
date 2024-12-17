@@ -4,10 +4,11 @@ import { UseDepositFundsProps } from '../types';
 import useDepositWithGas from './useDepositWithGas';
 import useGaslessDepositFunds from './useGaslessDepositFunds';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { getSolanaConnection } from '@/utils/solana';
 
 const useDepositFunds = ({ amount, token, contract }: UseDepositFundsProps) => {
     const nativeToken = token.address === PublicKey.default.toBase58();
-    const connection = new Connection(clusterApiUrl('mainnet-beta')); // Adjust the cluster as needed
+    const connection = getSolanaConnection();
     const { primaryWallet } = useDynamicContext();
 
     const withGasCall = useDepositWithGas({
