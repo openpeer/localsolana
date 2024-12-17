@@ -76,7 +76,7 @@ const HomePage = () => {
 
 			console.log('Raw API Response:', response);
 			console.log('Parsed Response:', data);
-			console.log('JSON.stringify of response:', JSON.stringify(data));
+			// console.log('JSON.stringify of response:', JSON.stringify(data));
 
 
 			const toBuyers = data.data.data.filter((list: List) => list.type === 'SellList');
