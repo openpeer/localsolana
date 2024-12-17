@@ -63,47 +63,51 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         const error: Errors = {};
 
         const { minimum_amount: minimumAmount } = token as Token;
-        // console.log("TOKEN", token);
 
-        console.log("Total:", total, "Min:", min, "Max:", max, "Minimum Amount:", minimumAmount);
-
+        // Validate total available amount
         if (minimumAmount !== null && total < Number(minimumAmount)) {
             error.totalAvailableAmount = `Should be bigger or equals to ${minimumAmount} ${token!.name}`;
-            console.log("Error: Total available amount is less than minimum amount");
         }
 
         if (total <= 0) {
             error.totalAvailableAmount = 'Should be bigger than 0';
-            console.log("Error: Total available amount should be bigger than 0");
         }
 
-        if (!!limitMax && min > max) {
-            error.limitMin = 'Should be smaller than the max';
-            console.log("Error: Min limit should be smaller than max limit");
+        // Enhanced limit validations
+        if (min <= 0) {
+            error.limitMin = 'Minimum limit must be greater than 0';
         }
 
-        console.log("Price before fiatTotal calculation:", price);
+        if (max <= 0) {
+            error.limitMax = 'Maximum limit must be greater than 0';
+        }
+
+        if (min > max) {
+            error.limitMin = 'Minimum limit must be less than or equal to maximum limit';
+        }
+
         const fiatTotal = total * (calculatedPrice || 0);
-        console.log("Fiat Total:", fiatTotal);
 
-        if (!!limitMin && min > fiatTotal) {
+        if (min > fiatTotal) {
             error.limitMin = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
-            console.log("Error: Min limit should be smaller than fiat total");
         }
 
+        if (max > fiatTotal) {
+            error.limitMax = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
+        }
+
+        // Margin validations
         if (percentage) {
             if ((margin || 0) <= 0) {
                 error.margin = 'Should be bigger than zero';
-                console.log("Error: Margin should be bigger than zero for percentage pricing");
             }
         } else {
             if (!calculatedPrice || calculatedPrice <= 0) {
                 error.margin = 'Price should be set for fixed pricing';
-                console.log("Error: Price should be set for fixed pricing");
             }
         }
 
-        console.log("Errors before return:", error);
+        console.log("Validation errors:", error);
         return error;
     };
 
