@@ -40,15 +40,16 @@ const Details = ({ list, updateList }: ListStepProps) => {
   } = list;
   const { address, isAuthenticated } = useAccount();
   const { user, fetchUserProfile } = useUserProfile({});
-  const { data: sellerContract } = useContractRead(
+  const { data: sellerContract, error: contractError } = useContractRead(
     address || "",
     "escrowState",
     true
   );
 
-  const { balance: balance } = useBalance(
+  const { balance: balance, error: balanceError } = useBalance(
     sellerContract || "",
-    token?.address || PublicKey.default.toBase58(),true
+    token?.address || PublicKey.default.toBase58(),
+    true
   );
 
   const contracts = (user?.contract_address);
@@ -177,6 +178,16 @@ const Details = ({ list, updateList }: ListStepProps) => {
 			}
 		}
 	}, [contracts, sellerContract]);
+
+  useEffect(() => {
+    if (contractError) {
+      console.error('Contract read error:', contractError);
+    }
+    if (balanceError) {
+      console.error('Balance read error:', balanceError);
+    }
+  }, [contractError, balanceError]);
+
   if ((!needToDeploy && balance == null) || user === undefined) {
     return <Loading />;
   }
