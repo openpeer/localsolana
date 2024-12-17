@@ -66,7 +66,7 @@ const EditTrade = ({ id }: { id: number }) => {
                     accept_only_verified: acceptOnlyVerified,
                     escrow_type: escrowType,
                     banks: banks,
-                    price_source: rawPriceSource = 1
+                    price_source: rawPriceSource
                 } = data;
 
                 console.log('Destructured values:', {
@@ -94,39 +94,20 @@ const EditTrade = ({ id }: { id: number }) => {
 
                 console.log('Raw DB price source:', rawPriceSource, typeof rawPriceSource);
 
+                // Initialize with the mapped source from the DB value
+                let finalPriceSource = priceSourceMap[rawPriceSource as PriceSourceNumber] || 'binance_median';
+
+                console.log('Mapped price source:', finalPriceSource);
+
                 const currencyLower = currency?.name.toLowerCase() as CoingeckoSupportedCurrency;
                 const isCoingeckoSupported = COINGECKO_SUPPORTED_CURRENCIES.includes(currencyLower);
 
-                // Initialize with a default value
-                let finalPriceSource = 'binance_median';
-
-                // Only attempt to map if we have a valid rawPriceSource
-                if (rawPriceSource !== undefined && rawPriceSource !== null) {
-                    if (!isCoingeckoSupported) {
-                        finalPriceSource = 'binance_median';
-                    } else {
-                        const mappedSource = priceSourceMap[rawPriceSource as PriceSourceNumber];
-                        finalPriceSource = mappedSource || 'binance_median';
-                    }
+                // Only override if necessary for unsupported currencies
+                if (!isCoingeckoSupported && !finalPriceSource.startsWith('binance_')) {
+                    finalPriceSource = 'binance_median';
                 }
 
-                console.log('Final mapped price source:', finalPriceSource);
-
-                // const processedPaymentMethods = Array.isArray(paymentMethods) 
-                //     ? paymentMethods.map(pm => ({
-                //         id: Number(pm.id),
-                //         name: pm.name,
-                //         color: pm.color,
-                //         values: pm.values || {},
-                //         bank: pm.bank
-                //     }))
-                //     : (paymentMethods ? [{
-                //         id: Number(paymentMethods.id),
-                //         name: paymentMethods.name,
-                //         color: paymentMethods.color,
-                //         values: paymentMethods.values || {},
-                //         bank: paymentMethods.bank
-                //     }] : []);
+                console.log('Final price source:', finalPriceSource);
 
                 const ui: UIList = {
                     ...data,
