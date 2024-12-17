@@ -57,43 +57,45 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 
     const resolver: Resolver = () => {
         const total = totalAvailableAmount || 0;
-        const min = limitMin || 0;
-        const max = limitMax || 0;
+        const min = limitMin;
+        const max = limitMax;
+        const fiatTotal = total * (calculatedPrice || 0);
 
         const error: Errors = {};
 
-        const { minimum_amount: minimumAmount } = token as Token;
-
         // Validate total available amount
+        const { minimum_amount: minimumAmount } = token as Token;
         if (minimumAmount !== null && total < Number(minimumAmount)) {
             error.totalAvailableAmount = `Should be bigger or equals to ${minimumAmount} ${token!.name}`;
         }
-
         if (total <= 0) {
             error.totalAvailableAmount = 'Should be bigger than 0';
         }
 
-        // Enhanced limit validations
-        if (min <= 0) {
-            error.limitMin = 'Minimum limit must be greater than 0';
+        // Validate limits only if they are set
+        if (min !== undefined && min !== null) {
+            if (min <= 0) {
+                error.limitMin = 'If set, minimum limit must be greater than 0';
+            }
+            if (min > fiatTotal) {
+                error.limitMin = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
+            }
         }
 
-        if (max <= 0) {
-            error.limitMax = 'Maximum limit must be greater than 0';
+        if (max !== undefined && max !== null) {
+            if (max <= 0) {
+                error.limitMax = 'If set, maximum limit must be greater than 0';
+            }
+            if (max > fiatTotal) {
+                error.limitMax = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
+            }
         }
 
-        if (min > max) {
-            error.limitMin = 'Minimum limit must be less than or equal to maximum limit';
-        }
-
-        const fiatTotal = total * (calculatedPrice || 0);
-
-        if (min > fiatTotal) {
-            error.limitMin = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
-        }
-
-        if (max > fiatTotal) {
-            error.limitMax = `Should be smaller than the total available amount ${fiatTotal.toFixed(2)} ${currency!.name}`;
+        // Only validate min vs max if both are set
+        if (min !== undefined && min !== null && max !== undefined && max !== null) {
+            if (min > max) {
+                error.limitMin = 'Minimum limit must be less than or equal to maximum limit';
+            }
         }
 
         // Margin validations
