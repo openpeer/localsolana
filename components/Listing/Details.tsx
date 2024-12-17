@@ -68,6 +68,11 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 bank_id: pm.id
             })) || [];
 
+            // Add logging to see what's happening with price source conversion
+            console.log('Price source before conversion:', list.priceSource);
+            console.log('Price source map:', priceSourceToNumber);
+            console.log('Converted price source:', priceSourceToNumber[list.priceSource as string]);
+
             // Format data to match expected API structure
             const formattedData = {
                 id: list.id,

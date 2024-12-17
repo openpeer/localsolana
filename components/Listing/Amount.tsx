@@ -121,11 +121,12 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         const isCoingeckoSupported = isCoinGeckoSupported(currencyCode);
         const binanceSupported = isBinanceSupported(currencyCode);
         
-        // For Binance-only currencies (like VES), force binance_median
+        // For Binance-only currencies (like VES), ensure we're using a Binance source
         if (!isCoingeckoSupported && binanceSupported) {
-            const forcedSource = 'binance_median';
-            if (list.priceSource !== forcedSource) {
-                updateValue({ priceSource: forcedSource });
+            const currentSource = String(list.priceSource || 'binance_median');
+            if (!currentSource.startsWith('binance_')) {
+                // Only force to binance_median if current source isn't a binance source
+                updateValue({ priceSource: 'binance_median' });
             }
             return;
         }
