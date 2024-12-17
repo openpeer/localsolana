@@ -291,7 +291,9 @@ const MarginSwitcher = ({
     value={(percentageMargin ? (percentageMargin - 1) * 100 : 0)}
     suffix="%" 
     updateValue={(value) => {
-        handleMarginUpdate(1 + (value/100));
+        // Fix floating point precision by rounding to 4 decimal places
+        const newMargin = Number((1 + (value/100)).toFixed(4));
+        handleMarginUpdate(newMargin);
     }}
     error={error}
     decimals={0}
