@@ -100,8 +100,12 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 margin_type: list.marginType === "fixed" ? 0 : 1,
                 margin: list.marginType === "fixed" ? 0 : list.margin,
                 total_available_amount: Number(list.totalAvailableAmount),
-                limit_min: Number(list.limitMin),
-                limit_max: Number(list.limitMax),
+                limit_min: list.limitMin === undefined || list.limitMin === null || String(list.limitMin).trim() === '' 
+                    ? null 
+                    : Number(list.limitMin),
+                limit_max: list.limitMax === undefined || list.limitMax === null || String(list.limitMax).trim() === '' 
+                    ? null 
+                    : Number(list.limitMax),
                 deposit_time_limit: list.depositTimeLimit,
                 payment_time_limit: list.paymentTimeLimit,
                 terms: list.terms,
