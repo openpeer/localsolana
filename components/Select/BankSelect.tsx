@@ -23,6 +23,8 @@ const BankSelect = ({
 }) => {
 	const [banks, setBanks] = useState<Bank[] | undefined>(options);
 	const [isLoading, setLoading] = useState(false);
+	const [search, setSearch] = useState('');
+
 
 	useEffect(() => {
 		if (options) {
@@ -42,6 +44,14 @@ const BankSelect = ({
 			});
 	}, [currencyId]);
 
+	const filteredBanks = search
+	? banks?.filter(
+			(b) =>
+				(b.name && b.name.toLowerCase().includes(search.toLowerCase())) ||
+				(b.code && b.code.toLowerCase().includes(search.toLowerCase()))
+		)
+	: banks;
+
 	if (isLoading) {
 		return <Loading big={false} />;
 	}
@@ -49,11 +59,12 @@ const BankSelect = ({
 	return banks ? (
 		<Select
 			label="Payment Method"
-			options={banks}
+			options={filteredBanks || []}
 			selected={selected}
 			onSelect={onSelect}
 			error={error}
 			labelStyle={labelStyle}
+			onSearch={setSearch}
 		/>
 	) : (
 		<></>

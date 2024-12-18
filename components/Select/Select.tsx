@@ -57,7 +57,7 @@ export default function Select({
 							className={`bg-gray-100 relative w-full cursor-default rounded-md py-2 pl-3 text-left sm:text-sm ${
 								minimal
 									? 'pr-7 h-12 bg-gray-100'
-									: `${height} pr-10 border border-gray-100 bg-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500`
+									: `${height} pr-10 border border-gray-100 bg-white shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 h-12 focus:ring-indigo-500`
 							}`}
 						>
 							<span className="flex items-center">
