@@ -73,6 +73,22 @@ const Details = ({ list, updateList }: ListStepProps) => {
             console.log('Price source map:', priceSourceToNumber);
             console.log('Converted price source:', priceSourceToNumber[list.priceSource as string]);
 
+            /**
+             * Format list data for API submission
+             * 
+             * API Requirements for margin_type, margin and price:
+             * 
+             * 1. Fixed Rate (margin_type = 0):
+             *    - margin must be 0
+             *    - price must be the fixed price value (non-null, positive)
+             * 
+             * 2. Floating Rate (margin_type = 1):
+             *    - margin must be the percentage value (non-zero)
+             *    - price must be null
+             * 
+             * @see listsApi.md for complete API specification
+             */
+
             // Format data to match expected API structure
             const formattedData = {
                 id: list.id,
@@ -93,7 +109,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 accept_only_verified: list.acceptOnlyVerified,
                 escrow_type: escrowVal,
                 price_source: priceSourceToNumber[list.priceSource as string],
-                price: list.marginType === "fixed" ? list.calculatedPrice || list.price : null,
+                price: list.marginType === "fixed" ? list.margin : null,
                 automatic_approval: true,
                 payment_methods: simplifiedPaymentMethods
             };
