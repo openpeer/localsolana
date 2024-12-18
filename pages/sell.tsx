@@ -3,6 +3,7 @@ import { Amount, Details, ListType, PaymentMethod, Setup, Summary } from 'compon
 import { UIList } from 'components/Listing/Listing.types';
 import React, { useEffect, useState, useRef } from 'react';
 import { useAccount } from 'hooks';
+import { useRouter } from 'next/router';
 
 import { AdjustmentsVerticalIcon } from '@heroicons/react/24/solid';
 import {
@@ -20,7 +21,7 @@ const PAYMENT_METHOD_STEP = 4;
 const DETAILS_STEP = 5;
 
 const defaultList = {
-	marginType: DEFAULT_MARGIN_TYPE,
+	marginType: 'percentage' as const,
 	margin: DEFAULT_MARGIN_VALUE,
 	depositTimeLimit: DEFAULT_DEPOSIT_TIME_LIMIT,
 	paymentTimeLimit: DEFAULT_PAYMENT_TIME_LIMIT,
@@ -29,18 +30,20 @@ const defaultList = {
 
 const SellPage = () => {
 	const [showFilters, setShowFilters] = useState(false);
-
 	const { address } = useAccount();
+	const router = useRouter();
+	const mounted = useRef(true);
+	
+	const isEditing = router.query.id !== undefined;
 	
 	const [list, setList] = useState<UIList>({
 		...{
 			step: LIST_TYPE_STEP,
-			type: 'SellList'
+			type: 'SellList',
+			marginType: isEditing ? DEFAULT_MARGIN_TYPE : 'percentage',
 		},
 		...defaultList
 	} as UIList);
-	
-	const mounted = useRef(true);
 	
 	useEffect(() => {
 		mounted.current = true;
