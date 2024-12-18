@@ -127,7 +127,6 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         if (!isCoingeckoSupported && binanceSupported) {
             const currentSource = String(list.priceSource || 'binance_median');
             if (!currentSource.startsWith('binance_')) {
-                // Only force to binance_median if current source isn't a binance source
                 updateValue({ priceSource: 'binance_median' });
             }
             return;
@@ -148,29 +147,48 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         
         console.log("validSource", validSource);
 
-        // Fetch the price
-        minkeApi.get(`/api/prices`, {
-            params: {
+        // Format parameters based on price source
+        const params = validSource.startsWith('binance_') 
+            ? {
                 token: token.name.toUpperCase(),
                 fiat: currency.name.toUpperCase(),
                 source: validSource,
                 type: type.replace('List', '').toUpperCase()
             }
-        })
-        .then((res) => {
-            console.log("Price API response:", res.data);
-            return res.data.data;
-        })
-        .then((data) => {
-            if (Object.keys(data).length > 0) {
-                const fetchedPrice = data[token.name][currency.name];
-                console.log("Fetched price:", fetchedPrice);
-                setPrice(fetchedPrice);
-            }
-        })
-        .catch((error) => {
-            console.error("Error fetching price:", error);
-        });
+            : {
+                // For CoinGecko, use coingecko_id and lowercase currency
+                token: token.coingecko_id,
+                fiat: currency.name.toLowerCase(),
+                source: validSource
+            };
+
+        console.log("Fetching price with params:", params);
+
+        // Fetch the price
+        minkeApi.get(`/api/prices`, { params })
+            .then((res) => {
+                console.log("Price API response:", res.data);
+                return res.data.data;
+            })
+            .then((data) => {
+                if (Object.keys(data).length > 0) {
+                    let fetchedPrice;
+                    if (validSource.startsWith('binance_')) {
+                        fetchedPrice = data[token.name][currency.name];
+                    } else {
+                        // For CoinGecko responses, use coingecko_id and lowercase currency
+                        fetchedPrice = data[token.coingecko_id][currency.name.toLowerCase()];
+                    }
+                    
+                    if (fetchedPrice) {
+                        console.log("Fetched price:", fetchedPrice);
+                        setPrice(fetchedPrice);
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error("Error fetching price:", error);
+            });
     }, [token, currency, list.priceSource]);
 
     useEffect(() => {
