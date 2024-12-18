@@ -93,7 +93,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 accept_only_verified: list.acceptOnlyVerified,
                 escrow_type: escrowVal,
                 price_source: priceSourceToNumber[list.priceSource as string],
-                price: list.marginType === "fixed" ? list.margin : null,
+                price: list.marginType === "fixed" ? list.calculatedPrice || list.price : null,
                 automatic_approval: true,
                 payment_methods: simplifiedPaymentMethods
             };
@@ -102,11 +102,14 @@ const Details = ({ list, updateList }: ListStepProps) => {
             if (!user?.id) {
                 throw new Error('User ID not found');
             }
-            if (list.marginType === "fixed" && list.price === undefined && list.calculatedPrice === undefined) {
-                throw new Error('Price is required for fixed rate listings');
-            }
-            if (list.marginType === "percentage" && (list.margin === undefined || list.margin === 0)) {
-                throw new Error('Margin is required for floating rate listings');
+            if (list.marginType === "fixed") {
+                if (!formattedData.price || formattedData.price <= 0) {
+                    throw new Error('A positive price is required for fixed rate listings');
+                }
+            } else {
+                if (!formattedData.margin || formattedData.margin <= 0) {
+                    throw new Error('A positive margin is required for floating rate listings');
+                }
             }
             if (list.priceSource === undefined) {
                 throw new Error('Price source is required');
