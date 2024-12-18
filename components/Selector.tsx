@@ -16,6 +16,7 @@ interface SelectorProps {
 	maxValue?: number;
 	showPlusMinus?: boolean;
 	initialSign?: '+' | '-' | ''; 
+	onSignChange?: (sign: '+' | '-') => void;
 }
 
 const Selector = ({
@@ -30,7 +31,8 @@ const Selector = ({
 	minValue,
 	maxValue,
 	showPlusMinus = false,
-	initialSign = ''
+	initialSign = '',
+	onSignChange,
 }: SelectorProps) => {
 	const changeAmount = (newAmount: number) => {
 		if (maxValue !== undefined && newAmount >= maxValue) {
@@ -64,6 +66,7 @@ const Selector = ({
 								const isPositive = e.target.value === '+';
 								const absValue = Math.abs(value);
 								changeAmount(isPositive ? absValue : -absValue);
+								onSignChange?.(e.target.value as '+' | '-');
 							}}
 						>
 							<option value="">Select</option>

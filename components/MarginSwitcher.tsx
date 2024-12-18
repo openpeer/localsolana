@@ -90,6 +90,9 @@ const MarginSwitcher = ({
 	const [percentageMargin, setPercentageMargin] = useState<number | undefined>(
 		selected === 'percentage' ? margin ?? 1 : undefined
 	);
+	const [isPositive, setIsPositive] = useState<boolean>(() => {
+		return !percentageMargin || percentageMargin >= 1;
+	});
 
 	// Handle margin updates based on mode
 	const handleMarginUpdate = (value: number) => {
@@ -288,18 +291,24 @@ const MarginSwitcher = ({
 					)
 				) : (
 					<Selector 
-    value={(percentageMargin ? (percentageMargin - 1) * 100 : 0)}
+    value={Math.abs((percentageMargin ? (percentageMargin - 1) * 100 : 0))}
     suffix="%" 
     updateValue={(value) => {
+        // Apply sign based on isPositive state
+        const signedValue = isPositive ? Math.abs(value) : -Math.abs(value);
+        
         // Fix floating point precision by rounding to 4 decimal places
-        const newMargin = Number((1 + (value/100)).toFixed(4));
+        const newMargin = Number((1 + (signedValue/100)).toFixed(4));
         handleMarginUpdate(newMargin);
     }}
     error={error}
     decimals={0}
     showPlusMinus={true}
     allowNegative={true}
-    initialSign={percentageMargin !== undefined ? (percentageMargin >= 1 ? '+' : '-') : ''} 
+    initialSign={isPositive ? '+' : '-'}
+    onSignChange={(sign) => {
+        setIsPositive(sign === '+');
+    }}
 />
 				)}
 
