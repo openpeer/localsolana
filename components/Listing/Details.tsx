@@ -93,7 +93,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 accept_only_verified: list.acceptOnlyVerified,
                 escrow_type: escrowVal,
                 price_source: priceSourceToNumber[list.priceSource as string],
-                price: list.marginType === "fixed" ? (list.price || list.calculatedPrice) : null,
+                price: list.marginType === "fixed" ? list.margin : null,
                 automatic_approval: true,
                 payment_methods: simplifiedPaymentMethods
             };
