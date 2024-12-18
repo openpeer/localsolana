@@ -1,7 +1,7 @@
 import { Steps } from 'components';
 import { Amount, Details, ListType, PaymentMethod, Setup, Summary } from 'components/Listing';
 import { UIList } from 'components/Listing/Listing.types';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAccount } from 'hooks';
 
 import { AdjustmentsVerticalIcon } from '@heroicons/react/24/solid';
@@ -39,15 +39,26 @@ const SellPage = () => {
 		},
 		...defaultList
 	} as UIList);
-	const { step } = list;
+	
+	const mounted = useRef(true);
+	
+	useEffect(() => {
+		mounted.current = true;
+		
+		return () => {
+			mounted.current = false;
+		};
+	}, []);
 
 	useEffect(() => {
+		if (!mounted.current) return;
 		if (list.step > 4) {
 			setList({ ...{ step: PAYMENT_METHOD_STEP }, ...defaultList } as UIList);
 		}
 	}, [address]);
 
 	useEffect(() => {
+		if (!mounted.current) return;
 		if ((list.paymentMethods || []).length > 0) {
 			setList({ ...list, ...{ paymentMethods: [] } });
 		}
@@ -58,21 +69,31 @@ const SellPage = () => {
 	}, [list.type]);
 
 	useEffect(() => {
-		window.scrollTo(0, 0);
+		if (mounted.current) {
+			window.scrollTo(0, 0);
+		}
 	}, [list.step]);
 
 	const handleToggleFilters = () => {
-		setShowFilters(!showFilters);
-	}
+		if (mounted.current) {
+			setShowFilters(!showFilters);
+		}
+	};
+
+	const safeUpdateList = (updates: Partial<UIList>) => {
+		if (mounted.current) {
+			setList(prevList => ({ ...prevList, ...updates }));
+		}
+	};
 
 	return (
 		<div className="pt-4 md:pt-6 bg-white">
 			<div className="w-full flex flex-col md:flex-row px-4 sm:px-6 md:px-8 mb-16">
 				<div className="w-full lg:w-2/4">
 					<Steps
-						currentStep={step}
+						currentStep={list.step}
 						stepsCount={4}
-						onStepClick={(n) => setList({ ...list, ...{ step: n } })}
+						onStepClick={(n) => safeUpdateList({ step: n })}
 					/>
 					<div className="flex flex-row justify-end md:hidden md:justify-end" onClick={handleToggleFilters}>
 						<AdjustmentsVerticalIcon
@@ -87,11 +108,11 @@ const SellPage = () => {
 							<Summary list={list} />
 						</div>
 					)}
-					{step === LIST_TYPE_STEP && <ListType list={list} updateList={setList} />}
-					{step === SETUP_STEP && <Setup list={list} updateList={setList} />}
-					{step === AMOUNT_STEP && <Amount list={list} updateList={setList} />}
-					{step === PAYMENT_METHOD_STEP && <PaymentMethod list={list} updateList={setList} />}
-					{step === DETAILS_STEP && <Details list={list} updateList={setList} />}
+					{list.step === LIST_TYPE_STEP && <ListType list={list} updateList={safeUpdateList} />}
+					{list.step === SETUP_STEP && <Setup list={list} updateList={safeUpdateList} />}
+					{list.step === AMOUNT_STEP && <Amount list={list} updateList={safeUpdateList} />}
+					{list.step === PAYMENT_METHOD_STEP && <PaymentMethod list={list} updateList={safeUpdateList} />}
+					{list.step === DETAILS_STEP && <Details list={list} updateList={safeUpdateList} />}
 				</div>
 				<div className="hidden lg:contents">
 					<Summary list={list} />
