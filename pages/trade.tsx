@@ -4,7 +4,8 @@ import { usePagination } from 'hooks';
 import { SearchFilters } from 'models/search';
 import { List } from 'models/types';
 import { GetServerSideProps } from 'next';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import debounce from 'lodash/debounce';
 
 import { AdjustmentsVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
@@ -37,69 +38,104 @@ const HomePage = () => {
 
 	const { page, onNextPage, onPrevPage, resetPage } = usePagination();
 
+	// Add mounted ref to prevent state updates after unmount
+	const mounted = useRef(true);
+	
+	useEffect(() => {
+		// Set mounted to true when component mounts
+		mounted.current = true;
+		
+		// Cleanup function to run on unmount
+		return () => {
+			mounted.current = false;
+		};
+	}, []);
+
 	const performSearch = async (selectedPage: number) => {
 		try {
+			if (!mounted.current) return; // Don't proceed if unmounted
 			setLoading(true);
-			if (Object.keys(filters).length === 0) return;
+			
+			if (Object.keys(filters).length === 0) {
+				setLoading(false);
+				return;
+			}
 
-			const params: { [key: string]: string | undefined } = {
+			const params: Record<string, string | undefined> = {
 				page: selectedPage.toString(),
 				type: type === 'Buy' ? 'SellList' : 'BuyList',
-				amount: filters.amount ? filters.amount.toString() : undefined,
-				currency: filters.currency ? filters.currency.id.toString() : undefined,
-				payment_method: filters.paymentMethod ? filters.paymentMethod.id.toString() : undefined,
-				token: filters.token ? filters.token.id.toString() : undefined,
-				fiat_amount: filters.fiatAmount ? filters.fiatAmount.toString() : undefined,
-				//chain_id: filters.chain ? filters.chain : undefined
+				amount: filters.amount?.toString(),
+				currency: filters.currency?.id?.toString(),
+				payment_method: filters.paymentMethod?.id?.toString(),
+				token: filters.token?.id?.toString(),
+				fiat_amount: filters.fiatAmount?.toString(),
 			};
 
-			const search = Object.keys(params)
-				.filter((key) => !!params[key])
-				.reduce((obj, key) => {
-					const newObject = obj;
-					newObject[key] = params[key] as string;
-					return newObject;
-				}, {} as { [key: string]: string });
+			const cleanParams: Record<string, string> = Object.entries(params)
+				.reduce((acc, [key, value]) => {
+					if (value !== undefined) {
+						acc[key] = value;
+					}
+					return acc;
+				}, {} as Record<string, string>);
 
-			const searchParams = new URLSearchParams(search);
+			const searchParams = new URLSearchParams(cleanParams);
 			const response = await fetch(`/api/getLists?${searchParams.toString()}`, {
 				headers: {
 					Authorization: `Bearer ${getAuthToken()}`
 				}
 			});
 
+			if (!mounted.current) return; // Don't update state if unmounted
+
 			if (!response.ok) {
 				throw new Error('Failed to fetch lists');
 			}
 
 			const data: ListsResponse = await response.json();
-
-			console.log('Raw API Response:', response);
-			console.log('Parsed Response:', data);
-			// console.log('JSON.stringify of response:', JSON.stringify(data));
-
+			
+			if (!mounted.current) return; // Don't update state if unmounted
 
 			const toBuyers = data.data.data.filter((list: List) => list.type === 'SellList');
 			const toSellers = data.data.data.filter((list: List) => list.type === 'BuyList');
-			console.log('Filtered toBuyers:', toBuyers);
-			console.log('Filtered toSellers:', toSellers);
+			
 			setPaginationMeta(data.data.meta);
 			setSellSideLists(toSellers);
 			setBuySideLists(toBuyers);
 			setLists(type === 'Buy' ? toBuyers : toSellers);
 		} catch (error) {
 			console.error('Error fetching lists:', error);
-			// Add error state handling if needed
+			if (mounted.current) {
+				setLists([]);
+				setBuySideLists([]);
+				setSellSideLists([]);
+				setPaginationMeta(undefined);
+			}
 		} finally {
-			setLoading(false);
+			if (mounted.current) {
+				setLoading(false);
+			}
 		}
 	};
 
-	
+	// Debounce the search to prevent too many API calls
+	const debouncedSearch = useCallback(
+		debounce((page: number) => {
+			if (mounted.current) {
+				performSearch(page);
+			}
+		}, 300),
+		[type, filters]
+	);
 
 	useEffect(() => {
 		resetPage();
-		performSearch(1);
+		debouncedSearch(1);
+		
+		// Cleanup function
+		return () => {
+			debouncedSearch.cancel();
+		};
 	}, [type, filters]);
 
 	useEffect(() => {
