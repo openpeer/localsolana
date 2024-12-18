@@ -157,7 +157,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
             }
             : {
                 // For CoinGecko, use coingecko_id and lowercase currency
-                token: token.coingecko_id,
+                token: (token as Token).coingecko_id,
                 fiat: currency.name.toLowerCase(),
                 source: validSource
             };
@@ -177,7 +177,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                         fetchedPrice = data[token.name][currency.name];
                     } else {
                         // For CoinGecko responses, use coingecko_id and lowercase currency
-                        fetchedPrice = data[token.coingecko_id][currency.name.toLowerCase()];
+                        fetchedPrice = data[(token as Token).coingecko_id][currency.name.toLowerCase()];
                     }
                     
                     if (fetchedPrice) {
