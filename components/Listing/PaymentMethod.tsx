@@ -10,11 +10,19 @@ import StepLayout from './StepLayout';
 import PaymentMethodForm from './PaymentMethodForm';
 import { minkeApi } from '@/pages/api/utils/utils';
 
+/**
+ * Represents a bank-based payment method structure
+ * Used for handling bank-specific payment details
+ */
 type BankPaymentMethod = {
 	bank_id: string;
 	values: Record<string, string>;
 };
 
+/**
+ * Represents a direct payment method structure
+ * Used for handling non-bank payment details
+ */
 type DirectPaymentMethod = {
 	payment_method_id: string;
 	values: Record<string, string>;
@@ -30,11 +38,19 @@ type DirectPaymentMethod = {
  * @param {Function} props.updateList - Callback function to update the list data
  */
 const PaymentMethod = ({ list, updateList }: ListStepProps) => {
+	// State management for user context and wallet address
 	const { user } = useUserProfile({});
 	const { address } = useAccount();
 
+	// Destructure required properties from the list
 	const { currency, paymentMethods = [], type, banks = [] } = list;
 	
+	/**
+	 * State Management:
+	 * - paymentMethodCreation: Tracks the currently edited/created payment method
+	 * - isLoading: Controls loading state during async operations
+	 * - isDataReady: Indicates when payment method data is ready to be displayed
+	 */
 	const [paymentMethodCreation, setPaymentMethodCreation] = useState<UIPaymentMethod | null>(null);
 	const [isLoading, setLoading] = useState(false);
 	const [isDataReady, setIsDataReady] = useState(false);
@@ -85,10 +101,15 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 		} else if (type === 'SellList') {
 			const savedPaymentMethods = list.paymentMethods?.map(pm => ({
 				id: Number(pm.id),
-				bank: pm.bank,
-				values: pm.values || {},
-				color: pm.color,
-				name: pm.name
+				bank: pm.bank || {
+					id: Number(pm.id),
+					name: pm.name || '',
+					color: pm.color || '',
+					account_info_schema: pm.account_info_schema || [],
+					image: pm.image,
+					imageUrl: pm.imageUrl
+				} as Bank,
+				values: pm.values || {}
 			})) || [];
 			
 			updateList({
@@ -143,8 +164,10 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	};
 
 	/**
-	 * Updates the payment methods in the list
-	 * @param {UIPaymentMethod[]} pms - Array of payment methods to update
+	 * Updates payment methods based on list type (Buy/Sell)
+	 * - For BuyList: Processes bank-based payment methods
+	 * - For SellList: Processes direct payment methods
+	 * Handles data structure transformation and list updates
 	 */
 	const updatePaymentMethods = (pms: UIPaymentMethod[]) => {
 		setPaymentMethodCreation(null);
@@ -176,8 +199,10 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	};
 
 	/**
-	 * Toggles the selection state of a payment method
-	 * @param {PaymentMethodType | UIPaymentMethod} pm - Payment method to toggle
+	 * Toggles selection of a payment method
+	 * - Converts payment method to UI format
+	 * - Adds or removes from selected payment methods
+	 * - Handles both PaymentMethodType and UIPaymentMethod formats
 	 */
 	const togglePaymentMethod = (pm: PaymentMethodType | UIPaymentMethod) => {
 		const uiPaymentMethod: UIPaymentMethod = {
@@ -198,6 +223,13 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			updatePaymentMethods([...paymentMethods, uiPaymentMethod]);
 		}
 	};
+
+	/**
+	 * Payment Method Creation/Edit Logic:
+	 * - savePaymentMethodCreation: Processes and saves new/edited payment methods
+	 * - addNewPaymentMethod: Initializes a new payment method with default values
+	 * - enableEdit: Prepares existing payment method for editing
+	 */
 
 	/**
 	 * Enables edit mode for a payment method
@@ -272,21 +304,24 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	const canProceed = paymentMethods.length > 0;
 
 	// Debug logging for payment methods
-	listPaymentMethods.forEach((pm, index) => {
-		console.log(`Payment Method ${index}:`, pm);
-	});
+	// listPaymentMethods.forEach((pm, index) => {
+	// 	console.log(`Payment Method ${index}:`, pm);
+	// });
+
 
 	if (isLoading) {
 		return <Loading />;
 	}
 
 	/**
-	 * Renders the payment method interface
-	 * Includes:
-	 * - List of current payment methods
-	 * - Payment method creation/edit form
-	 * - Add new payment method button
-	 * - Proceed button (if conditions met)
+	 * Render Logic:
+	 * 1. Shows loading state when processing
+	 * 2. Displays StepLayout wrapper with:
+	 *    - Title and description
+	 *    - List of existing payment methods (each clickable for selection)
+	 *    - Edit/Create form when adding/editing
+	 *    - Add new payment method button
+	 * 3. Proceed button enabled only when valid payment methods exist
 	 */
 	return (
 		<StepLayout onProceed={paymentMethodCreation ? undefined : (canProceed ? onProceed : undefined)}>
@@ -302,15 +337,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					} w-full flex flex-col bg-gray-100 mt-8 py-4 p-8 rounded-md cursor-pointer`}
 					onClick={() => togglePaymentMethod(pm)}
 				>
-					{/* Debug display - positioned off-screen but maintaining data flow */}
-					{/* <div className="absolute left-[-9999px]">
-						<p><strong>Bank ID:</strong> {pm.bank?.id}</p>
-						<p><strong>Name:</strong> {pm.bank?.name}</p>
-						<p><strong>Color:</strong> {pm.bank?.color}</p>
-						<p><strong>Image:</strong> {pm.bank?.image}</p>
-						<p><strong>Image URL:</strong> {pm.bank?.imageUrl}</p>
-						<p><strong>Account Schema:</strong> {pm.bank?.account_info_schema?.length} fields</p>
-					</div> */}
 
 					<div
 						className={`w-full flex flex-row justify-between ${type === 'SellList' ? 'mb-4' : ''}`}
