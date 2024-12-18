@@ -80,10 +80,10 @@ const PaymentMethodForm = ({
 					/>
 				</div>
 				
-				{paymentMethod.bank?.account_info_schema.map((field: SchemaField) => (
-					<div key={field.id} className="mb-4">
+				{paymentMethod.bank?.account_info_schema.map((field: SchemaField, index: number) => (
+					<div key={`${field.id}-${index}`} className="mb-4">
 						<Input
-							id={field.id}
+							id={`${field.id}-${index}`}
 							label={field.label}
 							value={formValues[field.id] || ''}
 							onChange={(value: string) => handleInputChange(field.id, value)}
