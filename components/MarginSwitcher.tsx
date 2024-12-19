@@ -294,11 +294,16 @@ const MarginSwitcher = ({
     value={Math.abs((percentageMargin ? (percentageMargin - 1) * 100 : 0))}
     suffix="%" 
     updateValue={(value) => {
-        // Apply sign based on isPositive state
-        const signedValue = isPositive ? Math.abs(value) : -Math.abs(value);
+        // value is the raw percentage number (e.g., 3)
+        // isPositive determines if we should add or subtract from 1
         
-        // Fix floating point precision by rounding to 4 decimal places
-        const newMargin = Number((1 + (signedValue/100)).toFixed(4));
+        // If positive: 1 + (3/100) = 1.03
+        // If negative: 1 - (3/100) = 0.97
+        const adjustment = value / 100;
+        const newMargin = isPositive 
+            ? Number((1 + adjustment).toFixed(4))
+            : Number((1 - adjustment).toFixed(4));
+            
         handleMarginUpdate(newMargin);
     }}
     error={error}

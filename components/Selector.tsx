@@ -64,9 +64,12 @@ const Selector = ({
 							onChange={(e) => {
 								if (e.target.value === '') return;
 								const isPositive = e.target.value === '+';
-								const absValue = Math.abs(value);
-								changeAmount(isPositive ? absValue : -absValue);
+								const currentValue = Math.abs(value);
+								
+								changeAmount(isPositive ? currentValue : -currentValue);
 								onSignChange?.(e.target.value as '+' | '-');
+								
+								updateValue(isPositive ? currentValue : -currentValue);
 							}}
 						>
 							<option value="">Select</option>
