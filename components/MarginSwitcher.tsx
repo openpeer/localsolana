@@ -274,7 +274,7 @@ const MarginSwitcher = ({
 {selected !== 'fixed' && (
     <div className="mb-4">
         <span className="text-sm text-gray-600">
-				Select + or - and enter a value to set your price above or below the market rate. For example, +5% means your price will float 5% above market price.
+				Use the +/- buttons or type a signed number to set your margin relative to the current market rate. For example, -5 means your price is set to 5% lower than the market.
         </span>
     </div>
 )}
@@ -287,38 +287,31 @@ const MarginSwitcher = ({
 					) : (
 						
 						<Selector
-							value={(fixedMargin || localPrice) ?? 0}
+							value={(fixedMargin ?? localPrice) ?? 0}
 							suffix={` ${currency.name} per ${token.name}`}
-							updateValue={handleMarginUpdate}
+							onChange={(val: number) => {
+								handleMarginUpdate(val);
+							}}
+							minValue={-99}
+							decimals={2}
 							error={error}
-							decimals={3}
 						/>
 					)
 				) : (
 					<Selector 
-    value={Math.abs((percentageMargin ? (percentageMargin - 1) * 100 : 0))}
+    value={(percentageMargin ? (percentageMargin - 1) * 100 : 0)}
     suffix="%" 
-    updateValue={(value) => {
-        // value is the raw percentage number (e.g., 3)
-        // isPositive determines if we should add or subtract from 1
-        
-        // If positive: 1 + (3/100) = 1.03
-        // If negative: 1 - (3/100) = 0.97
+    onChange={(value: number) => {
+        // Convert typed percentage -> margin
+        // -5 => 0.95, +5 => 1.05, etc.
         const adjustment = value / 100;
-        const newMargin = isPositive 
-            ? Number((1 + adjustment).toFixed(4))
-            : Number((1 - adjustment).toFixed(4));
-            
+        const newMargin = Number((1 + adjustment).toFixed(4));
         handleMarginUpdate(newMargin);
     }}
-    error={error}
-    decimals={0}
-    showPlusMinus={true}
     allowNegative={true}
-    initialSign={isPositive ? '+' : '-'}
-    onSignChange={(sign) => {
-        setIsPositive(sign === '+');
-    }}
+    minValue={-99}
+    decimals={0}
+    error={error}
 />
 				)}
 
