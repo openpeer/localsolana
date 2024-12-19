@@ -53,11 +53,7 @@ const CurrencySelect = ({
 					return;
 				}
 			} catch (e) {
-				console.error('ipapi.co: Unable to fetch user location currency - falling back to NGN', {
-					error: e instanceof Error ? e.message : 'Unknown error',
-					fallback: 'Using NGN as default currency'
-				});
-				
+				console.error('Currency API:', e);
 				// Fallback to NGN if ipapi fails
 				const ngnCurrency = currencies.find((c) => c.code === 'NGN');
 				if (ngnCurrency) {
