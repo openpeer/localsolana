@@ -57,119 +57,137 @@ const Details = ({ list, updateList }: ListStepProps) => {
 
   // @ts-ignore
   const createList = async () => {
-    const escrowVal = type === 'BuyList' ? 0 : (escrowType === "manual" ? 0 : 1);
-    
-    if (isAuthenticated) {
-        try {
-            console.log("List ID:", list.id);
-            
-            // Transform payment methods to simpler structure
-            const simplifiedPaymentMethods = list.paymentMethods?.map(pm => ({
-                bank_id: pm.id
-            })) || [];
-
-            // Add logging to see what's happening with price source conversion
-            console.log('Price source before conversion:', list.priceSource);
-            console.log('Price source map:', priceSourceToNumber);
-            console.log('Converted price source:', priceSourceToNumber[list.priceSource as string]);
-
-            /**
-             * Format list data for API submission
-             * 
-             * API Requirements for margin_type, margin and price:
-             * 
-             * 1. Fixed Rate (margin_type = 0):
-             *    - margin must be 0
-             *    - price must be the fixed price value (non-null, positive)
-             * 
-             * 2. Floating Rate (margin_type = 1):
-             *    - margin must be the percentage value (non-zero)
-             *    - price must be null
-             * 
-             * @see listsApi.md for complete API specification
-             */
-
-            // Format data to match expected API structure
-            const formattedData = {
-                id: list.id,
-                type: list.type,
-                status: list.status,
-                seller_id: user?.id,
-                token_id: Number(list.tokenId),
-                fiat_currency_id: Number(list.fiatCurrencyId),
-                margin_type: list.marginType === "fixed" ? 0 : 1,
-                margin: list.marginType === "fixed" ? 0 : list.margin,
-                total_available_amount: Number(list.totalAvailableAmount),
-                limit_min: list.limitMin === undefined || list.limitMin === null || String(list.limitMin).trim() === '' 
-                    ? null 
-                    : Number(list.limitMin),
-                limit_max: list.limitMax === undefined || list.limitMax === null || String(list.limitMax).trim() === '' 
-                    ? null 
-                    : Number(list.limitMax),
-                deposit_time_limit: list.depositTimeLimit,
-                payment_time_limit: list.paymentTimeLimit,
-                terms: list.terms,
-                chain_id: list.chainId,
-                accept_only_verified: list.acceptOnlyVerified,
-                escrow_type: escrowVal,
-                price_source: priceSourceToNumber[list.priceSource as string],
-                price: list.marginType === "fixed" ? list.margin : null,
-                automatic_approval: true,
-                payment_methods: simplifiedPaymentMethods
-            };
-
-            // Modify validation for price
-            if (!user?.id) {
-                throw new Error('User ID not found');
-            }
-            if (list.marginType === "fixed") {
-                if (!formattedData.price || formattedData.price <= 0) {
-                    throw new Error('A positive price is required for fixed rate listings');
-                }
-            } else {
-                if (!formattedData.margin || formattedData.margin <= 0) {
-                    throw new Error('A positive margin is required for floating rate listings');
-                }
-            }
-            if (list.priceSource === undefined) {
-                throw new Error('Price source is required');
-            }
-
-            // Add validation for price_source conversion
-            if (formattedData.price_source === undefined) {
-                throw new Error(`Invalid price source: ${list.priceSource}`);
-            }
-
-            console.log("Final data being sent to API:", formattedData);
-
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-            const result = await fetch(`/api/list_management/${list.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${getAuthToken()}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formattedData)
-            });
-
+    try {
+        console.log("Details.tsx - Creating list");
+        console.log("Details.tsx - Full list data:", list);
+        console.log("Details.tsx - Price source type:", typeof list.priceSource);
+        console.log("Details.tsx - Raw price source value:", list.priceSource);
+        
+        // Log conversion attempt
+        const priceSourceNum = list.priceSource ? priceSourceToNumber[list.priceSource] : undefined;
+        console.log("Details.tsx - Price source conversion:", {
+            from: list.priceSource,
+            to: priceSourceNum,
+            map: priceSourceToNumber
+        });
+        
+        const escrowVal = type === 'BuyList' ? 0 : (escrowType === "manual" ? 0 : 1);
+        
+        if (isAuthenticated) {
             try {
-                const responseBody = await result.text();
-                console.log("Response body:", responseBody);
-            } catch (e) {
-                console.error("Error reading response body:", e);
-            }
+                console.log("List ID:", list.id);
+                
+                // Transform payment methods to simpler structure
+                const simplifiedPaymentMethods = list.paymentMethods?.map(pm => ({
+                    bank_id: pm.id
+                })) || [];
 
-            if (result.status === 200) {
-                console.log("Update successful");
-                router.push('/ads');
-            } else {
-                console.error("Update failed:", result);
+                // Add logging to see what's happening with price source conversion
+                console.log('Price source before conversion:', list.priceSource);
+                console.log('Price source map:', priceSourceToNumber);
+                console.log('Converted price source:', priceSourceToNumber[list.priceSource as string]);
+
+                /**
+                 * Format list data for API submission
+                 * 
+                 * API Requirements for margin_type, margin and price:
+                 * 
+                 * 1. Fixed Rate (margin_type = 0):
+                 *    - margin must be 0
+                 *    - price must be the fixed price value (non-null, positive)
+                 * 
+                 * 2. Floating Rate (margin_type = 1):
+                 *    - margin must be the percentage value (non-zero)
+                 *    - price must be null
+                 * 
+                 * @see listsApi.md for complete API specification
+                 */
+
+                // Format data to match expected API structure
+                const formattedData = {
+                    id: list.id,
+                    type: list.type,
+                    status: list.status,
+                    seller_id: user?.id,
+                    token_id: Number(list.tokenId),
+                    fiat_currency_id: Number(list.fiatCurrencyId),
+                    margin_type: list.marginType === "fixed" ? 0 : 1,
+                    margin: list.marginType === "fixed" ? 0 : list.margin,
+                    total_available_amount: Number(list.totalAvailableAmount),
+                    limit_min: list.limitMin === undefined || list.limitMin === null || String(list.limitMin).trim() === '' 
+                        ? null 
+                        : Number(list.limitMin),
+                    limit_max: list.limitMax === undefined || list.limitMax === null || String(list.limitMax).trim() === '' 
+                        ? null 
+                        : Number(list.limitMax),
+                    deposit_time_limit: list.depositTimeLimit,
+                    payment_time_limit: list.paymentTimeLimit,
+                    terms: list.terms,
+                    chain_id: list.chainId,
+                    accept_only_verified: list.acceptOnlyVerified,
+                    escrow_type: escrowVal,
+                    price_source: priceSourceToNumber[list.priceSource as string],
+                    price: list.marginType === "fixed" ? list.margin : null,
+                    automatic_approval: true,
+                    payment_methods: simplifiedPaymentMethods
+                };
+
+                // Modify validation for price
+                if (!user?.id) {
+                    throw new Error('User ID not found');
+                }
+                if (list.marginType === "fixed") {
+                    if (!formattedData.price || formattedData.price <= 0) {
+                        throw new Error('A positive price is required for fixed rate listings');
+                    }
+                } else {
+                    if (!formattedData.margin || formattedData.margin <= 0) {
+                        throw new Error('A positive margin is required for floating rate listings');
+                    }
+                }
+                if (list.priceSource === undefined) {
+                    throw new Error('Price source is required');
+                }
+
+                // Add validation for price_source conversion
+                if (formattedData.price_source === undefined) {
+                    throw new Error(`Invalid price source: ${list.priceSource}`);
+                }
+
+                console.log("Final data being sent to API:", formattedData);
+
+                const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+                const result = await fetch(`/api/list_management/${list.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formattedData)
+                });
+
+                try {
+                    const responseBody = await result.text();
+                    console.log("Response body:", responseBody);
+                } catch (e) {
+                    console.error("Error reading response body:", e);
+                }
+
+                if (result.status === 200) {
+                    console.log("Update successful");
+                    router.push('/ads');
+                } else {
+                    console.error("Update failed:", result);
+                }
+            } catch (error: any) {
+                console.error('Error creating list:', error);
+                console.error('Error details:', error.response?.data);
             }
-        } catch (error: any) {
-            console.error('Error creating list:', error);
-            console.error('Error details:', error.response?.data);
         }
+    } catch (error) {
+        console.error("Details.tsx - Create list error:", error);
+        throw error;
     }
   };
 

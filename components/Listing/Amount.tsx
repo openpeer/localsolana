@@ -39,9 +39,11 @@ const Amount = ({ list, updateList }: ListStepProps) => {
     console.log("MARGIN:", margin)
 
     const updateValue = (obj: any) => {
-        console.log("Before update:", list);
+        console.log("Amount.tsx - updateValue called with:", obj);
+        console.log("Amount.tsx - Current list state:", list);
+        console.log("Amount.tsx - Price source before update:", list.priceSource);
         updateList({ ...list, ...obj });
-        console.log("After update:", { ...list, ...obj });
+        console.log("Amount.tsx - Price source after update:", { ...list, ...obj }.priceSource);
     };
 
     const updateMargin = (m: number) => {
@@ -115,10 +117,48 @@ const Amount = ({ list, updateList }: ListStepProps) => {
 
     useEffect(() => {
         if (!token || !currency) return;
+        
+        const currencyCode = currency.name.toUpperCase();
+        const isCoingeckoSupported = isCoinGeckoSupported(currencyCode);
+        const binanceSupported = isBinanceSupported(currencyCode);
+        
+        // Initialize price source if it's not set or is a number
+        if (typeof list.priceSource === 'number' || !list.priceSource) {
+            console.log("Amount.tsx - Initializing price source from number:", list.priceSource);
+            
+            // For VES, always use binance_median
+            if (!isCoingeckoSupported && binanceSupported) {
+                updateValue({ priceSource: 'binance_median' });
+                return;
+            }
+            
+            // For other currencies, map from number to string
+            const priceSourceMap = {
+                0: 'coingecko',
+                1: 'binance_median',
+                2: 'binance_min',
+                3: 'binance_max'
+            };
+            
+            const stringSource = priceSourceMap[list.priceSource as keyof typeof priceSourceMap] || 'binance_median';
+            updateValue({ priceSource: stringSource });
+        }
+    }, [token, currency]); // Run only on initial mount with token/currency
+
+    useEffect(() => {
+        if (!token || !currency) return;
+        console.log("Amount.tsx - Price source initialization");
+        console.log("Amount.tsx - Current price source:", list.priceSource);
+        console.log("Amount.tsx - Currency:", currency.name);
+        
+        const currencyCode = currency.name.toUpperCase();
+        console.log("Amount.tsx - Currency support:", {
+            isCoingeckoSupported: isCoinGeckoSupported(currencyCode),
+            binanceSupported: isBinanceSupported(currencyCode)
+        });
+        
         console.log("Fetching price for token:", token.name, "and currency:", currency.name);
 
-        const currencyCode = currency.name.toUpperCase();
-        
         // Check currency support
         const isCoingeckoSupported = isCoinGeckoSupported(currencyCode);
         const binanceSupported = isBinanceSupported(currencyCode);

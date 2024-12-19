@@ -131,10 +131,16 @@ const MarginSwitcher = ({
 
 	// Initialize price source
 	const [priceSource, setPriceSource] = useState<PriceSource>(() => {
+		console.log("MarginSwitcher.tsx - Initializing price source");
+		console.log("MarginSwitcher.tsx - List price source:", listPriceSource);
+		console.log("MarginSwitcher.tsx - Available sources:", availablePriceSources);
+		
 		if (listPriceSource && availablePriceSources.some(p => p.api_id === listPriceSource)) {
+			console.log("MarginSwitcher.tsx - Selected price source:", listPriceSource);
 			return listPriceSource;
 		}
 		// Default to first available source
+		console.log("MarginSwitcher.tsx - Selected price source:", availablePriceSources[0].api_id);
 		return availablePriceSources[0].api_id;
 	});
 
@@ -191,11 +197,10 @@ const MarginSwitcher = ({
 
 	// Log when price source changes
 	const selectPriceSource = async (ps: OptionPriceSource) => {
-		console.log('Price source change:', {
-			from: priceSource,
-			to: ps.api_id,
-			mode: selected,
-			currentMargin: margin
+		console.log("MarginSwitcher.tsx - Price source selection:", {
+			current: priceSource,
+			new: ps.api_id,
+			listPriceSource
 		});
 
 		setPriceSource(ps.api_id);
