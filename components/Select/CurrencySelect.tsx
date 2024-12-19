@@ -43,7 +43,7 @@ const CurrencySelect = ({
 				});
 				clearTimeout(timeoutId);
 
-				if (!response.ok) throw new Error('Currency API failed');
+				if (!response.ok) return;
 				
 				const currency = await response.text();
 				const toSelect = currencies.find((c) => c.code === currency);
@@ -53,14 +53,6 @@ const CurrencySelect = ({
 					return;
 				}
 			} catch (e) {
-				console.error('Currency API:', e);
-				// Fallback to NGN if ipapi fails
-				const ngnCurrency = currencies.find((c) => c.code === 'NGN');
-				if (ngnCurrency) {
-					onSelect(ngnCurrency);
-					return;
-				}
-				// If NGN not found, fall back to first currency
 				selectDefaultCurrency(currencies);
 			}
 		};
