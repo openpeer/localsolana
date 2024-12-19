@@ -2,7 +2,7 @@
 import { Input, Label, Loading, MarginSwitcher } from 'components';
 import { useFormErrors } from 'hooks';
 import { Errors, Resolver } from 'models/errors';
-import { FiatCurrency, List, Token } from 'models/types';
+import { FiatCurrency, List, Token, PriceSource } from 'models/types';
 import React, { useEffect, useState } from 'react';
 import { 
     COINGECKO_SUPPORTED_CURRENCIES, 
@@ -12,6 +12,12 @@ import {
 import { minkeApi } from '@/pages/api/utils/utils';
 import { ListStepProps } from './Listing.types';
 import StepLayout from './StepLayout';
+
+// Add type for the price source map
+type PriceSourceNumber = 0 | 1 | 2 | 3;
+type PriceSourceMap = {
+    [key: number]: PriceSource;
+};
 
 const Amount = ({ list, updateList }: ListStepProps) => {
     const {
@@ -133,14 +139,19 @@ const Amount = ({ list, updateList }: ListStepProps) => {
             }
             
             // For other currencies, map from number to string
-            const priceSourceMap = {
+            const priceSourceMap: PriceSourceMap = {
                 0: 'coingecko',
                 1: 'binance_median',
                 2: 'binance_min',
                 3: 'binance_max'
             };
             
-            const stringSource = priceSourceMap[list.priceSource as keyof typeof priceSourceMap] || 'binance_median';
+            // Ensure we have a valid number before accessing the map
+            const sourceNumber = typeof list.priceSource === 'number' ? 
+                list.priceSource as PriceSourceNumber : 
+                0;  // Default to 0 (coingecko) if undefined
+                
+            const stringSource = priceSourceMap[sourceNumber] || 'binance_median';
             updateValue({ priceSource: stringSource });
         }
     }, [token, currency]); // Run only on initial mount with token/currency
