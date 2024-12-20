@@ -67,7 +67,8 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         const total = totalAvailableAmount || 0;
         const min = limitMin;
         const max = limitMax;
-        const fiatTotal = total * (calculatedPrice || 0);
+        const currentPrice = calculatedPrice || price || 0;
+        const fiatTotal = total * currentPrice;
 
         const error: Errors = {};
 
@@ -112,12 +113,12 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                 error.margin = 'Should be bigger than zero';
             }
         } else {
-            if (!calculatedPrice || calculatedPrice <= 0) {
+            if (!currentPrice || currentPrice <= 0) {
                 error.margin = 'Price should be set for fixed pricing';
             }
         }
 
-        console.log("Validation errors:", error);
+        console.log("Validation with price:", currentPrice, "fiatTotal:", fiatTotal);
         return error;
     };
 
@@ -132,65 +133,48 @@ const Amount = ({ list, updateList }: ListStepProps) => {
         if (typeof list.priceSource === 'number' || !list.priceSource) {
             console.log("Amount.tsx - Initializing price source from number:", list.priceSource);
             
-            // For VES, always use binance_median
-            if (!isCoingeckoSupported && binanceSupported) {
+            // For Coingecko-supported currencies, prefer Coingecko
+            if (isCoingeckoSupported) {
+                updateValue({ priceSource: 'coingecko' });
+                return;
+            }
+            
+            // For Binance-only currencies, use binance_median
+            if (binanceSupported) {
                 updateValue({ priceSource: 'binance_median' });
                 return;
             }
             
-            // For other currencies, map from number to string
-            const priceSourceMap: PriceSourceMap = {
-                0: 'coingecko',
-                1: 'binance_median',
-                2: 'binance_min',
-                3: 'binance_max'
-            };
-            
-            // Ensure we have a valid number before accessing the map
-            const sourceNumber = typeof list.priceSource === 'number' ? 
-                list.priceSource as PriceSourceNumber : 
-                0;  // Default to 0 (coingecko) if undefined
-                
-            const stringSource = priceSourceMap[sourceNumber] || 'binance_median';
-            updateValue({ priceSource: stringSource });
+            // Default fallback to coingecko
+            updateValue({ priceSource: 'coingecko' });
         }
-    }, [token, currency]); // Run only on initial mount with token/currency
+    }, [token, currency]);
 
     useEffect(() => {
         if (!token || !currency) return;
+        
         console.log("Amount.tsx - Price source initialization");
         console.log("Amount.tsx - Current price source:", list.priceSource);
         console.log("Amount.tsx - Currency:", currency.name);
         
-        const currencyCode = currency.name.toUpperCase();
-        console.log("Amount.tsx - Currency support:", {
-            isCoingeckoSupported: isCoinGeckoSupported(currencyCode),
-            binanceSupported: isBinanceSupported(currencyCode)
-        });
-        
         console.log("Fetching price for token:", token.name, "and currency:", currency.name);
 
-        // Check currency support
+        const currencyCode = currency.name.toUpperCase();
         const isCoingeckoSupported = isCoinGeckoSupported(currencyCode);
         const binanceSupported = isBinanceSupported(currencyCode);
         
-        // For Binance-only currencies (like VES), ensure we're using a Binance source
-        if (!isCoingeckoSupported && binanceSupported) {
-            const currentSource = String(list.priceSource || 'binance_median');
-            if (!currentSource.startsWith('binance_')) {
-                updateValue({ priceSource: 'binance_median' });
-            }
-            return;
-        }
+        // Get current source, defaulting to coingecko for Coingecko-supported currencies
+        const currentSource = String(list.priceSource || (isCoingeckoSupported ? 'coingecko' : 'binance_median'));
         
-        // For other currencies, keep existing logic
-        const currentSource = String(list.priceSource || 'binance_median');
-        const validSource = isCoingeckoSupported 
-            ? currentSource 
-            : binanceSupported 
-                ? 'binance_median'
-                : currentSource;
+        // Determine valid source based on currency support
+        let validSource = currentSource;
+        if (isCoingeckoSupported && !currentSource.startsWith('coingecko')) {
+            validSource = 'coingecko';
+        } else if (!isCoingeckoSupported && binanceSupported && !currentSource.startsWith('binance_')) {
+            validSource = 'binance_median';
+        }
 
+        // Update price source if it changed
         if (validSource !== currentSource) {
             updateValue({ priceSource: validSource });
             return;
@@ -227,13 +211,13 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                     if (validSource.startsWith('binance_')) {
                         fetchedPrice = data[token.name][currency.name];
                     } else {
-                        // For CoinGecko responses, use coingecko_id and lowercase currency
                         fetchedPrice = data[(token as Token).coingecko_id][currency.name.toLowerCase()];
                     }
                     
                     if (fetchedPrice) {
                         console.log("Fetched price:", fetchedPrice);
                         setPrice(fetchedPrice);
+                        updateValue({ calculatedPrice: fetchedPrice });
                     }
                 }
             })
@@ -311,6 +295,7 @@ const Amount = ({ list, updateList }: ListStepProps) => {
                         type="decimal"
                         value={list.limitMax ?? undefined}
                         onChangeNumber={(n) => updateValue({ limitMax: n })}
+                        error={errors.limitMax}
                     />
                 </div>
             </div>
