@@ -304,8 +304,6 @@ const MarginSwitcher = ({
 						error={error}
 						step={1}
 						decimals={0}
-						minValue={-99}
-						maxValue={99}
 						suffix="%"
 					/>
 				)}
