@@ -1,120 +1,94 @@
-import React, { useCallback } from 'react';
+import React from 'react';
+import { NumericFormat, OnValueChange } from 'react-number-format';
+
+import Button from './Button/Button';
 
 interface SelectorProps {
-	label?: string;
 	value: number;
-	step?: number;
+	suffix: string;
+	underValue?: string;
+	updateValue: (n: number) => void;
+	error?: string;
+	allowNegative?: boolean;
+	changeableAmount?: number;
 	decimals?: number;
 	minValue?: number;
 	maxValue?: number;
-	allowNegative?: boolean;
-	placeholder?: string;
-	onChange: (newVal: number) => void;
-	error?: string;
-	suffix?: string;
-	className?: string;
+	showPlusMinus?: boolean;
+	initialSign?: '+' | '-' | ''; 
+	onSignChange?: (sign: '+' | '-') => void;
 }
 
-const Selector: React.FC<SelectorProps> = ({
-	label,
+const Selector = ({
 	value,
-	step = 1,
+	suffix,
+	underValue,
+	updateValue,
+	error,
+	allowNegative = false,
+	changeableAmount = 0.01,
 	decimals = 2,
 	minValue,
 	maxValue,
-	allowNegative = false,
-	placeholder,
-	onChange,
-	error,
-	suffix,
-	className = ''
-}) => {
-	const roundToDecimals = useCallback((val: number) => {
-		return Number(val.toFixed(decimals));
-	}, [decimals]);
-
-	const clampValue = useCallback((val: number) => {
-		let newVal = val;
-		if (!allowNegative && newVal < 0) {
-			newVal = 0;
-		}
-		if (minValue !== undefined && newVal < minValue) {
-			newVal = minValue;
-		}
-		if (maxValue !== undefined && newVal > maxValue) {
-			newVal = maxValue;
-		}
-		return roundToDecimals(newVal);
-	}, [allowNegative, minValue, maxValue, roundToDecimals]);
-
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		let val = e.target.value;
-		if (val === '-' && allowNegative) {
-			onChange(-0);
-			return;
-		}
-		if (val === '') {
-			onChange(0);
+	showPlusMinus = false,
+	initialSign = '',
+	onSignChange,
+}: SelectorProps) => {
+	const changeAmount = (newAmount: number) => {
+		if (maxValue !== undefined && newAmount >= maxValue) {
+			updateValue(maxValue);
 			return;
 		}
 
-		const parsed = parseFloat(val);
-		if (!isNaN(parsed)) {
-			const clamped = clampValue(parsed);
-			onChange(clamped);
+		if ((!allowNegative && newAmount < 0) || (minValue !== undefined && newAmount <= minValue)) {
+			updateValue(minValue || 0);
+			return;
 		}
+
+		updateValue(newAmount);
 	};
 
-	const adjustValue = (direction: 'increment' | 'decrement') => {
-		const changeAmount = direction === 'increment' ? step : -step;
-		const newVal = clampValue(value + changeAmount);
-		onChange(newVal);
+	const onValueChange: OnValueChange = ({ floatValue }) => {
+		const valueChanged = floatValue || 0;
+		changeAmount(valueChanged);
 	};
 
 	return (
-		<div className={`w-full flex flex-col mb-4 ${className}`}>
-			{label && (
-				<label className="text-sm font-medium text-gray-700">
-					{label}
-				</label>
-			)}
-
-			<div className="flex gap-4 w-full text-sm text-gray-600 bg-gray-100 p-6 rounded justify-center">
-				<button
-					type="button"
-					onClick={() => adjustValue('decrement')}
-					className="px-2 py-1 border rounded text-2xl text-red-900"
-					title="Reduce Margin"
-				>
-					–
-				</button>
-
-				<input
-					type="number"
-					className="border border-gray-300 rounded px-2 py-1 w-1/2 text-center text-xl tracking-wider"
-					step={step}
-					value={Number.isFinite(value) ? value.toFixed(decimals) : ''}
-					onChange={handleInputChange}
-					placeholder={placeholder}
-				/>
-
-				<button
-					type="button"
-					onClick={() => adjustValue('increment')}
-					className="px-2 py-1 border rounded text-2xl text-green-500"
-					title="Increase Margin"
-				>
-					+
-				</button>
-
-				{suffix && <span className="text-gray-700 text-xl font-black self-center">{suffix}</span>}
+		<div className="flex flex-row items-center bg-gray-100 my-8 p-4 border-2 border-slate-200 rounded-md">
+			<div className="w-full flex justify-center">
+				<div className="flex items-center gap-2">
+					{showPlusMinus && (
+						<select 
+							className="bg-transparent border-none outline-none"
+							value={initialSign || ''}
+							onChange={(e) => {
+								if (e.target.value === '') return;
+								const isPositive = e.target.value === '+';
+								const currentValue = Math.abs(value);
+								
+								changeAmount(isPositive ? currentValue : -currentValue);
+								onSignChange?.(e.target.value as '+' | '-');
+								
+								updateValue(isPositive ? currentValue : -currentValue);
+							}}
+						>
+							<option value="">Select</option>
+							<option value="+">+</option>
+							<option value="-">-</option>
+						</select>
+					)}
+					<NumericFormat
+						value={Math.abs(value)}
+						onValueChange={onValueChange}
+						className="bg-white w-24 text-center rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm placeholder:text-slate-400"
+						allowedDecimalSeparators={[',', '.']}
+						decimalScale={decimals}
+						inputMode="decimal"
+						allowNegative={allowNegative && !showPlusMinus}
+					/>
+					<span>{suffix}</span>
+				</div>
 			</div>
-
-			{error && (
-				<span className="text-sm text-red-500">
-					{error}
-				</span>
-			)}
 		</div>
 	);
 };
