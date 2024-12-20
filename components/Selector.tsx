@@ -86,9 +86,7 @@ const Selector: React.FC<SelectorProps> = ({
 					className="px-2 py-1 border rounded text-2xl text-red-900"
 					title="Reduce Margin"
 				>
-					<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10">
-						<path d="M1 10L1 6L15 6V10L1 10Z" fill="#fb122f"/>
-					</svg>
+					–
 				</button>
 
 				<input
@@ -106,9 +104,7 @@ const Selector: React.FC<SelectorProps> = ({
 					className="px-2 py-1 border rounded text-2xl text-green-500"
 					title="Increase Margin"
 				>
-					<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8">
-						<path d="M10 1H6V6L1 6V10H6V15H10V10H15V6L10 6V1Z" fill="#57E964"/>
-					</svg>
+					+
 				</button>
 
 				{suffix && <span className="text-gray-700 text-xl font-black self-center">{suffix}</span>}
