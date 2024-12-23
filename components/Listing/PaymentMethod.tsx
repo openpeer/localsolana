@@ -263,7 +263,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			id: paymentMethodCreation.id || Number(paymentMethodCreation.bank?.id),
 			bank: {
 				...paymentMethodCreation.bank!,
-				imageUrl: paymentMethodCreation.bank?.icon || paymentMethodCreation.bank?.imageUrl,
+				imageUrl: paymentMethodCreation.bank?.imageUrl || '',
 			},
 			values: paymentMethodCreation.values || {}
 		};
@@ -276,6 +276,20 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			
 			setPaymentMethodCreation(null);
 		} else {
+			const token = getAuthToken();
+			const payload = type === 'BuyList' ? {
+				bank_id: paymentMethodCreation.bank?.id
+			} : {
+				bank: {
+					id: paymentMethodCreation.bank?.id,
+					name: paymentMethodCreation.bank?.name || '',
+					color: paymentMethodCreation.bank?.color || '',
+					account_info_schema: paymentMethodCreation.bank?.account_info_schema || [],
+					imageUrl: paymentMethodCreation.bank?.imageUrl || '',
+				},
+				values: paymentMethodCreation.values
+			};
+
 			const updatedPaymentMethods = [...paymentMethods, newPaymentMethod];
 			updatePaymentMethods(updatedPaymentMethods);
 			setPaymentMethodCreation(null);
@@ -292,9 +306,10 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			bank: {
 				id: 0,
 				name: '',
-				icon: '',
 				color: '#000000',
-				account_info_schema: []
+				account_info_schema: [],
+				imageUrl: '',
+				code: '',
 			} as Bank,
 			values: {},
 		});
