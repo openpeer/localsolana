@@ -370,13 +370,13 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 								const field = schemaInfo.find((f) => f.id === key);
 								if (!value || !field) return null;
 
-								// return (
-								// 	<div className="mb-2" key={key}>
-								// 		<span>
-								// 			{field.label}: {value}
-								// 		</span>
-								// 	</div>
-								// );
+								return (
+									<div className="mb-2" key={key}>
+										<span>
+											{field.label}: {value}
+										</span>
+									</div>
+								);
 							})}
 						</div>
 					)}

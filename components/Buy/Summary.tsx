@@ -9,6 +9,7 @@ import { UIOrder } from './Buy.types';
 import Chat from './Chat';
 import Loading from '../Loading/Loading';
 import FriendlyTime from 'components/FriendlyTime';
+import { Bank, PaymentMethod, List } from 'models/types';
 
 
 const SummaryBuy = ({ order }: { order: UIOrder }) => {	
@@ -36,7 +37,8 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 		type,
 		accept_only_verified: acceptOnlyVerified,
 		escrow_type: escrowType,
-		payment_methods: paymentMethods
+		payment_methods: paymentMethods = [],
+		banks: listBanks = []
 	} = list!;
 
 	
@@ -44,8 +46,25 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 	const selling = seller.address === address;
 	const chatAddress = selling ? buyer.address : seller.address;
 	const user = !!selling && !!buyer ? buyer : seller;
-	//@ts-ignore
-	const banks = paymentMethod? [paymentMethod.bank]: type === 'BuyList'? list.bank: Array.isArray(paymentMethods)? paymentMethods.map((pm) => pm.bank): [paymentMethods].map((pm) => pm?.bank);
+
+	const isBank = (obj: any): obj is Bank => 
+		obj && typeof obj === 'object' && 'name' in obj && 'account_info_schema' in obj;
+
+	const isPaymentMethod = (obj: any): obj is PaymentMethod =>
+		obj && typeof obj === 'object' && 'bank' in obj && 'values' in obj;
+
+	const getBankFromPaymentMethod = (pm: PaymentMethod | Bank | null | undefined): Bank | null => {
+		if (!pm) return null;
+		if (isBank(pm)) return pm;
+		if (isPaymentMethod(pm)) return pm.bank;
+		return null;
+	};
+
+	const banks = paymentMethod ? [paymentMethod.bank] :
+		type === 'BuyList' ? listBanks :
+		Array.isArray(paymentMethods) ? 
+			paymentMethods.map(getBankFromPaymentMethod).filter((bank): bank is Bank => bank !== null) :
+			[paymentMethods].map(getBankFromPaymentMethod).filter((bank): bank is Bank => bank !== null);
 	const depositTimeLimit = order.deposit_time_limit || list.deposit_time_limit;
 	const paymentTimeLimit = order.payment_time_limit || list.payment_time_limit;
 	const instantEscrow = escrowType === 'instant';
@@ -156,15 +175,15 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 					{banks.length > 0 && (
 						<div className="w-full flex flex-row mb-4 space-x-2">
 							<div className="text-sm">Payment methods</div>
-							{banks.map((bank: any) => (
-								<div className="flex flex-row items-center" key={bank?.id}>
+							{banks.map((bank: Bank) => (
+								<div className="flex flex-row items-center" key={`bank-${bank?.id}`}>
 									<span
 										className="bg-gray-500 w-1 h-3 rounded-full"
 										style={{ backgroundColor: bank?.color || 'gray' }}
 									>
 										&nbsp;
 									</span>
-									<span className="pl-1 text-gray-700 text-[11px]">{bank?.name||"Bank Name"}</span>
+									<span className="pl-1 text-gray-700 text-[11px]">{bank?.name || "Bank Name"}</span>
 								</div>
 							))}
 						</div>

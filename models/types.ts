@@ -95,17 +95,16 @@ export interface Bank {
 	id: number;
 	name: string;
 	color: string;
-	account_info_schema: Array<{
-		label: string;
-		id: string;
-		required: boolean;
-	}>;
-	image?: string;
-	imageUrl?: string;
-	icon?: string;
-	createdAt?: string;
-	updatedAt?: string;
+	account_info_schema: AccountSchema[];
+	imageUrl: string;
 	code?: string;
+}
+
+export interface AccountSchema {
+	label: string;
+	id: string;
+	required: boolean;
+	type?: string;
 }
 
 export interface PaymentMethod {
