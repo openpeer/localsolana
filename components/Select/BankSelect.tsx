@@ -35,6 +35,11 @@ const BankSelect = ({
 		fetch(currencyId===-1?`/api/getbanks`:`/api/banks?currency_id=${currencyId}`)
 			.then((res) => res.json())
 			.then((data) => { 
+				console.log('Bank API Response:', {
+					endpoint: currencyId===-1 ? '/api/getbanks' : `/api/banks?currency_id=${currencyId}`,
+					data: data.data,
+					firstBank: data.data[0]
+				});
 				setBanks(data.data);
 				setLoading(false);
 			});

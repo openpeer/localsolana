@@ -6,6 +6,7 @@ import BankSelect from 'components/Select/BankSelect';
 import { UIPaymentMethod } from './Listing.types';
 import { Option } from 'components/Select/Select.types';
 import Button from 'components/Button/Button';
+import Image from 'next/image';
 
 interface SchemaField {
 	id: string;
@@ -40,6 +41,12 @@ const PaymentMethodForm = ({
 	}, [paymentMethod]);
 
 	const handleBankSelect = (bank: Bank | Option | undefined) => {
+		console.log('Bank Selected:', {
+			bank,
+			hasSchema: bank && 'account_info_schema' in bank,
+			imageUrl: bank && 'imageUrl' in bank ? bank.imageUrl : undefined
+		});
+
 		if (!bank || !('account_info_schema' in bank)) return;
 
 		// Initialize empty values for all schema fields

@@ -263,7 +263,10 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			id: paymentMethodCreation.id || Number(paymentMethodCreation.bank?.id),
 			bank: {
 				...paymentMethodCreation.bank!,
-				imageUrl: paymentMethodCreation.bank?.imageUrl || '',
+				imageUrl: paymentMethodCreation.bank?.icon || 
+						 (paymentMethodCreation.bank?.image 
+							? `https://bankimg.localsolana.com/${paymentMethodCreation.bank.image}`
+							: ''),
 			},
 			values: paymentMethodCreation.values || {}
 		};
@@ -276,7 +279,6 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			
 			setPaymentMethodCreation(null);
 		} else {
-			const token = getAuthToken();
 			const payload = type === 'BuyList' ? {
 				bank_id: paymentMethodCreation.bank?.id
 			} : {
@@ -285,7 +287,10 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 					name: paymentMethodCreation.bank?.name || '',
 					color: paymentMethodCreation.bank?.color || '',
 					account_info_schema: paymentMethodCreation.bank?.account_info_schema || [],
-					imageUrl: paymentMethodCreation.bank?.imageUrl || '',
+					imageUrl: paymentMethodCreation.bank?.icon || 
+							 (paymentMethodCreation.bank?.image 
+								? `https://bankimg.localsolana.com/${paymentMethodCreation.bank.image}`
+								: ''),
 				},
 				values: paymentMethodCreation.values
 			};
@@ -357,9 +362,9 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 						className={`w-full flex flex-row justify-between ${type === 'SellList' ? 'mb-4' : ''}`}
 					>
 						<div className="flex flex-row items-center">
-							{pm.bank?.imageUrl ? (
+							{(pm.bank?.imageUrl || pm.bank?.icon) ? (
 								<Image
-									src={pm.bank.imageUrl}
+									src={pm.bank.imageUrl || pm.bank.icon || ''}
 									alt={pm.bank.name}
 									className="h-6 w-6 flex-shrink-0 rounded-full mr-1"
 									width={24}

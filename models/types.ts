@@ -97,6 +97,8 @@ export interface Bank {
 	color: string;
 	account_info_schema: AccountSchema[];
 	imageUrl: string;
+	icon?: string;
+	image?: string;
 	code?: string;
 }
 
