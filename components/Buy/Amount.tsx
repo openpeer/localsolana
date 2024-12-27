@@ -243,29 +243,55 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     }
   };
 
-  function onChangeFiat(val: number | undefined) {
-    clearErrors(["fiatAmount"]);
-    setFiatAmount(val);
-    if (price && val) setTokenAmount(truncate(val / price, token.decimals));
-  }
+  const [inputSource, setInputSource] = useState<'token' | 'fiat'>('token');
 
   function onChangeToken(val: number | undefined) {
-    //console.log("OnChange Token", val);
     clearErrors(["tokenAmount"]);
-
+    setInputSource('token');
+    console.group('Token Input Change');
+    
     if (val) {
-      setTokenAmount(truncate(val, token.decimals));
+      const truncatedVal = truncate(val, token.decimals);
+      setTokenAmount(truncatedVal);
+      if (price) {
+        const newFiatAmount = truncatedVal * price;
+        setFiatAmount(newFiatAmount);
+      }
     } else {
       setTokenAmount(val);
+      setFiatAmount(undefined);
     }
-    if (price && val) setFiatAmount(val * price);
+    console.groupEnd();
+  }
+
+  function onChangeFiat(val: number | undefined) {
+    clearErrors(["fiatAmount"]);
+    setInputSource('fiat');
+    console.group('Fiat Input Change');
+    
+    setFiatAmount(val);
+    // Only recalculate tokens if fiat was the original input
+    if (price && val && inputSource === 'fiat') {
+      const rawTokenAmount = val / price;
+      const newTokenAmount = truncate(rawTokenAmount, token.decimals);
+      setTokenAmount(newTokenAmount);
+    }
+    console.groupEnd();
   }
 
   useEffect(() => {
+    console.group('Order State Update');
+    console.log('Updating order with new amounts:', {
+      fiatAmount,
+      tokenAmount,
+      price,
+      tokenDecimals: token?.decimals
+    });
     updateOrder({
       ...order,
       ...{ fiatAmount, tokenAmount },
     });
+    console.groupEnd();
   }, [tokenAmount, fiatAmount]);
 
   useEffect(() => {
@@ -378,16 +404,6 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
               type="decimal"
               error={errors.fiatAmount}
             />
-
-            {!buyCrypto && (
-              <BankSelect
-                currencyId={currency.id}
-                onSelect={(b) => setBank(b as Bank)}
-                selected={bank}
-                options={banks}
-                error={errors.bankId}
-              />
-            )}
           </>
         )}
       </div>
