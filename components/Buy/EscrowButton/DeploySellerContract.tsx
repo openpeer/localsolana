@@ -3,11 +3,8 @@ import { useTransactionFeedback } from "@/hooks";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { Button } from "components";
 import TransactionLink from "components/TransactionLink";
-import { useAccount, useUserProfile } from "hooks";
-import useDeploy from "hooks/transactions/deploy/useDeploy";
+import { useAccount } from "hooks";
 import React, { useEffect, useRef } from "react";
-import { toast } from "react-toastify";
-import { useTransactionFeedbackModal } from "@/contexts/TransactionFeedContext";
 
 const DeploySellerContract = ({
   label = "Create LocalSolana Account",
@@ -17,7 +14,6 @@ const DeploySellerContract = ({
   setContractAddress: (address: string | undefined) => void; 
 }) => {
   const { primaryWallet } = useDynamicContext();
-
   const { isFetching, isLoading, isSuccess, data, deploy } = useGaslessDeploy();
 
   useTransactionFeedback({
@@ -29,24 +25,24 @@ const DeploySellerContract = ({
 
   const deploySellerContract = async () => {
     if (!primaryWallet?.isConnected) return;
- 	 await deploy?.();
+    await deploy?.();
   };
 
-  const prevIsSuccessRef = useRef<boolean>(false);
-
+  // Single useEffect to handle contract address updates
   useEffect(() => {
-    console.log('in use effect of DeploySellerContract',isSuccess,data);
-    if (isSuccess && !prevIsSuccessRef.current && (data?.escrowPDA!='')) {
-      console.log('in use effect of DeploySellerContract',data);
-      prevIsSuccessRef.current = true;
-      setContractAddress(data?.escrowPDA);
-    }
-  }, [isSuccess,data]);
+    const handleContractDeployment = async () => {
+      if (isSuccess && data?.escrowPDA) {
+        try {
+          // Wait briefly to ensure blockchain state is updated
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          setContractAddress(data.escrowPDA);
+        } catch (error) {
+          console.error("Error updating contract address:", error);
+        }
+      }
+    };
 
-  useEffect(() => {
-    if (isSuccess && data?.escrowPDA) {
-      setContractAddress(data.escrowPDA);
-    }
+    handleContractDeployment();
   }, [isSuccess, data?.escrowPDA, setContractAddress]);
 
   return (

@@ -1,7 +1,6 @@
-
 import { Token } from 'models/types';
 import { useQRCode } from 'next-qrcode';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ClipboardText from 'components/Buy/ClipboardText';
 import DeploySellerContract from 'components/Buy/EscrowButton/DeploySellerContract';
 import Input from 'components/Input/Input';
@@ -24,25 +23,33 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 	const listTotalNumber = listTotal - balance;
 	const toDeposit = listTotalNumber / 4;
 	const [depositAmount, setDepositAmount] = useState<number | undefined>(listTotalNumber);
+	const [isContractReady, setIsContractReady] = useState(false);
 	const { SVG } = useQRCode();
-	//const chain = allChains.find((c) => c.id === chainId);
-	// const { user,setContractAddress } = useUserProfile({
-	// 	onUpdateProfile: setUser
-	// });
-	const {address} = useAccount();
-	const { user,updateContractAddress } = useUserProfile({});
-	  const handleContractUpdate=async (contractAddress:string|undefined)=>{
-		if(contractAddress !== undefined){
-		updateContractAddress(contractAddress);
-		}
-	  }
+	const { address } = useAccount();
+	const { user, updateContractAddress } = useUserProfile({});
 
-	  const { data: escrowState } = useContractRead(
-		address||'',
+	const handleContractUpdate = async (contractAddress: string | undefined) => {
+		if (contractAddress) {
+			await updateContractAddress(contractAddress);
+			// Wait for contract to be ready before setting state
+			await new Promise(resolve => setTimeout(resolve, 2000));
+			setIsContractReady(true);
+		}
+	};
+
+	const { data: escrowState, error: escrowError } = useContractRead(
+		address || '',
 		"escrowState",
 		true
 	);
-	  var sellerContractDeployed =  escrowState!=undefined && escrowState!=null;
+
+	useEffect(() => {
+		if (escrowState) {
+			setIsContractReady(true);
+		}
+	}, [escrowState]);
+
+	const sellerContractDeployed = isContractReady && escrowState != undefined;
 
 	function handleFundsDeposited(): void {
 		
@@ -91,12 +98,12 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 									onChangeNumber={setDepositAmount}
 									containerExtraStyle="mt-0 mb-2"
 								/>
-								{ (
+								{depositAmount && depositAmount >= toDeposit && (
 									<DepositFunds
 										contract={user?.contract_address || ''}
 										token={token}
-										tokenAmount={depositAmount!}
-										disabled={(depositAmount || 0) < toDeposit }
+										tokenAmount={depositAmount}
+										disabled={!isContractReady}
 										onFundsDeposited={handleFundsDeposited}
 									/>
 								)}
@@ -104,7 +111,9 @@ const FundEscrow = ({ token, sellerContract, chainId, balance, totalAvailableAmo
 						) : (
 							<DeploySellerContract setContractAddress={handleContractUpdate} />
 						)}
-						<span className="text-sm text-gray-500">Available funds can be withdrawn at any time</span>
+						<span className="text-sm text-gray-500">
+							Available funds can be withdrawn at any time
+						</span>
 					</div>
 					{sellerContractDeployed && (
 						<div className="mt-8">

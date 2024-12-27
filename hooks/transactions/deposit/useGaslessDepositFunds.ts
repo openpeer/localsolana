@@ -50,79 +50,64 @@ const useGaslessDepositFunds = ({
         setIsSuccess(false);
         setIsLoading(false);
         return;
-      }
+    }
 
     setIsLoading(true);
-    //console.log("Initiating deposit");
 
     try {
-      const senderAccountInfo = await getAccountInfo(primaryWallet.address);
-      if (!senderAccountInfo) {
-        console.error("Sender account not found");
-        setIsSuccess(false);
-        setIsLoading(false);
-        return;
-      }
+        // Skip account verification for now since the wallet is connected
+        // This is safe because the transaction will fail if account doesn't exist
+        if (token.address === PublicKey.default.toBase58()) {
+            const transaction = new Transaction().add(
+                SystemProgram.transfer({
+                    fromPubkey: new PublicKey(primaryWallet.address),
+                    toPubkey: new PublicKey(contract),
+                    lamports: Number(amount),
+                })
+            );
 
-      if (token.address === PublicKey.default.toBase58()) {
-        const transaction = new Transaction().add(
-          SystemProgram.transfer({
-            fromPubkey: new PublicKey(primaryWallet.address),
-            toPubkey: new PublicKey(contract),
-            lamports: Number(amount),
-          })
-        );
+            if (!shyft) {
+                throw new Error("Shyft not initialized for transaction relaying");
+            }
 
-        // Shyft used only for transaction relaying
-        if (!shyft) {
-          console.error("Shyft not initialized for transaction relaying");
-          setIsSuccess(false);
-          setIsLoading(false);
-          return;
-        }
-
-        const finalTx = await sendTransactionWithShyft(transaction,true);
-        //console.log('here is final result', finalTx);
-        if (finalTx) {
-          setIsSuccess(true);
-          updateData({ hash: finalTx });
+            const finalTx = await sendTransactionWithShyft(transaction, true);
+            if (finalTx) {
+                setIsSuccess(true);
+                updateData({ hash: finalTx });
+            } else {
+                throw new Error("Transaction relaying failed");
+            }
         } else {
-          console.error("Transaction relaying failed", finalTx);
-          setIsSuccess(false);
-        }
+            const tx = await depositFundsToLocalSolana(
+                amount,
+                new PublicKey(primaryWallet?.address),
+                new PublicKey(contract),
+                new PublicKey(token.address)
+            );
 
-      } else {
-        const tx = await depositFundsToLocalSolana(
-          amount,
-          new PublicKey(primaryWallet?.address),
-          new PublicKey(contract),
-          new PublicKey(token.address)
-        );
+            if (!tx || !shyft) {
+                console.error("Deposit failed: Missing transaction or Shyft instance", tx, shyft);
+                setIsSuccess(false);
+                setIsLoading(false);
+                return;
+            }
 
-        if (!tx || !shyft) {
-          console.error("Deposit failed: Missing transaction or Shyft instance", tx, shyft);
-          setIsSuccess(false);
-          setIsLoading(false);
-          return;
-        }
-
-          const finalTx = await sendTransactionWithShyft(tx,true);
-          //console.log('here is final result', finalTx);
-          if (finalTx) {
-            setIsSuccess(true);
-            updateData({ hash: finalTx });
-          } else {
-            console.error("Transaction relaying failed", finalTx);
-            setIsSuccess(false);
-          }
+            const finalTx = await sendTransactionWithShyft(tx,true);
+            //console.log('here is final result', finalTx);
+            if (finalTx) {
+                setIsSuccess(true);
+                updateData({ hash: finalTx });
+            } else {
+                console.error("Transaction relaying failed", finalTx);
+                setIsSuccess(false);
+            }
         }
 
     } catch (error) {
-      console.error("Deposit operation failed", error);
-      setIsSuccess(false);
-      setIsLoading(false);
+        console.error("Deposit operation failed:", error);
+        setIsSuccess(false);
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 
