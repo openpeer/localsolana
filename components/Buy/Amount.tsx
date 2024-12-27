@@ -10,7 +10,7 @@ import { countries } from "models/countries";
 import { Errors, Resolver } from "models/errors";
 import { Bank, List, Order, User } from "models/types";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { truncate } from "utils";
 
 import snakecaseKeys from "snakecase-keys";
@@ -27,6 +27,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useBalance } from "@/hooks/transactions";
 import useGaslessEscrowAccountDeploy from "@/hooks/transactions/deploy/useGaslessEscrowAccountDeploy";
 import Loading from "../Loading/Loading";
+import OrderPaymentMethod from './OrderPaymentMethod';
 
 interface BuyAmountStepProps extends BuyStepProps {
   price: number | undefined;
@@ -224,23 +225,46 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   };
 
   const onProceed = async () => {
+    console.group('Amount.tsx - onProceed');
+    console.log('Current state:', {
+      list,
+      price,
+      fiatAmount,
+      tokenAmount,
+      currentStep: order.step
+    });
+
     if (acceptOnlyVerified && user && !user.verified) {
+      console.log('Verification required - redirecting');
       router.push(`/${user.address}`);
+      console.groupEnd();
       return;
     }
 
     if (list && price) {
-      if (!validate(resolver)) return;
+      if (!validate(resolver)) {
+        console.log('Validation failed');
+        console.groupEnd();
+        return;
+      }
+      
       const newOrder: UIOrder = {
         ...order,
         ...{ fiat_amount: fiatAmount!, token_amount: tokenAmount!, price },
       };
+
       if (list.type === "SellList") {
+        console.log('SellList - creating order directly');
         await createOrder(newOrder);
       } else {
+        console.log('BuyList - proceeding to payment method step', {
+          currentStep: order.step,
+          newStep: order.step + 1
+        });
         updateOrder({ ...newOrder, ...{ step: newOrder.step + 1 } });
       }
     }
+    console.groupEnd();
   };
 
   const [inputSource, setInputSource] = useState<'token' | 'fiat'>('token');
@@ -341,6 +365,11 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     }
   }, [banks]);
 
+  const handlePaymentMethodUpdate = useCallback((newOrder: UIOrder) => {
+    console.log('Payment method update:', newOrder);
+    updateOrder(newOrder);
+  }, [updateOrder]);
+
   if (!user?.email) {
     return <AccountInfo setUser={setUser} />;
   }
@@ -353,58 +382,72 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   const buttonText = verificationRequired ? "Verify" : "";
 
   return (
-    <StepLayout onProceed={onProceed} buttonText={buttonText}>
-      <div className="my-8">
-        {verificationRequired ? (
-          <ModalWindow
-            title="ID Verification Needed"
-            content={
-              <div className="py-4">
-                You&apos;re almost set. Please, take a moment to verify some
-                information before continue, we use Quadrata a secure service.
-              </div>
-            }
-            type="confirmation"
-            actionButtonTitle="Verify ID"
-            open
-            onClose={() => router.back()}
-            onAction={() => router.push(`/${address}`)}
-            closeAfterAction={false}
-          />
-        ) : (
-          <>
-            <Input
-              label={buyCrypto ? "Amount to sell" : "Amount to buy"}
-              prefix={
-                <Prefix
-                  label={token!.name}
-                  image={<Token token={token} size={24} />}
-                />
+    <StepLayout 
+      onProceed={onProceed} 
+      buttonText={list.escrow_type === 'instant' ? 'Continue' : 'Sign and Continue'}
+    >
+      <div className="space-y-8">
+        <div className="my-8">
+          {verificationRequired ? (
+            <ModalWindow
+              title="ID Verification Needed"
+              content={
+                <div className="py-4">
+                  You&apos;re almost set. Please, take a moment to verify some
+                  information before continue, we use Quadrata a secure service.
+                </div>
               }
-              id="amountToReceive"
-              value={tokenAmount}
-              onChangeNumber={(t) => onChangeToken(t)}
-              type="decimal"
-              decimalScale={token.decimals}
-              error={errors.tokenAmount}
+              type="confirmation"
+              actionButtonTitle="Verify ID"
+              open
+              onClose={() => router.back()}
+              onAction={() => router.push(`/${address}`)}
+              closeAfterAction={false}
             />
-            <Input
-              label={buyCrypto ? "Amount you'll receive" : "Amount you'll pay"}
-              prefix={
-                <Prefix
-                  label={currency!.symbol}
-                  image={
-                    <Flag name={countries[currency.country_code]} size={24} />
-                  }
-                />
-              }
-              id="amountBuy"
-              value={fiatAmount}
-              onChangeNumber={(f) => onChangeFiat(f)}
-              type="decimal"
-              error={errors.fiatAmount}
+          ) : (
+            <>
+              <Input
+                label={buyCrypto ? "Amount to sell" : "Amount to buy"}
+                prefix={
+                  <Prefix
+                    label={token!.name}
+                    image={<Token token={token} size={24} />}
+                  />
+                }
+                id="amountToReceive"
+                value={tokenAmount}
+                onChangeNumber={(t) => onChangeToken(t)}
+                type="decimal"
+                decimalScale={token.decimals}
+                error={errors.tokenAmount}
+              />
+              <Input
+                label={buyCrypto ? "Amount you'll receive" : "Amount you'll pay"}
+                prefix={
+                  <Prefix
+                    label={currency!.symbol}
+                    image={
+                      <Flag name={countries[currency.country_code]} size={24} />
+                    }
+                  />
+                }
+                id="amountBuy"
+                value={fiatAmount}
+                onChangeNumber={(f) => onChangeFiat(f)}
+                type="decimal"
+                error={errors.fiatAmount}
+              />
+            </>
+          )}
+        </div>
+
+        {!verificationRequired && (
+          <div className="mt-8">
+            <OrderPaymentMethod 
+              order={order} 
+              updateOrder={handlePaymentMethodUpdate}
             />
-          </>
+          </div>
         )}
       </div>
     </StepLayout>
