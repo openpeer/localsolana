@@ -20,17 +20,21 @@ import { UIOrder } from './Buy.types';
 
 /**
  * OrderPaymentMethod Component
- * Handles payment method selection and management during the order creation process.
- * Part of the buy order flow after amount selection.
+ * Handles payment method selection during order creation.
+ * 
+ * Behavior differs based on list type:
+ * - SellList: Shows only bank selection (buyer pays to seller's account)
+ * - BuyList: Shows bank selection and account details form (seller provides payment details)
  * 
  * Features:
- * - Payment method selection from available banks
- * - Form handling for payment details
- * - Validation of required fields
- * - Support for both instant and manual escrow types
- * - Message signing for manual escrow
+ * - Dynamic bank loading based on currency
+ * - Form validation for required fields
+ * - Payment method state management
+ * - Error handling and loading states
  * 
- * @see lsdocs/orderBuyProcess.md for complete flow documentation
+ * @param {BuyStepProps} props
+ * @param {UIOrder} props.order - Current order state
+ * @param {Function} props.updateOrder - Callback to update parent state
  */
 const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 	const { address } = useAccount();
@@ -253,10 +257,10 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 	};
 
 	/**
-	 * Handles bank selection
+	 * Handles bank selection and initializes payment form
 	 * - Validates bank data
-	 * - Initializes empty form values
-	 * - Updates payment method state
+	 * - Creates empty form values based on schema
+	 * - Updates order state with new payment method
 	 */
 	const handleBankSelect = (selectedBank: Bank | SelectOption | undefined) => {
 		console.log('Bank selected:', selectedBank);

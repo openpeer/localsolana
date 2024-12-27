@@ -9,9 +9,29 @@ import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 
 /**
  * BuyPage Component - Handles the buying process for a listed item
- * @param {number} id - The ID of the listing to buy
+ * 
+ * Flow:
+ * 1. Fetches and displays list details
+ * 2. Shows combined amount and payment method form
+ * 3. Handles order creation and escrow process
+ * 
+ * Features:
+ * - Real-time price updates via useListPrice
+ * - Validation for amounts and payment methods
+ * - Support for both instant and manual escrow
+ * - Verification requirements check
+ * - Mobile-responsive layout with collapsible summary
+ * 
+ * @param {number} id - The listing ID to buy from
  */
 const BuyPage = ({ id }: { id: number }) => {
+	/**
+	 * Component State:
+	 * @property {UIOrder} order - Current order state including list and payment details
+	 * @property {string | undefined} error - Error message if list fetch fails
+	 * @property {boolean} isLoading - Loading state for initial data fetch
+	 * @property {boolean} showFilters - Controls mobile summary visibility
+	 */
 	const [order, setOrder] = useState<UIOrder>({} as UIOrder);
 	const [error, setError] = useState<string | undefined>();
 	const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +50,14 @@ const BuyPage = ({ id }: { id: number }) => {
 		hasAddress: !!address
 	});
 
-	// Fetch listing details when component mounts or ID changes
+	/**
+	 * Fetches list details and initializes order state
+	 * Handles loading states and error cases:
+	 * - Network errors
+	 * - Invalid list ID
+	 * - Server errors
+	 * - Authorization errors
+	 */
 	useEffect(() => {
 		setIsLoading(true);
 		setError(undefined);
@@ -94,6 +121,12 @@ const BuyPage = ({ id }: { id: number }) => {
 	const seller = order.seller || order.list?.seller;
 	const canBuy = seller && seller.address !== address;
 
+	/**
+	 * Validates if user can proceed with purchase:
+	 * - User must not be the seller
+	 * - Required data must be loaded (list, price, address)
+	 * - User must be verified if list requires it
+	 */
 	if (!canBuy) {
 		return (
 			<Loading
