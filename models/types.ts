@@ -88,7 +88,7 @@ export interface AccountField {
 }
 
 export interface AccountFieldValue {
-	[key: string]: string | undefined;
+	[key: string]: string;
 }
 
 export interface Bank {
@@ -103,8 +103,8 @@ export interface Bank {
 }
 
 export interface AccountSchema {
-	label: string;
 	id: string;
+	label: string;
 	required: boolean;
 	type?: string;
 }
@@ -181,4 +181,11 @@ export interface Contract {
 	chain_id: number;
 	version: string;
 	locked_value: number | undefined;
+}
+
+export interface PaymentMethodForm {
+	id?: number;
+	bank?: Bank;
+	bank_id?: number;  // Keep as number to match PaymentMethod
+	values: AccountFieldValue;
 }

@@ -10,6 +10,7 @@ import Chat from './Chat';
 import Loading from '../Loading/Loading';
 import FriendlyTime from 'components/FriendlyTime';
 import { Bank, PaymentMethod, List } from 'models/types';
+import Image from 'next/image';
 
 
 const SummaryBuy = ({ order }: { order: UIOrder }) => {	
@@ -58,6 +59,12 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 		if (isBank(pm)) return pm;
 		if (isPaymentMethod(pm)) return pm.bank;
 		return null;
+	};
+
+	const getBankImage = (bank: Bank | undefined) => {
+		if (!bank) return '';
+		return bank.imageUrl || bank.icon || 
+			(bank.image ? `https://bankimg.localsolana.com/${bank.image}` : '');
 	};
 
 	const banks = paymentMethod ? [paymentMethod.bank] :

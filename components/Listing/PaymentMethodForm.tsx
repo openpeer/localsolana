@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-curly-newline */
 import React, { useEffect, useState } from 'react';
-import { Bank } from 'models/types';
+import { Bank, PaymentMethodForm as PaymentMethodFormType, AccountSchema } from 'models/types';
 import Input from 'components/Input/Input';
 import BankSelect from 'components/Select/BankSelect';
 import { UIPaymentMethod } from './Listing.types';
@@ -8,18 +8,11 @@ import { Option } from 'components/Select/Select.types';
 import Button from 'components/Button/Button';
 import Image from 'next/image';
 
-interface SchemaField {
-	id: string;
-	label: string;
-	type?: string;
-	required?: boolean;
-}
-
 interface PaymentMethodFormProps {
 	currencyId: number;
 	type: string;
-	paymentMethod: UIPaymentMethod;
-	updatePaymentMethod: (pm: UIPaymentMethod) => void;
+	paymentMethod: PaymentMethodFormType;
+	updatePaymentMethod: (pm: PaymentMethodFormType) => void;
 	onFinish: () => void;
 	bankIds?: number[];
 }
@@ -32,35 +25,63 @@ const PaymentMethodForm = ({
 	onFinish,
 	bankIds = []
 }: PaymentMethodFormProps) => {
-	// Initialize form values
 	const [formValues, setFormValues] = useState<Record<string, string>>(paymentMethod.values || {});
+	const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Update form values when payment method changes
 	useEffect(() => {
 		setFormValues(paymentMethod.values || {});
 	}, [paymentMethod]);
 
-	const handleBankSelect = (bank: Bank | Option | undefined) => {
-		console.log('Bank Selected:', {
-			bank,
-			hasSchema: bank && 'account_info_schema' in bank,
-			imageUrl: bank && 'imageUrl' in bank ? bank.imageUrl : undefined
+	const validateField = (fieldId: string, value: string, required?: boolean): string => {
+		if (required && !value.trim()) {
+			return 'This field is required';
+		}
+		return '';
+	};
+
+	const validateForm = (): boolean => {
+		const errors: Record<string, string> = {};
+		
+		// Validate bank selection
+		if (!paymentMethod.bank) {
+			errors.bank = 'Please select a bank';
+			setFormErrors(errors);
+			return false;
+		}
+
+		// Validate required fields
+		paymentMethod.bank.account_info_schema.forEach(field => {
+			const error = validateField(field.id, formValues[field.id] || '', field.required);
+			if (error) {
+				errors[field.id] = error;
+			}
 		});
 
-		if (!bank || !('account_info_schema' in bank)) return;
+		setFormErrors(errors);
+		return Object.keys(errors).length === 0;
+	};
 
-		// Initialize empty values for all schema fields
-		const initialValues = bank.account_info_schema.reduce((acc, field) => ({
+	const handleBankSelect = (bank: Bank | Option | undefined) => {
+		if (!bank || !('account_info_schema' in bank)) {
+			setFormErrors({ bank: 'Invalid bank selection' });
+			return;
+		}
+
+		// Initialize empty values for all schema fields with proper types
+		const initialValues = bank.account_info_schema.reduce((acc: Record<string, string>, field: AccountSchema) => ({
 			...acc,
 			[field.id]: ''
-		}), {});
+		}), {} as Record<string, string>);
 
+		setFormValues(initialValues);
+		setFormErrors({});
+		
 		updatePaymentMethod({
 			...paymentMethod,
 			bank: bank as Bank,
 			values: initialValues
 		});
-		setFormValues(initialValues);
 	};
 
 	const handleInputChange = (fieldId: string, value: string) => {
@@ -68,11 +89,31 @@ const PaymentMethodForm = ({
 			...formValues,
 			[fieldId]: value
 		};
+
+		// Clear error when user starts typing
+		if (formErrors[fieldId]) {
+			setFormErrors(prev => {
+				const updated = { ...prev };
+				delete updated[fieldId];
+				return updated;
+			});
+		}
+
 		setFormValues(newValues);
 		updatePaymentMethod({
 			...paymentMethod,
 			values: newValues
 		});
+	};
+
+	const handleSubmit = () => {
+		setIsSubmitting(true);
+		
+		if (validateForm()) {
+			onFinish();
+		}
+		
+		setIsSubmitting(false);
 	};
 
 	return (
@@ -83,11 +124,11 @@ const PaymentMethodForm = ({
 						currencyId={currencyId}
 						selected={paymentMethod.bank}
 						onSelect={handleBankSelect}
-						error={undefined}
+						error={formErrors.bank}
 					/>
 				</div>
 				
-				{paymentMethod.bank?.account_info_schema.map((field: SchemaField, index: number) => (
+				{paymentMethod.bank?.account_info_schema.map((field, index) => (
 					<div key={`${field.id}-${index}`} className="mb-4">
 						<Input
 							id={`${field.id}-${index}`}
@@ -96,12 +137,18 @@ const PaymentMethodForm = ({
 							onChange={(value: string) => handleInputChange(field.id, value)}
 							type={field.type === 'email' ? 'email' : 'text'}
 							required={field.required}
+							error={formErrors[field.id]}
 						/>
 					</div>
 				))}
 			</div>
 			<div className="flex justify-end">
-				<Button onClick={onFinish} title="Save Payment Method" />
+				<Button 
+					onClick={handleSubmit}
+					title="Save Payment Method"
+					disabled={isSubmitting}
+					processing={isSubmitting}
+				/>
 			</div>
 		</div>
 	);
