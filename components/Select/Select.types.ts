@@ -5,6 +5,9 @@ export interface Option {
 	name: string;
 	icon?: string;
 	address?:string;
+	label?: string;
+	value?: string | number;
+	[key: string]: any;
 }
 
 export interface SelectProps {
@@ -50,3 +53,5 @@ export interface TokenSelectProps {
 }
 
 export type TimezoneSelectProps = Pick<SelectProps, 'selected' | 'onSelect' | 'error'>;
+
+export type SelectOption = Option;
