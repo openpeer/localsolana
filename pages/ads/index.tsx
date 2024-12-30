@@ -23,6 +23,7 @@ const Ads = () => {
 		})
 		.then((res) => res.json())
 		.then((data) => {
+			console.log("Ads data:", data.data.data);
 			setLists(data.data.data);
 		});
 	}, [address]);
@@ -63,13 +64,17 @@ const Ads = () => {
 						{sellLists.length > 0 && (
 							<div className="mb-4">
 								<Label title="Buy Ads" />
-								<ListsTable lists={lists.filter((l) => l.type === 'SellList')} />
+								<ListsTable 
+									lists={lists.filter((l) => l.type === 'SellList')}
+								/>
 							</div>
 						)}
 						{buyLists.length > 0 && (
 							<div>
 								<Label title="Sell Ads" />
-								<ListsTable lists={lists.filter((l) => l.type === 'BuyList')} />
+								<ListsTable 
+									lists={lists.filter((l) => l.type === 'BuyList')}
+								/>
 							</div>
 						)}
 					</>

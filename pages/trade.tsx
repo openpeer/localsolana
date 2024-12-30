@@ -202,13 +202,13 @@ const HomePage = () => {
 						/>
 						{!!lists.length && !!paginationMeta && paginationMeta.total_pages > 1 && (
 							<Pagination
-								length={lists.length}
-								totalCount={paginationMeta.total_count}
-								page={page}
-								pagesCount={paginationMeta.total_pages}
-								onPrevPage={onPrevPage}
-								onNextPage={onNextPage}
-							/>
+									length={lists.length}
+									totalCount={paginationMeta.total_count}
+									page={page}
+									pagesCount={paginationMeta.total_pages}
+									onPrevPage={onPrevPage}
+									onNextPage={onNextPage}
+								/>
 						)}
 					</div>
 				) : (

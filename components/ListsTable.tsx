@@ -170,7 +170,7 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
 
                     const isHidden = getStatusStringList(Number(list.status)) === 'created';
                     if (hideLowAmounts && Number(escrowedAmount) < Number(minimumAmount)) {
-                        return <></>;
+                        return null;
                     }
 
                     return (
