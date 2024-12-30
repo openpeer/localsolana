@@ -111,7 +111,7 @@ const AdsSettings = () => {
 			setTimezone(option);
 			setFrom(user.available_from || undefined);
 			setTo(user.available_to || undefined);
-			setDisableWeekends(user.weekend_offline);
+			setDisableWeekends(Boolean(user.weekend_offline));
 
 			setIsVisible(!!(user.timezone && user.available_from !== null && user.available_to !== null));
 		}
