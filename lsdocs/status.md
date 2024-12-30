@@ -50,8 +50,9 @@ The existing PUT endpoint now handles status updates more gracefully by:
 ```
 
 ## Status Values
-- `0`: Inactive
-- `1`: Active
+- 0: Inactive/Disabled - List is not visible or tradeable
+- 1: Active - Default for new lists, visible and tradeable
+- 2: Cancelled/Closed - List has been terminated
 
 ## Implementation Details
 
