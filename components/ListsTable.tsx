@@ -64,6 +64,13 @@ const getDisplayName = (seller: any) => {
     return `${seller.address.slice(0, 4)}...${seller.address.slice(-4)}`;
 };
 
+const getInstantEscrowStatus = (escrowType: string | number): boolean => {
+    if (typeof escrowType === 'number') {
+        return escrowType === 1;
+    }
+    return escrowType === 'instant';
+};
+
 const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTableProps) => {
     const { address } = useAccount();
     const { primaryWallet } = useDynamicContext();
@@ -118,7 +125,12 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
                 {lists.map((list) => {
-									console.log("Lists:", lists);
+                    console.log("Processing list:", {
+                        id: list.id,
+                        escrow_type: list.escrow_type,
+                        type: typeof list.escrow_type
+                    });
+
                     const {
                         id,
                         total_available_amount: amount,
@@ -141,7 +153,12 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                     const effectivePrice = Number(calculatedPrice) || 0;
                     const escrowedAmount = Number(amount) || 0;
                     const priceDifferencePercentage = 100;
-                    const instantEscrow = escrowType === 'instant';
+                    const instantEscrow = getInstantEscrowStatus(escrowType);
+                    console.log("Instant escrow status:", {
+                        id,
+                        rawEscrowType: escrowType,
+                        processedStatus: instantEscrow
+                    });
 
                     // Use the appropriate payment methods based on list type
                     const displayMethods = type === 'BuyList' ? listBanks : paymentMethods;
@@ -236,10 +253,16 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                                             <div className="flex flex-row items-center mb-2">
                                                 {isHidden && <HiddenBadge />}
                                             </div>
-                                            {!!instantEscrow && (
+                                            {!!instantEscrow ? (
                                                 <div className="flex flex-row items-center mb-2">
                                                     <span className="pr-2 text-[11px] text-gray-700">
                                                         Instant deposit ⚡
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-row items-center mb-2">
+                                                    <span className="pr-2 text-[11px] text-gray-700">
+                                                        Manual deposit
                                                     </span>
                                                 </div>
                                             )}
@@ -298,6 +321,9 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                                     </div>
                                     <div className="flex flex-row items-center">
                                         {isHidden && <HiddenBadge />}
+                                        <span className="text-[11px] text-gray-700 ml-2">
+                                            {instantEscrow ? 'Instant deposit ⚡' : 'Manual deposit'}
+                                        </span>
                                     </div>
                                 </div>
                             </td>
