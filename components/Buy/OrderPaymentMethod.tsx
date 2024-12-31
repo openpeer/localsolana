@@ -1,3 +1,5 @@
+// components/Buy/OrderPaymentMethod.tsx
+
 /* eslint-disable react/jsx-curly-newline */
 import { BankSelect, Button, Input, Loading, Textarea } from 'components';
 import { UIPaymentMethod } from 'components/Listing/Listing.types';
@@ -309,49 +311,61 @@ const OrderPaymentMethod = ({ order, updateOrder }: BuyStepProps) => {
 		setLoading(true);
 		console.log('Fetching banks from API...');
 
-		fetch(`/api/banks?currency_id=${currency.id}`, {
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`
-			}
-		})
-			.then((res) => res.json())
-			.then((res) => {
-				console.log('Raw API response:', res);
-				return res.data;
-			})
-			.then((data: PaymentMethod[]) => {
-				console.log('API Response - Available payment methods:', data);
-
-				const listBankIds = banks ? banks.map((b: any) => b?.id) : [];
+		const fetchPaymentMethods = async () => {
+			try {
+				const response = await fetch(`/api/banks?currency_id=${currency.id}`, {
+					headers: {
+						Authorization: `Bearer ${getAuthToken()}`
+					}
+				});
+				const result = await response.json();
+				console.log('Raw API response:', result);
+				
+				const availableMethods = result.data;
+				console.log('API Response - Available payment methods:', availableMethods);
+				
+				const listBankIds = banks.map(b => b.id);
 				console.log('List bank IDs:', listBankIds);
-
-				const filtered = data.filter((pm) => listBankIds.includes(pm?.bank?.id));
+				
+				const filtered = availableMethods.filter((pm: { id: number }) => 
+					listBankIds.includes(pm.id)
+				);
 				console.log('Filtered payment methods:', filtered);
-
+				
 				setPaymentMethods(filtered);
-				if (!paymentMethod.values) {
-					console.log('No existing values, setting first payment method:', filtered[0]);
-					setPaymentMethod(filtered[0]);
-				} else {
-					console.log('Existing values found:', paymentMethod.values);
-					setPaymentMethod(undefined);
+				
+				if (filtered.length > 0) {
+					console.log('Setting payment method:', filtered[0]);
+					const newPaymentMethod: PaymentMethod = {
+						id: filtered[0].id,
+						bank: filtered[0],
+						bank_id: filtered[0].id,
+						values: {}
+					};
+					setPaymentMethod(newPaymentMethod);
+					updateOrder({
+						...order,
+						payment_method: newPaymentMethod
+					});
 				}
-			})
-			.catch(error => {
-				console.error('Payment method fetch error:', error);
-			})
-			.finally(() => {
-				console.log('Fetch complete, setting loading to false');
+			} catch (error) {
+				console.error('Error fetching payment methods:', error);
+			} finally {
 				setLoading(false);
-			});
-	}, [address, currency, type]);
+			}
+		};
+
+		if (currency?.id && banks.length > 0) {
+			fetchPaymentMethods();
+		}
+	}, [address, currency, type, banks]);
 
 	console.log('Pre-render state:', {
 		isLoading,
 		paymentMethods,
 		currentBank: bank,
 		currentValues: values,
-		errors
+			errors
 	});
 
 	if (isLoading) {

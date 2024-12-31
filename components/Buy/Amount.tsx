@@ -1,3 +1,5 @@
+// components/Buy/Amount.tsx
+
 /* eslint-disable react/jsx-curly-newline */
 import { getAuthToken } from "@dynamic-labs/sdk-react-core";
 import Flag from "components/Flag/Flag";
@@ -190,21 +192,26 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     }
     };
   const createOrder = async (newOrder: Order) => {
+    if (!newOrder.payment_method?.bank?.id) {
+      console.error('No payment method selected');
+      return;
+    }
+
     const result = await fetch("/api/createOrder/", {
       method: "POST",
-      body: JSON.stringify(
-        snakecaseKeys(
-          {
-            listId: newOrder.list.id,
-            fiatAmount: newOrder.fiat_amount,
-            tokenAmount: truncate(newOrder.token_amount, token.decimals),
-            price: newOrder.price,
-            paymentMethod: { id: bank?.id },
-            buyer_id: address,
+      body: JSON.stringify({
+        list_id: newOrder.list.id,
+        fiat_amount: newOrder.fiat_amount,
+        token_amount: truncate(newOrder.token_amount, token.decimals),
+        price: newOrder.price,
+        buyer_id: address,
+        payment_method: {
+          bank: { 
+            id: newOrder.payment_method.bank.id 
           },
-          { deep: true }
-        )
-      ),
+          values: newOrder.payment_method.values
+        }
+      }),
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
         "Content-Type": "application/json",
@@ -217,54 +224,44 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
       if (!seller || !buyer || !instantEscrow) {
         router.push(`/orders/${orderId}`);
         return;
-      }else{
+      } else {
         setOrderID(orderId);
       }
     }
-    //console.log("Order Created", data);
   };
 
   const onProceed = async () => {
-    console.group('Amount.tsx - onProceed');
-    console.log('Current state:', {
-      list,
-      price,
-      fiatAmount,
-      tokenAmount,
-      currentStep: order.step
-    });
+    console.log('Amount.tsx - onProceed');
+    console.log('Current state:', { list, price, fiatAmount, tokenAmount, payment_method: order.payment_method });
+
+    if (!order?.payment_method?.bank?.id) {
+      console.error('No payment method selected');
+      // TODO: Show error to user
+      return;
+    }
 
     if (acceptOnlyVerified && user && !user.verified) {
       console.log('Verification required - redirecting');
       router.push(`/${user.address}`);
-      console.groupEnd();
       return;
     }
 
     if (list && price) {
       if (!validate(resolver)) {
         console.log('Validation failed');
-        console.groupEnd();
         return;
       }
       
       const newOrder: UIOrder = {
         ...order,
-        ...{ fiat_amount: fiatAmount!, token_amount: tokenAmount!, price },
+        fiat_amount: fiatAmount!,
+        token_amount: tokenAmount!,
+        price
       };
 
-      if (list.type === "SellList") {
-        console.log('SellList - creating order directly');
-        await createOrder(newOrder);
-      } else {
-        console.log('BuyList - proceeding to payment method step', {
-          currentStep: order.step,
-          newStep: order.step + 1
-        });
-        updateOrder({ ...newOrder, ...{ step: newOrder.step + 1 } });
-      }
+      console.log('Creating order with:', newOrder);
+      await createOrder(newOrder);
     }
-    console.groupEnd();
   };
 
   const [inputSource, setInputSource] = useState<'token' | 'fiat'>('token');
@@ -317,27 +314,6 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     });
     // console.groupEnd();
   }, [tokenAmount, fiatAmount]);
-
-  useEffect(() => {
-    updateOrder({
-      ...order,
-      ...{
-        paymentMethod: bank ? { id: bank.id, bank, values: {} } : undefined,
-      },
-    });
-  }, [bank]);
-
-  // const updateUserState=(data:any)=>{
-  //   setUser(()=>{
-  //     if(data.image){
-  //       return {
-  //         ...data,
-  //         image_url:`${process.env.NEXT_PUBLIC_AWS_CLOUD_FRONT!}/profile_images/${data.image}`
-  //       }
-  //     }
-  //     return {...data};
-  //   });
-  // }
 
   useEffect(() => {
     if (!address) return;
