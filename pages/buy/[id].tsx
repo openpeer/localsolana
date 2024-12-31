@@ -41,14 +41,14 @@ const BuyPage = ({ id }: { id: number }) => {
 	const { price } = useListPrice(list);
 	const { address } = useAccount();
 
-	console.log('BuyPage render:', {
-		order,
-		isLoading,
-		error,
-		hasPrice: !!price,
-		hasList: !!list,
-		hasAddress: !!address
-	});
+	// console.log('BuyPage render:', {
+	// 	order,
+	// 	isLoading,
+	// 	error,
+	// 	hasPrice: !!price,
+	// 	hasList: !!list,
+	// 	hasAddress: !!address
+	// });
 
 	/**
 	 * Fetches list details and initializes order state
@@ -81,14 +81,11 @@ const BuyPage = ({ id }: { id: number }) => {
 			})
 			.then((res) => {
 				const data = res.data;
-				data.margin_type = data.margin_type === 1 ? 'percentage' : 'fixed';
 				setOrder({
 					...order,
-					...{ 
-						list: data, 
-						listId: data.id,
-						marginType: data.margin_type === 1 ? 'percentage' : 'fixed' 
-					}
+					list: data,
+					price: Number(data.calculatedPrice),
+					step: order.step || 1
 				});
 			})
 			.catch((err) => {
@@ -165,7 +162,7 @@ const BuyPage = ({ id }: { id: number }) => {
 						<Amount 
 							order={order} 
 							updateOrder={(newOrder) => {
-								console.log('Form update:', newOrder);
+								// console.log('Form update:', newOrder);
 								setOrder(newOrder);
 							}} 
 							price={price} 
