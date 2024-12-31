@@ -11,6 +11,7 @@ import Loading from '../Loading/Loading';
 import FriendlyTime from 'components/FriendlyTime';
 import { Bank, PaymentMethod, List } from 'models/types';
 import Image from 'next/image';
+import { formatNumberWithCommas } from '@/utils';
 
 const getListDescription = (list: List, price: number | undefined) => {
 	const { type, token, fiat_currency: currency, total_available_amount, margin_type, margin, price_source } = list;
@@ -151,117 +152,54 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 						</div>
 					</div>
 					<div className="flex flex-col bg-gray-100 rounded-lg p-6">
-						<div className="w-full flex flex-col md:flex-row justify-between mb-4">
-							<div className="text-sm">Total available amount</div>
-							<div className="font-bold md:text-right text-sm">
-								{totalAvailableAmount} {token.symbol}{' '}
-								{!!price && `(${currency.symbol} ${(Number(totalAvailableAmount) * price).toFixed(2)})`}
+						<div className="space-y-4">
+						<h2 className="text-xl font-bold text-gray-900 uppercase">Offer Summary</h2>
+							<div className="flex justify-between">
+								<span className="text-gray-600 font-semibold text-sm">Total available amount</span>
+								<span>
+									{formatNumberWithCommas(Number(totalAvailableAmount))} {token.symbol} (${formatNumberWithCommas(
+										Number((Number(totalAvailableAmount) * Number(price || 0)).toFixed(2))
+									)})
+								</span>
 							</div>
-						</div>
-						<div className="w-full flex flex-row justify-between">
-							<div className="w-full flex flex-row mb-4 space-x-2">
-								<div className="text-sm">Price</div>
-								<div className="font-bold text-right text-sm">
-									{currency.symbol} {Number(price).toFixed(2)}
-								</div>
-							</div>
-							{/* <div className="w-full flex flex-row mb-4">
-							<div className="text-sm">Payment Limit</div>
-							<div className="text-sm font-bold">10 minutes</div>
-						</div> */}
-						</div>
 
-						<div className="w-full flex flex-row justify-between">
-							{!!fiatAmount && (
-								<div className="flex flex-row space-x-2 mb-4">
-									<div className="text-sm">Amount to pay</div>
-									<div className="font-bold text-sm">
-										{selling
-											? `${tokenAmount} ${token.symbol}`
-											: `${currency.symbol} ${Number(fiatAmount).toFixed(2)}`}
-									</div>
+							<div className="flex justify-between">
+								<span className="text-gray-600 font-semibold text-sm">Price</span>
+								<span>$ {formatNumberWithCommas(
+									Number(Number(price || 0).toFixed(2))
+								)}</span>
+							</div>
+
+							<div className="flex justify-between">
+								<span className="text-gray-600 font-semibold text-sm">Payment methods</span>
+								<div className="text-right">
+									{banks.map((bank, i) => (
+										<div key={i}>{bank?.name}</div>
+									))}
 								</div>
-							)}
-							{!!tokenAmount && (
-								<div className="flex flex-row space-x-2 mb-4">
-									<div className="text-sm">Amount to receive</div>
-									<div className="font-bold text-sm">
-										{selling
-											? `${currency.symbol} ${Number(fiatAmount).toFixed(2)}`
-											: `${tokenAmount} ${token.symbol}`}
-									</div>
-								</div>
-							)}
-						</div>
-						<div className="w-full flex flex-row justify-between">
-							{!!limitMin && (
-								<div className="flex flex-row space-x-2 mb-4">
-									<div className="text-sm">Min order</div>
-									<div className="font-bold text-right text-sm">
-										{currency.symbol} {limitMin}
-									</div>
-								</div>
-							)}
-							{!!limitMax && (
-								<div className="flex flex-row space-x-2 mb-4">
-									<div className="text-sm">Max order</div>
-									<div className="font-bold text-right text-sm">
-										{currency.symbol} {limitMax}
-									</div>
+							</div>
+
+							<div className="flex justify-between">
+								<span className="text-gray-600 font-semibold text-sm">Deposit Time Limit</span>
+								{typeof depositTimeLimit === 'number' && (
+									<FriendlyTime timeInMinutes={depositTimeLimit} />
+								)}
+							</div>
+
+							<div className="flex justify-between">
+								<span className="text-gray-600 font-semibold text-sm">Payment Time Limit</span>
+								{typeof paymentTimeLimit === 'number' && (
+									<FriendlyTime timeInMinutes={paymentTimeLimit} />
+								)}
+							</div>
+
+							{terms && (
+								<div>
+									<span className="text-gray-600 font-semibold text-sm">Terms</span>
+									<div className="mt-2" dangerouslySetInnerHTML={{ __html: terms }} />
 								</div>
 							)}
 						</div>
-						{banks.length > 0 && (
-							<div className="w-full flex flex-row mb-4 space-x-2">
-								<div className="text-sm">Payment methods</div>
-								{banks.map((bank: Bank) => (
-									<div className="flex flex-row items-center" key={`bank-${bank?.id}`}>
-										<span
-											className="bg-gray-500 w-1 h-3 rounded-full"
-											style={{ backgroundColor: bank?.color || 'gray' }}
-										>
-											&nbsp;
-										</span>
-										<span className="pl-1 text-gray-700 text-[11px]">{bank?.name || "Bank Name"}</span>
-									</div>
-								))}
-							</div>
-						)}
-						{instantEscrow ? (
-							<div className="w-full flex flex-row mb-4 space-x-2">
-								<div className="text-sm font-bold">⚡ Instant deposit</div>
-							</div>
-						) : (
-							!!depositTimeLimit && (
-								<div className="w-full flex flex-row mb-4 space-x-2">
-									<div className="text-sm">Deposit Time Limit</div>
-									<div className="text-sm font-bold">
-										<FriendlyTime timeInMinutes={Number(depositTimeLimit)} />
-									</div>
-								</div>
-							)
-						)}
-						{!!paymentTimeLimit && (
-							<div className="w-full flex flex-row mb-4 space-x-2">
-								<div className="text-sm">Payment Time Limit</div>
-								<div className="text-sm font-bold">
-									<FriendlyTime timeInMinutes={Number(paymentTimeLimit)} />
-								</div>
-							</div>
-						)}
-						{!!acceptOnlyVerified && (
-							<div className="w-full flex flex-row mb-4 space-x-2">
-								<div className="text-sm">
-									Accept only verified {type === 'SellList' ? 'buyers' : 'sellers'}
-								</div>
-							</div>
-						)}
-						{!!terms && (
-							<div className="w-full flex flex-row mb-4 space-x-2">
-								<div className="text-sm">Terms</div>
-								<div className="text-sm font-bold" dangerouslySetInnerHTML={{ __html: terms }} />
-							</div>
-						)}
 					</div>
 
 					<div className="flex items-start space-x-3 p-4 my-1 bg-yellow-100 rounded-xl">
