@@ -193,40 +193,57 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     };
   const createOrder = async (newOrder: Order) => {
     if (!newOrder.payment_method?.bank?.id) {
-      console.error('No payment method selected');
-      return;
+        console.error('No payment method selected');
+        return;
     }
 
-    const result = await fetch("/api/createOrder/", {
-      method: "POST",
-      body: JSON.stringify({
+    // Format the request payload according to API expectations
+    const orderPayload = {
         list_id: newOrder.list.id,
+        buyer_id: address, // Add the missing buyer_id
         fiat_amount: newOrder.fiat_amount,
         token_amount: truncate(newOrder.token_amount, token.decimals),
         price: newOrder.price,
-        buyer_id: address,
         payment_method: {
-          bank: { 
-            id: newOrder.payment_method.bank.id 
-          },
-          values: newOrder.payment_method.values
+            id: newOrder.payment_method.id,
+            bank: {
+                id: newOrder.payment_method.bank.id
+            },
+            bank_id: newOrder.payment_method.bank_id,
+            values: newOrder.payment_method.values || {}
         }
-      }),
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-        "Content-Type": "application/json",
-      },
-    });
-    const { data } = await result.json();
+    };
+
+    try {
+        const result = await fetch("/api/createOrder/", {
+            method: "POST",
+            body: JSON.stringify(orderPayload),
+            headers: {
+                Authorization: `Bearer ${getAuthToken()}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!result.ok) {
+            const errorData = await result.json();
+            throw new Error(errorData.error || 'Failed to create order');
+        }
+
+        const { data } = await result.json();
    
-    if (data.id) {
-      let orderId = data.id;
-      if (!seller || !buyer || !instantEscrow) {
-        router.push(`/orders/${orderId}`);
-        return;
-      } else {
-        setOrderID(orderId);
-      }
+        if (data.id) {
+            let orderId = data.id;
+            if (!seller || !buyer || !instantEscrow) {
+                router.push(`/orders/${orderId}`);
+                return;
+            } else {
+                setOrderID(orderId);
+            }
+        }
+    } catch (error) {
+        console.error('Order creation error:', error);
+        // Handle error appropriately
+        throw error;
     }
   };
 
