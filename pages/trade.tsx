@@ -144,10 +144,8 @@ const HomePage = () => {
 
 	useEffect(() => {
 		if (type === 'Buy') {
-			console.log('Setting Buy lists:', buySideLists);
 			setLists(buySideLists);
 		} else {
-			console.log('Setting Sell lists:', sellSideLists);
 			setLists(sellSideLists);
 		}
 	}, [type, buySideLists, sellSideLists]);
@@ -156,6 +154,10 @@ const HomePage = () => {
 
 	const handleToggleFilters = () => {
 		setShowFilters(!showFilters);
+	};
+
+	const handleFilterUpdate = (newFilters: SearchFilters) => {
+		setFilters(newFilters);
 	};
 
 	return (
@@ -175,7 +177,7 @@ const HomePage = () => {
 					</div>
 					<div className="flex lg:justify-end hidden lg:block">
 						<Filters
-							onFilterUpdate={setFilters}
+							onFilterUpdate={handleFilterUpdate}
 							needToReset={needToReset}
 							setNeedToReset={setNeedToReset}
 						/>
@@ -184,7 +186,7 @@ const HomePage = () => {
 				{showFilters && (
 					<div className="lg:my-8 lg:hidden">
 						<Filters
-							onFilterUpdate={setFilters}
+							onFilterUpdate={handleFilterUpdate}
 							needToReset={needToReset}
 							setNeedToReset={setNeedToReset}
 						/>

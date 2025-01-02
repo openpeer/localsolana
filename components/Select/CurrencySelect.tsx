@@ -23,6 +23,7 @@ const CurrencySelect = ({
 	const [currencies, setCurrencies] = useState<FiatCurrency[]>();
 	const [isLoading, setLoading] = useState(false);
 	const [search, setSearch] = useState('');
+	const [skipAutoSelect, setSkipAutoSelect] = useState(false);
 
 	const selectDefaultCurrency = (availableCurrencies: FiatCurrency[]) => {
 		if (selectTheFirst && !selected && availableCurrencies[0]) {
@@ -32,8 +33,8 @@ const CurrencySelect = ({
 
 	useEffect(() => {
 		const fetchCurrencyByLocation = async () => {
-			if (!selectByLocation || !currencies) return;
-
+			if (!selectByLocation || !currencies || skipAutoSelect) return;
+			
 			try {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 2000);
@@ -50,7 +51,6 @@ const CurrencySelect = ({
 				
 				if (toSelect) {
 					onSelect(toSelect);
-					return;
 				}
 			} catch (e) {
 				selectDefaultCurrency(currencies);
@@ -58,7 +58,11 @@ const CurrencySelect = ({
 		};
 
 		fetchCurrencyByLocation();
-	}, [currencies, selectByLocation, selectTheFirst, selected, onSelect]);
+	}, [currencies, selectByLocation]);
+
+	useEffect(() => {
+		setSkipAutoSelect(false);
+	}, [selected]);
 
 	useEffect(() => {
 		setLoading(true);
@@ -91,6 +95,7 @@ const CurrencySelect = ({
 	}, []);
 
 	const selectCurrency = (option: FiatCurrency | undefined) => {
+		setSkipAutoSelect(true);
 		onSelect(option);
 		setSearch('');
 	};
@@ -99,17 +104,17 @@ const CurrencySelect = ({
 		return <Loading message="" big={false} />;
 	}
 	const result =
-		search && rawCurrencies
-			? rawCurrencies
-					.filter(
-						(c) =>
-							c.code.toLowerCase().includes(search.toLowerCase()) ||
-							c.name.toLowerCase().includes(search.toLowerCase()) ||
-							String(c.country_code).toLowerCase().includes(search.toLowerCase()) ||
-							c.symbol.toLowerCase().includes(search.toLowerCase())
-					)
-					.map((c: FiatCurrency) => ({ ...c, ...{ name: c.code } }))
-			: currencies;
+			search && rawCurrencies
+				? rawCurrencies
+						.filter(
+							(c) =>
+								c.code.toLowerCase().includes(search.toLowerCase()) ||
+								c.name.toLowerCase().includes(search.toLowerCase()) ||
+								String(c.country_code).toLowerCase().includes(search.toLowerCase()) ||
+								c.symbol.toLowerCase().includes(search.toLowerCase())
+						)
+						.map((c: FiatCurrency) => ({ ...c, ...{ name: c.code } }))
+				: currencies;
 
 	return result ? (
 		<Select
