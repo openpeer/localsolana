@@ -125,11 +125,11 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
                 {lists.map((list) => {
-                    console.log("Processing list:", {
-                        id: list.id,
-                        escrow_type: list.escrow_type,
-                        type: typeof list.escrow_type
-                    });
+                    // console.log("Processing list:", {
+                    //     id: list.id,
+                    //     escrow_type: list.escrow_type,
+                    //     type: typeof list.escrow_type
+                    // });
 
                     const {
                         id,
@@ -154,11 +154,11 @@ const ListsTable = ({ lists, fiatAmount, tokenAmount, hideLowAmounts }: ListsTab
                     const escrowedAmount = Number(amount) || 0;
                     const priceDifferencePercentage = 100;
                     const instantEscrow = getInstantEscrowStatus(escrowType);
-                    console.log("Instant escrow status:", {
-                        id,
-                        rawEscrowType: escrowType,
-                        processedStatus: instantEscrow
-                    });
+                    // console.log("Instant escrow status:", {
+                    //     id,
+                    //     rawEscrowType: escrowType,
+                    //     processedStatus: instantEscrow
+                    // });
 
                     // Use the appropriate payment methods based on list type
                     const displayMethods = type === 'BuyList' ? listBanks : paymentMethods;
