@@ -41,7 +41,6 @@ const Filters = ({ onFilterUpdate, needToReset, setNeedToReset }: FilterProps) =
 		const availableInTheNewCurrency =
 			currency &&
 			paymentMethod &&
-			// @ts-expect-error
 			(!paymentMethod.fiat_currency || paymentMethod.fiat_currency.id === currency.id);
 		const newPaymentMethod = availableInTheNewCurrency ? paymentMethod : undefined;
 		setPaymentMethod(newPaymentMethod);
