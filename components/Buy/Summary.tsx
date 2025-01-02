@@ -14,37 +14,40 @@ import Image from 'next/image';
 import { formatNumberWithCommas } from '@/utils';
 
 const getListDescription = (list: List, price: number | undefined) => {
-	const { type, token, fiat_currency: currency, total_available_amount, margin_type, margin, price_source } = list;
+	const { 
+		type, 
+		token, 
+		fiat_currency: currency, 
+		total_available_amount, 
+		margin_type, 
+		margin,
+		price_source 
+	} = list;
+	
+	// Format total available amount to 4 decimal places
+	const formattedAmount = Number(total_available_amount).toFixed(4);
 	
 	const getRateDescription = () => {
-		if (margin_type === "fixed") {
-			return "at a fixed rate";
+		// For fixed rate (margin_type === 0)
+		if (Number(margin_type) === 0) {
+			return `at a fixed rate of ${currency.symbol}${price} per ${token.symbol}`;
 		}
-		const marginPercent = Math.abs((margin - 1) * 100).toFixed(2);
-		return `at a floating rate of ${margin >= 1 ? '+' : '-'}${marginPercent}% from the ${Number(price_source) === 0 ? 'CoinGecko' : 'Binance P2P'} price`;
+		
+		// For floating rate (margin_type === 1)
+		const marginPercent = Math.abs((Number(margin) - 1) * 100).toFixed(2);
+		const source = Number(price_source) === 0 ? 'CoinGecko' : 'Binance P2P';
+		return `at a floating rate of ${Number(margin) >= 1 ? '+' : '-'}${marginPercent}% from the ${source} price`;
 	};
 	
 	if (type === "BuyList") {
-		const priceDescription = margin_type === "fixed" 
-			? `at ${currency.symbol}${margin} per ${token.symbol}`
-			: price 
-				? `at ${currency.symbol}${price} per ${token.symbol}`
-				: `at ${margin}% ${margin > 0 ? 'above' : 'below'} market price`;
-
 		return {
 			title: "This Ad Offers to Buy Tokens from You",
-			description: `The ad owner wants to buy up to ${total_available_amount} ${token.symbol} using ${currency.name} (${currency.symbol}) ${getRateDescription()}.`
+			description: `The ad owner wants to buy up to ${formattedAmount} ${token.symbol} using ${currency.name} (${currency.symbol}) ${getRateDescription()}.`
 		};
 	} else {
-		const priceDescription = margin_type === "fixed" 
-			? `at ${currency.symbol}${margin} per ${token.symbol}`
-			: price 
-				? `at ${currency.symbol}${price} per ${token.symbol}`
-				: `at ${margin}% ${margin > 0 ? 'above' : 'below'} market price`;
-
 		return {
 			title: "This Ad Offers to Sell Tokens to You",
-			description: `The ad owner is selling up to ${total_available_amount} ${token.symbol} for ${currency.name} (${currency.symbol}) ${getRateDescription()}.`
+			description: `The ad owner is selling up to ${formattedAmount} ${token.symbol} for ${currency.name} (${currency.symbol}) ${getRateDescription()}.`
 		};
 	}
 };
@@ -157,8 +160,8 @@ const SummaryBuy = ({ order }: { order: UIOrder }) => {
 							<div className="flex justify-between">
 								<span className="text-gray-600 font-semibold text-sm">Total available amount</span>
 								<span>
-									{formatNumberWithCommas(Number(totalAvailableAmount))} {token.symbol} (${formatNumberWithCommas(
-										Number((Number(totalAvailableAmount) * Number(price || 0)).toFixed(2))
+									{formatNumberWithCommas(Number(totalAvailableAmount), 4)} {token.symbol} (${formatNumberWithCommas(
+										Number(Number(totalAvailableAmount) * Number(price || 0)), 2
 									)})
 								</span>
 							</div>
