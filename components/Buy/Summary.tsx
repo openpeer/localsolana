@@ -1,3 +1,6 @@
+// is used for displaying order details when buying/selling from an existing listing
+
+
 /* eslint-disable react/no-danger */
 import Avatar from 'components/Avatar';
 import Link from 'next/link';

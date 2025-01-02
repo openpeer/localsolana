@@ -1,3 +1,5 @@
+// is used for displaying listing details when creating/editing an ad
+
 /* eslint-disable react/no-danger */
 import Flag from 'components/Flag/Flag';
 import Token from 'components/Token/Token';
