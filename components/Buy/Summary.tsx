@@ -24,7 +24,8 @@ const getListDescription = (list: List, price: number | undefined) => {
 		total_available_amount, 
 		margin_type, 
 		margin,
-		price_source 
+		price_source,
+		id 
 	} = list;
 	
 	// Format total available amount to 4 decimal places
@@ -41,15 +42,17 @@ const getListDescription = (list: List, price: number | undefined) => {
 		const source = Number(price_source) === 0 ? 'CoinGecko' : 'Binance P2P';
 		return `at a floating rate of ${Number(margin) >= 1 ? '+' : '-'}${marginPercent}% from the ${source} price`;
 	};
+
+	const listIdText = id ? ` (#${id})` : '';
 	
 	if (type === "BuyList") {
 		return {
-			title: "This Ad Offers to Buy Tokens from You",
+			title: `This Ad${listIdText} Offers to Buy Tokens from You`,
 			description: `The ad owner wants to buy up to ${formattedAmount} ${token.symbol} using ${currency.name} (${currency.symbol}) ${getRateDescription()}.`
 		};
 	} else {
 		return {
-			title: "This Ad Offers to Sell Tokens to You",
+			title: `This Ad${listIdText} Offers to Sell Tokens to You`,
 			description: `The ad owner is selling up to ${formattedAmount} ${token.symbol} for ${currency.name} (${currency.symbol}) ${getRateDescription()}.`
 		};
 	}
