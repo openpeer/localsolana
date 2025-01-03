@@ -112,6 +112,25 @@ const useGaslessEscrow = ({
     }
   };
 
+  const prepareTransaction = async () => {
+    console.log("Preparing Escrow Transaction:", {
+      seller,
+      buyer,
+      amount,
+      tokenAddress: token.address,
+      orderID,
+      instantEscrow,
+      contract
+    });
+    
+    // Get escrow state if needed
+    const escrowPDA = await getEscrowPDA(orderID);
+    if (escrowPDA) {
+      const escrowAccountInfo = await getAccountInfo(escrowPDA.toBase58());
+      console.log("Current Escrow State:", escrowAccountInfo);
+    }
+  };
+
   return {
     isFetching: false,
     gaslessEnabled: true,

@@ -36,6 +36,7 @@ const OrderPage = ({ id }: { id: string }) => {
     useEffect(() => {
         const fetchOrder = async () => {
             try {
+                console.log("Fetching order data...");
                 const response = await fetch(`/api/orders/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -43,14 +44,27 @@ const OrderPage = ({ id }: { id: string }) => {
                 });
                 const result = await response.json();
                 const data = result.data;
-                setOrder(snakecaseKeys({ ...data, status: getStatusString(data.status), step: steps[getStatusString(data.status) || 'error'] },{deep: true}));
+                
+                console.log("Order status:", data.status);
+                console.log("Full order data:", data);
+
+                setOrder(snakecaseKeys({ 
+                    ...data, 
+                    status: getStatusString(data.status), 
+                    step: steps[getStatusString(data.status) || 'error'] 
+                }, {deep: true}));
             } catch (error) {
                 console.error('Error fetching order:', error);
             }
         };
 
+        // Add polling for status updates
+        const pollInterval = setInterval(fetchOrder, 5000);
+
         fetchOrder();
-    }, [id, token, order?.status]);
+
+        return () => clearInterval(pollInterval);
+    }, [id, token]);
 
     //console.log('Socket',socketRef);
     useEffect(() => {
