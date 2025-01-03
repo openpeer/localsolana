@@ -90,9 +90,14 @@ const Details = ({ list, updateList }: ListStepProps) => {
                 price_source: priceSourceToNumber[list.priceSource as string],
                 price: list.marginType === "fixed" ? list.margin : null,
                 automatic_approval: true,
-                payment_methods: list.paymentMethods?.map(pm => ({
-                    bank_id: pm.id
-                })) || []
+                payment_methods: list.paymentMethods?.map(pm => 
+                    type === 'BuyList' ? {
+                        bank_id: pm.id
+                    } : {
+                        bank_id: pm.id,
+                        values: pm.values || {}
+                    }
+                ) || []
             };
 
             console.log("Final data being sent to API:", formattedData);
