@@ -1,13 +1,7 @@
 import { Button, Modal } from 'components';
-import TransactionLink from 'components/TransactionLink';
-import {  useAccount } from 'hooks';
-import { useEscrowFunds } from 'hooks/transactions';
+import { useAccount } from 'hooks';
 import React, { useEffect, useState } from 'react';
-import { getStatusString, truncate } from 'utils';
-import { parseUnits } from 'viem';
-
 import { EscrowFundsButtonProps } from './EscrowButton.types';
-import useTransactionFeedback from '@/hooks/useTransactionFeedback';
 import useGaslessEscrow from '@/hooks/transactions/escrow/useGaslessEscrow';
 import { getAuthToken } from '@dynamic-labs/sdk-react-core';
 
@@ -19,63 +13,70 @@ const EscrowFundsButton = ({
 	fee,
 	contract,
 	instantEscrow,
-	sellerWaitingTime,seller
+	sellerWaitingTime,
+	seller
 }: EscrowFundsButtonProps) => {
 	const { isConnected } = useAccount();
 	const amount = tokenAmount;
 	const [modalOpen, setModalOpen] = useState(false);
 	const [escrowConfirmed, setEscrowConfirmed] = useState(false);
-	//console.log('UUID is ',uuid);
 
-	const { isLoading, isSuccess, data, escrowFunds, isFetching } = useGaslessEscrow({
-		orderID: uuid!,
-		amount,
-		buyer,
-		token,
+	const { escrowFunds, isLoading, isSuccess, data } = useGaslessEscrow({
 		contract,
+		orderID: uuid,
+		buyer,
+		seller,
+		token,
+		amount: tokenAmount,
 		instantEscrow,
-		sellerWaitingTime,seller
+		sellerWaitingTime
 	});
 
-	const escrow = () => {
-		if (!isConnected) return;
+	const handleEscrow = async () => {
+		if (!escrowFunds) return;
 
-		if (!escrowConfirmed) {
-			setModalOpen(true);
-			return;
+		try {
+			const result = await escrowFunds();
+			
+			if (isSuccess) {
+				const response = await fetch(`/api/orders/${uuid}`, {
+						method: 'PUT',
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${getAuthToken()}`
+						},
+						body: JSON.stringify({
+							status: 'escrowed'
+						})
+					});
+			}
+		} catch (error) {
+			console.error("Error in escrow process:", error);
 		}
-		escrowFunds?.();
 	};
 
 	useEffect(() => {
 		if (escrowConfirmed) {
-			escrow();
+			handleEscrow();
 		}
 	}, [escrowConfirmed]);
 
-	useEffect(()=>{
-		if(isSuccess && data){
-            updateTrade();
-			
-		}
-	},[ data,isSuccess]);
-    const updateTrade = async () => {
+	const updateTrade = async () => {
 		const result = await fetch(`/api/updateOrder/?id=${uuid}`, {
 			method: 'POST',
-			body: JSON.stringify({status:1}),
+			body: JSON.stringify({status: 1}),
 			headers: {
 				Authorization: `Bearer ${getAuthToken()}`,
 				'Content-Type': 'application/json',
 			}
 		});
-    };
+	};
 
-	// useTransactionFeedback({
-	// 	hash: data?.hash,
-	// 	isSuccess,
-	// 	Link: <TransactionLink hash={data?.hash} />,
-	// 	description: instantEscrow ? 'Confirmed the order' : 'Escrowed funds'
-	// });
+	useEffect(() => {
+		if (isSuccess && data?.hash) {
+			updateTrade();
+		}
+	}, [data?.hash, isSuccess]);
 
 	return (
 		<>
@@ -83,9 +84,9 @@ const EscrowFundsButton = ({
 				title={
 					isLoading ? 'Processing...' : isSuccess ? 'Done' : instantEscrow ? 'Confirm Order' : 'Escrow funds'
 				}
-				onClick={escrow}
-				processing={isLoading || isFetching}
-				disabled={isSuccess || isFetching}
+				onClick={handleEscrow}
+				processing={isLoading}
+				disabled={isSuccess || isLoading}
 			/>
 			<Modal
 				actionButtonTitle="Yes, confirm"

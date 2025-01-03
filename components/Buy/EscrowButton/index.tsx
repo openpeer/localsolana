@@ -1,14 +1,10 @@
-//import { OpenPeerDeployer } from 'abis';
-//import { constants } from 'ethers';
-import { useAccount, useUserProfile } from "hooks";
-//import { DEPLOYER_CONTRACTS } from 'models/networks';
+import { getAuthToken } from '@dynamic-labs/sdk-react-core';
+import { useAccount } from "hooks";
 import React, { useState } from "react";
-//import { useContractRead, useNetwork } from 'wagmi';
 import { EscrowFundsParams } from "./EscrowButton.types";
 import EscrowFundsButton from "./EscrowFundsButton";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { useContractRead } from "@/hooks/transactions/useContractRead";
-import { User } from "@/models/types";
 import CreateEscrowAccount from "./CreateEscrowAccount";
 
 const EscrowButton = ({
@@ -29,11 +25,9 @@ const EscrowButton = ({
   const { data: sellerContract } = useContractRead(tradeID, "escrow", true);
   const { data: fee, loadingContract } = useContractRead(tradeID, "fee", true);
 
-
   if (loadingContract || fee === undefined) return <></>;
 
   const needsToDeploy = !instantEscrow || !sellerContract;
-  //console.log(needsToDeploy,sellerContract,instantEscrow);
 
   return (
     <span className="w-full">
@@ -65,21 +59,8 @@ const EscrowButton = ({
           />
         )
       )}
-      {/* {!instantEscrow && !nativeToken && (
-        <div
-          className={nativeToken || approved || needsToDeploy ? "hidden" : ""}
-        >
-          <ApproveTokenButton
-            token={token}
-            amount={totalAmount!}
-            spender={seller}
-            onApprovalChange={setApproved}
-          />
-        </div>
-      )} */}
     </span>
   );
 };
 
 export default EscrowButton;
-function setUser(user: User): void {}
