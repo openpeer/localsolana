@@ -26,7 +26,7 @@ const EditTrade = ({ id }: { id: number }) => {
     useEffect(() => {
         console.log('Fetching list with ID:', id);
         const token = getAuthToken();
-        console.log('Current auth token:', token);
+        // console.log('Current auth token:', token);
         
         fetch(`/api/lists/${id}`, {
             headers: {
