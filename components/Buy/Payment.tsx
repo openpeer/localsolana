@@ -1,7 +1,7 @@
 import StepLayout from 'components/Listing/StepLayout';
 import HeaderH3 from 'components/SectionHeading/h3';
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useAccount, useUserProfile } from 'hooks';
 import { useBalance } from '@/hooks/transactions';
 
@@ -96,6 +96,38 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 		await updateContractAddress(contractAddress);
 		}
 	  }
+
+	// Add logging before escrow creation
+	useEffect(() => {
+		if (escrowData) {
+			console.log("Escrow Creation Context:", {
+				tradeId,
+				seller: seller.address,
+				buyer: buyer.address,
+				tokenAmount,
+				token: token.address,
+				escrowType,
+				paymentMethod
+			});
+		}
+	}, [escrowData, tradeId, seller, buyer, tokenAmount, token, escrowType, paymentMethod]);
+
+	// Add validation before allowing escrow creation
+	const canCreateEscrow = useMemo(() => {
+		const validationResult = {
+			hasValidSeller: !!seller?.address,
+			hasValidBuyer: !!buyer?.address,
+			hasValidAmount: tokenAmount > 0,
+			hasValidToken: !!token?.address,
+			hasValidTradeId: !!tradeId,
+			hasValidPaymentMethod: !!paymentMethod?.id
+		};
+		
+		console.log("Escrow Creation Validation:", validationResult);
+		
+		return Object.values(validationResult).every(v => v === true);
+	}, [seller, buyer, tokenAmount, token, tradeId, paymentMethod]);
+
 	return (
 		<StepLayout>
 			<div className="my-0 md:my-8">
