@@ -44,3 +44,4 @@ next-env.d.ts
 /.vscode/
 package-lock.json
 auth_token.txt
+.cursorrules
