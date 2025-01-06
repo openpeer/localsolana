@@ -3,12 +3,32 @@ import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isSolanaWallet, SolanaWallet } from "@dynamic-labs/solana-core";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, VersionedTransaction, Keypair } from "@solana/web3.js";
 import { useEffect, useState } from "react";
-import { CURRENT_NETWORK_URL } from "utils";
 import idl from "../../idl/local_solana_migrate.json";
 import { LocalSolanaMigrate } from "./../../idl/local_solana_migrate";
 import { arbitrator, feePayer, feeRecepient } from "@/utils/constants";
+
+// This dummy class has publicKey & payer, plus signTransaction stubs, matching Anchor's Wallet requirement
+class NoSignWallet implements anchor.Wallet {
+  public payer: Keypair;
+  public publicKey: PublicKey;
+
+  constructor() {
+    this.payer = Keypair.generate();
+    this.publicKey = this.payer.publicKey;
+  }
+
+  async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
+    // No local signing needed, so return the unmodified transaction:
+    return tx;
+  }
+
+  async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
+    // No local signing needed, so return the unmodified transactions:
+    return txs;
+  }
+}
 
 const useLocalSolana = () => {
   const [program, setProgram] = useState<Program<LocalSolanaMigrate> | null>(
@@ -18,6 +38,17 @@ const useLocalSolana = () => {
   const { primaryWallet } = useDynamicContext();
   const [connection, setConnection] = useState<Connection | null>(null);
   const [myWallet, setMyWallet] = useState<SolanaWallet | null>(null);
+
+  const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
+
+  // 1) Single place for new Connection
+  useEffect(() => {
+    if (!connection) {
+      const conn = new Connection(SOLANA_RPC_URL);
+      setConnection(conn);
+      // console.log("Initialized Solana connection:", SOLANA_RPC_URL);
+    }
+  }, [connection, SOLANA_RPC_URL]);
 
   useEffect(() => {
     let mounted = true;
@@ -44,27 +75,27 @@ const useLocalSolana = () => {
           return;
         }
 
-        // Initialize connection first
-        const newConnection = await initConnection();
-        if (!mounted || !newConnection) return;
-        setConnection(newConnection);
+        // 2) Now we rely on the existing connection from the first useEffect:
+        const finalConnection = connection;
+        if (!mounted || !finalConnection) return;
 
-        // Initialize provider and program
-        //@ts-ignore
-        const provider = new AnchorProvider(newConnection, primaryWallet, {
+        const dummyWallet = new NoSignWallet();
+
+        // Create the provider with the dummyWallet
+        const anchorProvider = new AnchorProvider(finalConnection, dummyWallet, {
           commitment: "processed",
-          preflightCommitment: "processed"
+          preflightCommitment: "processed",
         });
-        
-        const program = new Program<LocalSolanaMigrate>(
-          idl as LocalSolanaMigrate,
-          provider
-        );
+        setProvider(anchorProvider);
 
-        if (!mounted) return;
-        setProvider(provider);
-        setProgram(program);
+        // Create the program instance
+        const prog = new Program<LocalSolanaMigrate>(
+          idl as LocalSolanaMigrate,
+          anchorProvider
+        );
+        setProgram(prog);
         setMyWallet(primaryWallet);
+
       } catch (error) {
         console.error("Failed to initialize Solana program:", error);
       }
@@ -75,21 +106,7 @@ const useLocalSolana = () => {
     return () => {
       mounted = false;
     };
-  }, [primaryWallet]);
-
-  const initConnection = async (retries = 3): Promise<Connection | null> => {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const connection = new Connection(CURRENT_NETWORK_URL);
-        await connection.getVersion(); // Test the connection
-        return connection;
-      } catch (error) {
-        if (i === retries - 1) return null;
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-    return null;
-  };
+  }, [primaryWallet, connection, SOLANA_RPC_URL]);
 
   const initialiseSolanaAccount = async (address: string) => {
     const walletAddress = primaryWallet?.address;
