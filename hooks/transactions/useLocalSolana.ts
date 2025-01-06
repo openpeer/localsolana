@@ -43,11 +43,32 @@ const useLocalSolana = () => {
 
   // 1) Single place for new Connection
   useEffect(() => {
+    const initConnection = async () => {
+      try {
+        // console.debug("[useLocalSolana] Initializing connection to:", SOLANA_RPC_URL);
+        const conn = new Connection(SOLANA_RPC_URL, {
+          commitment: 'confirmed',
+          confirmTransactionInitialTimeout: 60000
+        });
+        
+        // Verify connection is working
+        await conn.getVersion();
+        console.debug("[useLocalSolana] Connection established successfully");
+        setConnection(conn);
+      } catch (err) {
+        console.error("[useLocalSolana] Failed to initialize connection:", err);
+        // Retry connection after 2 seconds
+        setTimeout(initConnection, 2000);
+      }
+    };
+
     if (!connection) {
-      const conn = new Connection(SOLANA_RPC_URL);
-      setConnection(conn);
-      // console.log("Initialized Solana connection:", SOLANA_RPC_URL);
+      initConnection();
     }
+
+    return () => {
+      // Cleanup if needed
+    };
   }, [connection, SOLANA_RPC_URL]);
 
   useEffect(() => {
