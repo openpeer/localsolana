@@ -27,45 +27,46 @@ const useOpenDispute = ({ orderID }: {orderID:string}) => {
     return { isFetching: false, isSuccess, isLoading, data };
   }
 
-  if (!shyft) {
-    console.error("Shyft not initialized. Cannot proceed with transaction relaying.");
-    return { isFetching: false, isSuccess, isLoading, data };
-  }
-
 	const opensDispute = async () => {
 		setIsLoading(true);
 		try {
-			// Validate the sender's account using Helius
-      const senderAccountInfo = await getAccountInfo(address);
-      if (!senderAccountInfo) {
-        console.error("Sender account not found");
-        setIsSuccess(false);
-        return false;
-      }
+			// Check shyft here, so we only fail if the user actually tries to open a dispute
+			if (!shyft) {
+				console.error("Shyft not initialized. Cannot proceed with transaction relaying (opensDispute).");
+				setIsSuccess(false);
+				return false;
+			}
+
+			const senderAccountInfo = await getAccountInfo(address);
+			if (!senderAccountInfo) {
+				console.error("Sender account not found");
+				setIsSuccess(false);
+				return false;
+			}
 
 			const tx = await openDispute(orderID, new PublicKey(address));
 			if (!tx) {
-        console.error("Failed to create dispute transaction.");
-        setIsSuccess(false);
-        return false;
-      }
+				console.error("Failed to create dispute transaction.");
+				setIsSuccess(false);
+				return false;
+			}
 
-			const finalTx = await sendTransactionWithShyft(tx,true,orderID);
+			const finalTx = await sendTransactionWithShyft(tx, true, orderID);
 			if (finalTx) {
-				updateData({hash: finalTx} );
+				updateData({hash: finalTx});
 				setIsSuccess(true);
-        return true;
-			}else{
-				console.error('Transaction relaying failed.', finalTx);
+				return true;
+			} else {
+				console.error("Transaction relaying failed.", finalTx);
 				setIsSuccess(false);
 				return false;
 			}
 		} catch (error) {
-			console.error('Error during dispute process:', error);
+			console.error("Error during dispute process:", error);
 			setIsSuccess(false);
-      return false;
+			return false;
 		} finally {
-      setIsLoading(false);
+			setIsLoading(false);
 		}
 	};
 	return { isFetching: false, isLoading, isSuccess, data, opensDispute };

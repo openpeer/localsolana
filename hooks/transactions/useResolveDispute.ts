@@ -23,31 +23,39 @@ const useResolveDispute = ({ orderID,winner,seller,buyer,token }: {orderID:strin
 		return { isFetching: true, isSuccess, isLoading, data };
 	}
 
-	if (shyft === null) {
-		return { isFetching: false, isSuccess, isLoading, data };
-	}
-
 	const declareWinner = async () => {
 		try {
 			setIsLoading(true);
-			const tx = await resolveDispute(orderID,new PublicKey(seller),new PublicKey(buyer),new PublicKey(winner),new PublicKey(token));
-			const finalTx = await sendTransactionWithShyft(tx,true,orderID);
-			if(finalTx !== undefined  && finalTx !== null){
-				setIsLoading(false);
+
+			if (!shyft) {
+				console.error("Shyft not initialized. Cannot proceed with transaction relaying (declareWinner).");
+				setIsSuccess(false);
+				return false;
+			}
+
+			const tx = await resolveDispute(
+				orderID,
+				new PublicKey(seller),
+				new PublicKey(buyer),
+				new PublicKey(winner),
+				new PublicKey(token)
+			);
+			const finalTx = await sendTransactionWithShyft(tx, true, orderID);
+			if (finalTx) {
 				setIsSuccess(true);
-				updateData({hash: finalTx} );
+				updateData({ hash: finalTx });
 				return true;
-			}else{
-				console.error('error', finalTx);
-				setIsLoading(false);
+			} else {
+				console.error("Error relaying transaction", finalTx);
 				setIsSuccess(false);
 				return false;
 			}
 		} catch (error) {
-			console.error('error', error);
-			setIsLoading(false);
+			console.error("Error in declareWinner", error);
 			setIsSuccess(false);
 			return false;
+		} finally {
+			setIsLoading(false);
 		}
 	};
 	return { isFetching: false, isLoading, isSuccess, data, declareWinner };
