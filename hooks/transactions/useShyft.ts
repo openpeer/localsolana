@@ -9,10 +9,12 @@ import {
 } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { BLOCK_EXPLORER, CURRENT_NETWORK, CURRENT_NETWORK_URL } from "utils";
+import { BLOCK_EXPLORER } from "utils";
 import useLocalSolana from "./useLocalSolana";
 import { feePayer } from "@/utils/constants";
 import snakecaseKeys from "snakecase-keys";
+
+const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
 
 // Helper function to convert string network to ShyftSdk Network enum
 const getShyftNetwork = (network: string): Network => {
@@ -34,21 +36,41 @@ const useShyft = () => {
   const { primaryWallet } = useDynamicContext();
   const { provider, program, idl, connection } = useLocalSolana();
 
+  // 1) Grab environment variables directly
+  const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
+  // Provide a default fallback for safety
+  const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta";
+
+  // Debug log environment variables on mount
+  // useEffect(() => {
+  //   console.log("[useShyft] ENV => NEXT_PUBLIC_SHYFT_API_KEY:", SHYFT_API_KEY);
+  //   console.log("[useShyft] ENV => SOLANA_NETWORK:", SOLANA_NETWORK);
+  // }, []);
+
+  // useEffect(() => {
+  //   console.log("[useShyft] Current 'connection':", connection);
+  // }, [connection]);
+
   useEffect(() => {
     const initializeShyft = async () => {
-      const apiKey = process.env.NEXT_PUBLIC_SHYFT_API_KEY ;
-      if(!apiKey){
-        throw new Error("Error Initializing signer");
+      try {
+        if(!SHYFT_API_KEY){
+          throw new Error("Error Initializing signer: No SHYFT_API_KEY found");
+        }
+        // console.log("[useShyft] Initializing ShyftSdk with apiKey:", SHYFT_API_KEY, "and network:", SOLANA_NETWORK);
+
+        const shyftInstance = new ShyftSdk({
+          apiKey: SHYFT_API_KEY,
+          network: getShyftNetwork(SOLANA_NETWORK), // Convert string to ShyftSdk Network enum
+        });
+        setShyft(shyftInstance);
+      } catch (err) {
+        console.error("[useShyft] Error in initializeShyft:", err);
       }
-      const shyftInstance = new ShyftSdk({
-        apiKey: apiKey,
-        network: getShyftNetwork(CURRENT_NETWORK), // Convert string to Network enum
-      });
-      setShyft(shyftInstance);
     };
 
     initializeShyft();
-  }, []);
+  }, [SHYFT_API_KEY, SOLANA_NETWORK]);
 
   const sendTransactionWithShyft = async (
     transaction: Transaction,
@@ -61,7 +83,7 @@ const useShyft = () => {
     if (!feePayer) {
       throw new Error("Fee payer is not set in env");
     }
-    const connection = new Connection(CURRENT_NETWORK_URL);
+    const connection = new Connection(SOLANA_RPC_URL);
     const recentBlockhash = await connection.getLatestBlockhash('confirmed');
     transaction.recentBlockhash = recentBlockhash.blockhash;
     transaction.feePayer = new PublicKey(feePayer);
@@ -222,9 +244,16 @@ const useShyft = () => {
   };
 
   const getWalletBalance = async (address: string) => {
-    if (!connection) return null;
-    const balance = await connection.getBalance(new PublicKey(address));
-    return balance/1e9;
+    // console.log("[useShyft:getWalletBalance] Received call with address:", address);
+    if (!connection) {
+      console.error("[useShyft:getWalletBalance] No Solana connection is available");
+      return null;
+    }
+    // console.log("[useShyft:getWalletBalance] Calling connection.getBalance for:", address);
+    const lamports = await connection.getBalance(new PublicKey(address));
+    const sol = lamports / 1e9;
+    // console.log("[useShyft:getWalletBalance] Fetched lamports:", lamports, "=> SOL:", sol);
+    return sol;
   };
 
   const getTokenBalance = async (address: string, tokenAddress: string) => {
