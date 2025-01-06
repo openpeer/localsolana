@@ -11,6 +11,8 @@ import { Order } from "models/types";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import useShyft from "@/hooks/transactions/useShyft";
+
 
 interface OpenDisputeButtonParams {
   order: Order;
@@ -52,6 +54,19 @@ const OpenDisputeButton = ({
     token.address,
     false
   );
+
+  // Add debug logging for balance and parameters
+  useEffect(() => {
+    console.debug("[OpenDisputeButton] Balance state:", {
+      balance,
+      loadingBalance,
+      error,
+      isBuyer,
+      buyerAddress: buyer?.address,
+      sellerAddress: seller?.address,
+      tokenAddress: token?.address
+    });
+  }, [balance, loadingBalance, error, isBuyer, buyer?.address, seller?.address, token?.address]);
 
   const { isLoading, isSuccess, opensDispute, data } = useOpenDispute({
     orderID: order.id.toString(),
@@ -103,13 +118,23 @@ const OpenDisputeButton = ({
   console.log('paid for dispute ',paidForDisputeResult);
 	// console.log("here is your balance,",balance);
 
+  const { shyft } = useShyft();
 
-
-  if (balance === undefined || balance==null|| loadingContract ||paidForDisputeResult === undefined || loadingBalance) {
+  // Only show loading when we don't have the required data
+  if ((balance === undefined || balance === null) && loadingBalance) {
+    console.debug("[OpenDisputeButton] Returning 'Loading...' with", {
+      balance,
+      loadingBalance,
+      loadingContract,
+      paidForDisputeResult
+    });
     return <p>Loading...</p>;
   }
 
-  
+  if (loadingContract && paidForDisputeResult === undefined) {
+    return <p>Loading contract...</p>;
+  }
+
   const onOpenDispute = () => {
     if (!isConnected || !canOpenDispute) return;
 
@@ -150,28 +175,37 @@ const OpenDisputeButton = ({
 
   return (
     <>
-      <Button
-        title={
-          (paidForDisputeResult)
-            ? "Already opened"
-            : !canOpenDispute
-            ? "You cannot dispute"
-            : isLoading
-            ? "Processing..."
-            : isSuccess
-            ? "Done"
-            : title
-        }
-        processing={isLoading}
-        disabled={
+      {!shyft ? (
+        <button
+          className="px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed"
+          disabled
+        >
+          Initializing Shyft...
+        </button>
+      ) : (
+        <Button
+          title={
+            (paidForDisputeResult)
+              ? "Already opened"
+              : !canOpenDispute
+              ? "You cannot dispute"
+              : isLoading
+              ? "Processing..."
+              : isSuccess
+              ? "Done"
+              : title
+          }
+          processing={isLoading}
+          disabled={
 			disabledProp||
-          isSuccess ||
-          !canOpenDispute ||
-          (paidForDisputeResult.result as boolean)
-        }
-        onClick={onOpenDispute}
-        outlined={outlined}
-      />
+            isSuccess ||
+            !canOpenDispute ||
+            (paidForDisputeResult.result as boolean)
+          }
+          onClick={onOpenDispute}
+          outlined={outlined}
+        />
+      )}
       <Modal
         actionButtonTitle="Yes, confirm"
         title="Dispute Trade"
