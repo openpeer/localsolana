@@ -35,33 +35,23 @@ const useShyft = () => {
   const [shyft, setShyft] = useState<ShyftSdk | null>(null);
   const { primaryWallet } = useDynamicContext();
   const { provider, program, idl, connection } = useLocalSolana();
-
+  
   // 1) Grab environment variables directly
   const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
   // Provide a default fallback for safety
   const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta";
 
-  // Debug log environment variables on mount
-  // useEffect(() => {
-  //   console.log("[useShyft] ENV => NEXT_PUBLIC_SHYFT_API_KEY:", SHYFT_API_KEY);
-  //   console.log("[useShyft] ENV => SOLANA_NETWORK:", SOLANA_NETWORK);
-  // }, []);
-
-  // useEffect(() => {
-  //   console.log("[useShyft] Current 'connection':", connection);
-  // }, [connection]);
-
   useEffect(() => {
+    console.debug("[useShyft] Running effect to initialize Shyft. SOLANA_NETWORK:", SOLANA_NETWORK);
     const initializeShyft = async () => {
       try {
         if(!SHYFT_API_KEY){
           throw new Error("Error Initializing signer: No SHYFT_API_KEY found");
         }
-        // console.log("[useShyft] Initializing ShyftSdk with apiKey:", SHYFT_API_KEY, "and network:", SOLANA_NETWORK);
 
         const shyftInstance = new ShyftSdk({
           apiKey: SHYFT_API_KEY,
-          network: getShyftNetwork(SOLANA_NETWORK), // Convert string to ShyftSdk Network enum
+          network: getShyftNetwork(SOLANA_NETWORK),
         });
         setShyft(shyftInstance);
       } catch (err) {
@@ -77,8 +67,10 @@ const useShyft = () => {
     localSignRequired: boolean,
     orderId?: string
   ) => {
+    console.debug("[useShyft] sendTransactionWithShyft called. shyft:", shyft);
     if(!shyft){
-      throw new Error("Shyft SDK not initialized");
+      console.error("[useShyft] Shyft is null or undefined. Throwing error now...");
+      throw new Error("Shyft not initialized");
     }
     if (!feePayer) {
       throw new Error("Fee payer is not set in env");
@@ -110,51 +102,6 @@ const useShyft = () => {
       verifySignatures: true,
     });
     const base64Transaction = serializedTransaction.toString("base64");
-
-    // try {
-    //   const signature = await shyft?.txnRelayer.sign({
-    //     encodedTransaction: base64Transaction,
-    //     network: getShyftNetwork(CURRENT_NETWORK),
-    //   });
-
-    //   if (signature) {
-    //     const txSignature: TransactionSignature = signature as TransactionSignature;
-    //     await connection.confirmTransaction(txSignature, "confirmed");
-    //     return txSignature;
-    //   }
-    // } catch (error: any) {
-
-    //   try {
-    //     const errorMessage = error.message || error.toString();
-    //     const parsedError = JSON.parse(errorMessage.match(/{.*}/)[0]);
-
-    //     if (
-    //       parsedError.InstructionError &&
-    //       Array.isArray(parsedError.InstructionError)
-    //     ) {
-    //       const [index, instructionError] = parsedError.InstructionError;
-    //       if (instructionError.Custom !== undefined) {
-    //         console.log(
-    //           "This is an InstructionError with a custom error code:",
-    //           instructionError.Custom
-    //         );
-    //         idl.errors[instructionError.custom];
-    //       }
-    //     }
-    //   } catch (parsingError) {
-    //     console.error("Failed to parse the error message:", parsingError);
-    //     toast.error(`${error}`, {
-    //       theme: "dark",
-    //       position: "top-right",
-    //       autoClose: 5000,
-    //       hideProgressBar: false,
-    //       closeOnClick: true,
-    //       pauseOnHover: true,
-    //       draggable: false,
-    //       progress: undefined,
-    //     });
-    //   }
-    // }
 
     // here use fetch to hit an api to send orderid and base64Transaction in port request
     const result = await fetch("/api/processTransaction/", {
@@ -244,25 +191,33 @@ const useShyft = () => {
   };
 
   const getWalletBalance = async (address: string) => {
-    // console.log("[useShyft:getWalletBalance] Received call with address:", address);
     if (!connection) {
       console.error("[useShyft:getWalletBalance] No Solana connection is available");
       return null;
     }
-    // console.log("[useShyft:getWalletBalance] Calling connection.getBalance for:", address);
     const lamports = await connection.getBalance(new PublicKey(address));
     const sol = lamports / 1e9;
-    // console.log("[useShyft:getWalletBalance] Fetched lamports:", lamports, "=> SOL:", sol);
     return sol;
   };
 
   const getTokenBalance = async (address: string, tokenAddress: string) => {
     if (!shyft) return null;
-    const balance = await shyft.wallet.getTokenBalance({
-      token: tokenAddress,
-      wallet: address,
-    });
-    return balance.balance;
+    
+    try {
+      const response = await shyft.wallet.getTokenBalance({
+        token: tokenAddress,
+        wallet: address,
+      });
+      
+      if (!response || typeof response.balance === 'undefined') {
+        throw new Error('Invalid response from Shyft API');
+      }
+      
+      return response.balance;
+    } catch (error: any) {
+      console.error("[useShyft] Error fetching token balance:", error);
+      throw error;
+    }
   };
 
   const getAllTokenBalance = async (address: string) => {
