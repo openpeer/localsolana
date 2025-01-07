@@ -45,7 +45,7 @@ const useLocalSolana = () => {
   useEffect(() => {
     const initConnection = async () => {
       try {
-        // console.debug("[useLocalSolana] Initializing connection to:", SOLANA_RPC_URL);
+        console.debug("[useLocalSolana] Initializing connection to: SOLANA_RPC_URL");
         const conn = new Connection(SOLANA_RPC_URL, {
           commitment: 'confirmed',
           confirmTransactionInitialTimeout: 60000
@@ -88,17 +88,23 @@ const useLocalSolana = () => {
         if (!mounted) return;
         
         if (!primaryWallet) {
+          console.debug("[useLocalSolana] No primary wallet available");
           return;
         }
 
         if (!isSolanaWallet(primaryWallet)) {
-          console.warn("Not a Solana wallet");
+          console.warn("[useLocalSolana] Not a Solana wallet");
           return;
         }
 
+        console.debug("[useLocalSolana] Primary wallet found:", primaryWallet.address);
+
         // 2) Now we rely on the existing connection from the first useEffect:
         const finalConnection = connection;
-        if (!mounted || !finalConnection) return;
+        if (!mounted || !finalConnection) {
+          console.debug("[useLocalSolana] No connection available for program init");
+          return;
+        }
 
         const dummyWallet = new NoSignWallet();
 
@@ -110,15 +116,17 @@ const useLocalSolana = () => {
         setProvider(anchorProvider);
 
         // Create the program instance
+        console.debug("[useLocalSolana] Creating program instance");
         const prog = new Program<LocalSolanaMigrate>(
           idl as LocalSolanaMigrate,
           anchorProvider
         );
+        console.debug("[useLocalSolana] Program instance created");
         setProgram(prog);
         setMyWallet(primaryWallet);
 
       } catch (error) {
-        console.error("Failed to initialize Solana program:", error);
+        console.error("[useLocalSolana] Failed to initialize Solana program:", error);
       }
     };
 

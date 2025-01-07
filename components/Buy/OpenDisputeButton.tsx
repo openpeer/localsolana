@@ -52,7 +52,9 @@ const OpenDisputeButton = ({
   const { balance, loadingBalance, error } = useBalance(
     isBuyer?buyer.address:seller.address,
     token.address,
-    false
+    false,  // watch
+    0,      // refreshTrigger
+    tradeId  // contractAddress
   );
 
   // Add debug logging for balance and parameters
@@ -106,7 +108,7 @@ const OpenDisputeButton = ({
 
   
   const disputeFee = 5_000_000 / 1e9;
-  const { data: escrowData, loadingContract } = useContractRead(
+  const { data: escrowData, loading: loadingContract } = useContractRead(
     tradeId,
     "escrow",
     true
