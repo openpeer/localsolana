@@ -26,19 +26,20 @@ import { useAllTokenBalance } from "@/hooks/transactions/useAllTokenBalance";
 import { TokenBalance } from "@shyft-to/js";
 import { Router, useRouter } from "next/router";
 import { PublicKey } from "@solana/web3.js";
+import useLocalSolana from "@/hooks/transactions/useLocalSolana";
 
 // ContractTable component displays a table of tokens and their balances for a given contract
 const ContractTable = ({
   contract,
   tokens,
-  balances,
+  tokenBalances,
   nativeBalance,
   needToDeploy,
   onSelectToken,
 }: {
   contract: string;
   tokens: Token[];
-  balances: TokenBalance[] | null;
+  tokenBalances: { [key: string]: string };
   nativeBalance: number;
   needToDeploy: boolean;
   onSelectToken: (
@@ -46,61 +47,88 @@ const ContractTable = ({
     contract: string,
     action: "Withdraw" | "Deposit"
   ) => void;
-}) => (
-  <div className="mt-4" key={contract}>
-    <div className="flex flex-col md:flex-row md:items-center md:space-x-1 break-all">
-      <a
-        href={`https://explorer.solana.com/address/${contract}?cluster=${CURRENT_NETWORK}`}
-        className="text-purple-900"
-        target="_blank"
-        rel="noreferrer"
-      >
-        <h1>{contract} </h1>
-      </a>
+}) => {
+  const { connection } = useLocalSolana();
+  const [rentExemptBalance, setRentExemptBalance] = useState<number>(0);
+
+  // Calculate rent exempt balance
+  useEffect(() => {
+    const calculateRentExempt = async () => {
+      if (!connection || !contract) return;
+      try {
+        const publicKey = new PublicKey(contract);
+        const accountInfo = await connection.getAccountInfo(publicKey);
+        if (!accountInfo) return;
+
+        const rentExemptAmount = await connection.getMinimumBalanceForRentExemption(
+          accountInfo.data.length
+        );
+        setRentExemptBalance(rentExemptAmount / 1e9);
+      } catch (err) {
+        console.error("[ContractTable] Error calculating rent exempt balance:", err);
+      }
+    };
+
+    calculateRentExempt();
+  }, [connection, contract]);
+
+  return (
+    <div className="mt-4" key={contract}>
+      <div className="flex flex-col md:flex-row md:items-center md:space-x-1 break-all">
+        <a
+          href={`https://explorer.solana.com/address/${contract}?cluster=${CURRENT_NETWORK}`}
+          className="text-purple-900"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <h1>{contract} </h1>
+        </a>
+      </div>
+      <table className="w-full md:rounded-lg overflow-hidden mt-2">
+        <thead className="bg-gray-100">
+          <tr className="w-full relative">
+            <th
+              scope="col"
+              className="hidden py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 lg:table-cell"
+            >
+              Token
+            </th>
+            <th
+              scope="col"
+              className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
+            >
+              Balance
+            </th>
+            <th
+              scope="col"
+              className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
+            >
+              Action
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {tokens.map((t) => (
+            <TokenRow
+              key={t.id}
+              token={t}
+              contract={contract}
+              balance={
+                t.address === PublicKey.default.toBase58()
+                  ? Math.max(0, nativeBalance - rentExemptBalance)
+                  : tokenBalances?.[t.address] 
+                    ? parseFloat(tokenBalances[t.address]) / Math.pow(10, t.decimals || 6)
+                    : 0
+              }
+              depositDisabled={needToDeploy}
+              onSelectToken={onSelectToken}
+            />
+          ))}
+        </tbody>
+      </table>
     </div>
-    <table className="w-full md:rounded-lg overflow-hidden mt-2">
-      <thead className="bg-gray-100">
-        <tr className="w-full relative">
-          <th
-            scope="col"
-            className="hidden py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 lg:table-cell"
-          >
-            Token
-          </th>
-          <th
-            scope="col"
-            className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
-          >
-            Balance
-          </th>
-          <th
-            scope="col"
-            className="hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell"
-          >
-            Action
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-200">
-        {tokens.map((t) => (
-          <TokenRow
-            key={t.id}
-            token={t}
-            contract={contract}
-            balance={
-              t.address == PublicKey.default.toBase58()
-                ? nativeBalance
-                : balances?.find((balance) => balance.address == t.address)
-                    ?.balance || 0
-            }
-            depositDisabled={needToDeploy}
-            onSelectToken={onSelectToken}
-          />
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+  );
+};
 
 // TokenRow component represents a single row in the ContractTable for a specific token
 const TokenRow = ({
@@ -128,7 +156,7 @@ const TokenRow = ({
             <TokenImage size={24} token={token} />
             <span className="text-sm">{token.symbol}</span>
             <span className="text-sm">
-              {balance} {token.symbol}
+              {balance?.toFixed(token.decimals === 6 ? 6 : 9)} {token.symbol}
             </span>
           </div>
           <span className="w-full flex flex-row space-x-4 pb-4">
@@ -152,7 +180,7 @@ const TokenRow = ({
         </div>
       </td>
       <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
-        {balance == null ? "" : `${balance}  ${token.symbol}`}
+        {balance == null ? "" : `${balance?.toFixed(token.decimals === 6 ? 6 : 9)} ${token.symbol}`}
       </td>
       <td className="hidden px-3.5 py-3.5 text-sm text-gray-500 lg:table-cell">
         <div className="w-full flex flex-row space-x-4">
@@ -174,31 +202,28 @@ const TokenRow = ({
 
 // MyEscrows component is the main component for the /escrows page
 const MyEscrows = () => {
-  const { address } = useAccount(); // Get the user's account address
-  const [loading, setLoading] = useState(false); // State to manage loading status
-  const { user, fetchUserProfile } = useUserProfile({}); // Get user profile and function to fetch it
-  const [lastVersion, setLastVersion] = useState(0); // State to track the last version of something (not used in this snippet)
-  const [tokens, setTokens] = useState<Token[]>([]); // State to store tokens
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // State to trigger refresh of balances
+  const { address } = useAccount();
+  const [loading, setLoading] = useState(false);
+  const { user, fetchUserProfile } = useUserProfile({});
+  const [lastVersion, setLastVersion] = useState(0);
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // State for deposit/withdraw actions
   const [action, setAction] = useState<"Deposit" | "Withdraw">("Deposit");
   const [token, setToken] = useState<Token>();
   const [contract, setContract] = useState<string>();
 
   // Read contract data using a custom hook
-  const { data: escrowData, loadingContract } = useContractRead(
+  const { data: escrowData, loading: loadingContract, error: contractError, tokenBalances, solBalance } = useContractRead(
     address || "",
     "escrowState",
     true
   );
 
-  // Function to refresh balances
   const refreshBalances = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  // Fetch tokens from the API
   useEffect(() => {
     setLoading(true);
     const fetchTokens = async () => {
@@ -217,23 +242,9 @@ const MyEscrows = () => {
     };
 
     fetchTokens();
-  }, [refreshTrigger]); // Re-fetch tokens when refreshTrigger changes
+  }, [refreshTrigger]);
 
-  // Use custom hooks to get token balances
-  const { balances, loadingBalance, error } = useAllTokenBalance(
-    user?.contract_address || "",
-    false,
-    refreshTrigger
-  );
-
-  const { balance } = useBalance(
-    user?.contract_address || "",
-    PublicKey.default.toBase58(),
-    false,
-    refreshTrigger
-  );
-
-  const needToDeploy = escrowData == null; // Determine if a contract needs to be deployed
+  const needToDeploy = escrowData == null;
   const onSelectToken = (t: Token, c: string, a: "Withdraw" | "Deposit") => {
     setToken(t);
     setAction(a);
@@ -244,7 +255,7 @@ const MyEscrows = () => {
     setToken(undefined);
     setContract(undefined);
     setAction("Deposit");
-    refreshBalances(); // Refresh balances when returning
+    refreshBalances();
   };
 
   // Handle contract address updates
@@ -255,18 +266,12 @@ const MyEscrows = () => {
     }
   };
 
-  // Render loading component if balances are loading
-  // if (loadingBalance) {
-  //   return <Loading />;
-  // }
-
-  // Render EscrowDepositWithdraw component if action, token, and contract are set
   if (action && token && (contract || escrowData)) {
     return (
       <EscrowDepositWithdraw
         action={action}
         token={token}
-        contract={contract || user?.contract_address || ""}
+        contract={contract || user?.contract_address || ''}
         onBack={onBack}
         canDeposit={!needToDeploy}
         canWithdraw={!needToDeploy}
@@ -274,7 +279,6 @@ const MyEscrows = () => {
     );
   }
 
-  // Render the main content of the page
   return (
     <div className="px-6 w-full flex flex-col items-center justify-center mt-4 pt-4 md:pt-6 text-gray-700">
       <div className="w-full lg:w-1/2 flex flex-col mb-16">
@@ -294,10 +298,10 @@ const MyEscrows = () => {
             <>
               <div className="px-4 pb-4">
                 <ContractTable
-                  contract={user?.contract_address || ""}
+                  contract={user?.contract_address || ''}
                   tokens={tokens}
-                  balances={balances || []}
-                  nativeBalance={balance || 0}
+                  tokenBalances={tokenBalances || {}}
+                  nativeBalance={solBalance / 1e9}
                   needToDeploy={needToDeploy}
                   onSelectToken={onSelectToken}
                 />
