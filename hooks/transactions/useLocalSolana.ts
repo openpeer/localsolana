@@ -459,15 +459,34 @@ const useLocalSolana = () => {
     buyer: PublicKey,
     token: PublicKey
   ) => {
+    console.debug("[useLocalSolana:releaseFunds] Starting release funds", {
+      orderId,
+      seller: seller.toString(),
+      buyer: buyer.toString(),
+      token: token.toString()
+    });
+
     if (!program || !provider || !feeRecepient || !feePayer) {
+      console.error("[useLocalSolana:releaseFunds] Missing required dependencies", {
+        program: !!program,
+        provider: !!provider,
+        feeRecepient: feeRecepient,
+        feePayer: feePayer
+      });
       throw new Error("Program or provider is not initialized");
     }
-    let escrowPDA = await getEscrowPDA(orderId);
 
+    console.debug("[useLocalSolana:releaseFunds] Getting escrow PDA");
+    let escrowPDA = await getEscrowPDA(orderId);
+    console.debug("[useLocalSolana:releaseFunds] Escrow PDA:", escrowPDA?.toString());
+
+    console.debug("[useLocalSolana:releaseFunds] Setting up token accounts");
     let escrowTokenAccount =
       token == PublicKey.default
         ? null
         : await getAssociatedTokenAddress(token, escrowPDA!, true);
+    console.debug("[useLocalSolana:releaseFunds] Escrow token account:", escrowTokenAccount?.toString());
+
     let feeTokenAccount =
       token == PublicKey.default
         ? null
@@ -476,10 +495,15 @@ const useLocalSolana = () => {
             new PublicKey(feeRecepient),
             true
           );
+    console.debug("[useLocalSolana:releaseFunds] Fee token account:", feeTokenAccount?.toString());
+
     let buyerTokenAccount =
       token == PublicKey.default
         ? null
         : await getAssociatedTokenAddress(token, new PublicKey(buyer), true);
+    console.debug("[useLocalSolana:releaseFunds] Buyer token account:", buyerTokenAccount?.toString());
+
+    console.debug("[useLocalSolana:releaseFunds] Creating transaction");
     const tx = await program.methods
       .releaseFunds(orderId)
       .accounts({
@@ -493,6 +517,8 @@ const useLocalSolana = () => {
         buyerTokenAccount: buyerTokenAccount,
       })
       .transaction();
+    
+    console.debug("[useLocalSolana:releaseFunds] Transaction created:", tx);
     return tx;
   };
 
