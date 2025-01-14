@@ -34,9 +34,10 @@ const OrderPage = ({ id }: { id: string }) => {
     const socketRef = useRef<any>(null); // Use useRef to store the socket instance
 
     useEffect(() => {
+        console.debug("[OrderPage] Effect starting new render cycle");
         const fetchOrder = async () => {
             try {
-                console.log("Fetching order data...");
+                console.debug("[OrderPage] Fetching order data...");
                 const response = await fetch(`/api/orders/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -45,25 +46,50 @@ const OrderPage = ({ id }: { id: string }) => {
                 const result = await response.json();
                 const data = result.data;
                 
-                console.log("Order status:", data.status);
-                console.log("Full order data:", data);
+                console.debug("[OrderPage] Order status:", data.status);
+                console.debug("[OrderPage] Full order data:", data);
 
                 setOrder(snakecaseKeys({ 
                     ...data, 
                     status: getStatusString(data.status), 
                     step: steps[getStatusString(data.status) || 'error'] 
                 }, {deep: true}));
+
+                return data.status !== 5;
             } catch (error) {
-                console.error('Error fetching order:', error);
+                console.error('[OrderPage] Error fetching order:', error);
+                return true;
             }
         };
 
-        // Add polling for status updates
-        const pollInterval = setInterval(fetchOrder, 5000);
+        let pollInterval: NodeJS.Timeout | null = null;
 
-        fetchOrder();
+        // Initial fetch and setup polling only if needed
+        (async () => {
+            const shouldPoll = await fetchOrder();
+            if (shouldPoll) {
+                pollInterval = setInterval(async () => {
+                    const shouldContinue = await fetchOrder();
+                    if (!shouldContinue) {
+                        console.debug("[OrderPage] Order is closed, stopping polling");
+                        if (pollInterval) {
+                            clearInterval(pollInterval);
+                            pollInterval = null;
+                        }
+                    }
+                }, 10000);
+            } else {
+                console.debug("[OrderPage] Order is already closed, not starting polling");
+            }
+        })();
 
-        return () => clearInterval(pollInterval);
+        return () => {
+            console.debug("[OrderPage] Cleaning up effect");
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        };
     }, [id, token]);
 
     //console.log('Socket',socketRef);

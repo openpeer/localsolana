@@ -58,35 +58,47 @@ const ReleaseFundsButton = ({
 			onReleaseFunds();
 		}
 	}, [releaseConfirmed]);
-	// useEffect(()=>{
-	// 	if(isSuccess && data){
-    //         //updateTrade();
-	// 	}
-	// },[ isSuccess]);
-    const updateTrade = async () => {
-		const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
-			method: 'POST',
-			body: JSON.stringify({status:5}),
-			headers: {
-				Authorization: `Bearer ${getAuthToken()}`,
-				'Content-Type': 'application/json',
-			}
-		});
 
-		if(result.status===200){
-			await fetch(`/api/transaction`, {
+	useEffect(() => {
+		if (isSuccess && data?.hash) {
+			updateTrade();
+		}
+	}, [isSuccess, data]);
+
+	const updateTrade = async () => {
+		try {
+			console.debug('[ReleaseFundsButton] Updating order status to completed');
+			const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
 				method: 'POST',
-				body: JSON.stringify({
-					order_id:order.id,
-					tx_hash:data?.hash
-				}),
+				body: JSON.stringify({ status: 5 }), // 5 = completed
 				headers: {
 					Authorization: `Bearer ${getAuthToken()}`,
 					'Content-Type': 'application/json',
 				}
 			});
+
+			if (result.status === 200) {
+				console.debug('[ReleaseFundsButton] Order status updated successfully');
+				await fetch(`/api/transaction`, {
+					method: 'POST',
+					body: JSON.stringify({
+						order_id: order.id,
+						tx_hash: data?.hash
+					}),
+					headers: {
+						Authorization: `Bearer ${getAuthToken()}`,
+						'Content-Type': 'application/json',
+					}
+				});
+				console.debug('[ReleaseFundsButton] Transaction recorded successfully');
+			} else {
+				console.error('[ReleaseFundsButton] Failed to update order status:', result.status);
+			}
+		} catch (error) {
+			console.error('[ReleaseFundsButton] Error updating order status:', error);
 		}
-    };
+	};
+
 	return (
 		<>
 			<Button
