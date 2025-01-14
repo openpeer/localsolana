@@ -79,6 +79,22 @@ const useShyft = () => {
     const recentBlockhash = await connection.getLatestBlockhash('confirmed');
     transaction.recentBlockhash = recentBlockhash.blockhash;
     transaction.feePayer = new PublicKey(feePayer);
+
+    // Simulate transaction before signing
+    console.debug("[useShyft] Simulating transaction before signing");
+    try {
+      const simulation = await connection.simulateTransaction(transaction);
+      console.debug("[useShyft] Simulation result:", simulation);
+      
+      if (simulation.value.err) {
+        console.error("[useShyft] Transaction simulation failed:", simulation.value.err);
+        throw new Error(`Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`);
+      }
+    } catch (simError) {
+      console.error("[useShyft] Error during transaction simulation:", simError);
+      throw simError;
+    }
+
     let signedTransaction;
 
     if (localSignRequired) {
@@ -187,7 +203,6 @@ const useShyft = () => {
       });
       return data;
     }
-    
   };
 
   const getWalletBalance = async (address: string) => {
@@ -215,6 +230,10 @@ const useShyft = () => {
       
       return response.balance;
     } catch (error: any) {
+      if (error.response?.status === 404) {
+        console.debug("[useShyft] Token account does not exist:", error);
+        return null;
+      }
       console.error("[useShyft] Error fetching token balance:", error);
       throw error;
     }
