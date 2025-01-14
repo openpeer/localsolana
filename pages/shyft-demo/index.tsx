@@ -20,9 +20,7 @@ export default function ShyftRPCDemo() {
     getWalletBalance,
     getTokenBalance,
     getAllTokenBalance,
-    getAccountInfo,
-    relayTransaction
-  } = useShyft();
+    getAccountInfo  } = useShyft();
 
   const isValidPublicKey = (address: string) => {
     try {
@@ -128,18 +126,6 @@ export default function ShyftRPCDemo() {
       let method;
 
       try {
-        if (!shyft || !connection) {
-          throw new Error('Shyft or connection not initialized');
-        }
-
-        // Try relay first
-        console.log('Attempting to send via Shyft relay...');
-        txResult = await relayTransaction(transaction);
-        method = 'shyft-relay';
-
-      } catch (error) {
-        console.log('Relay failed, falling back to Shyft API...', error);
-        
         if (!shyft) {
           throw new Error('Shyft not initialized');
         }
@@ -147,6 +133,10 @@ export default function ShyftRPCDemo() {
         // Fallback to API if relay fails
         txResult = await sendTransactionWithShyft(transaction, true);
         method = 'shyft-api';
+
+      } catch (error) {
+        console.log('Relay failed, falling back to Shyft API...', error);
+
       }
 
       if (txResult) {
