@@ -1,3 +1,5 @@
+// hooks/transactions/useBalance.ts
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import useLocalSolana from './useLocalSolana';
