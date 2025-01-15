@@ -55,7 +55,7 @@ const OrderPage = ({ id }: { id: string }) => {
                     step: steps[getStatusString(data.status) || 'error'] 
                 }, {deep: true}));
 
-                return data.status !== 5;
+                return ![3, 5].includes(data.status);
             } catch (error) {
                 console.error('[OrderPage] Error fetching order:', error);
                 return true;
