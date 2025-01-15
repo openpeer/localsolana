@@ -12,7 +12,7 @@ import { countries } from "models/countries";
 import { Errors, Resolver } from "models/errors";
 import { Bank, List, Order, User } from "models/types";
 import { useRouter } from "next/router";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { truncate } from "utils";
 
 import snakecaseKeys from "snakecase-keys";
@@ -87,9 +87,21 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     "escrowState",
     true
   );
-  const { balance: balance } = useBalance(
+
+  // Memoize balance hook parameters
+  const balanceAddress = useMemo(() => 
     list.type === "SellList" ? sellerContract || "" : address || "",
+    [list.type, sellerContract, address]
+  );
+  
+  const balanceToken = useMemo(() => 
     token?.address || PublicKey.default.toBase58(),
+    [token?.address]
+  );
+
+  const { balance: balance } = useBalance(
+    balanceAddress,
+    balanceToken,
     true
   );
 
@@ -286,51 +298,43 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   function onChangeToken(val: number | undefined) {
     clearErrors(["tokenAmount"]);
     setInputSource('token');
-    // console.group('Token Input Change');
     
-    if (val) {
-      const truncatedVal = truncate(val, token.decimals);
-      setTokenAmount(truncatedVal);
-      if (price) {
-        const newFiatAmount = truncatedVal * price;
-        setFiatAmount(newFiatAmount);
-      }
+    setTokenAmount(val);
+    if (price && val !== undefined) {
+      // Round to 2 decimal places for fiat
+      const newFiatAmount = Math.round((val * price) * 100) / 100;
+      setFiatAmount(newFiatAmount);
     } else {
-      setTokenAmount(val);
       setFiatAmount(undefined);
     }
-    // console.groupEnd();
   }
 
   function onChangeFiat(val: number | undefined) {
     clearErrors(["fiatAmount"]);
     setInputSource('fiat');
-    // console.group('Fiat Input Change');
     
     setFiatAmount(val);
-    // Only recalculate tokens if fiat was the original input
-    if (price && val && inputSource === 'fiat') {
-      const rawTokenAmount = val / price;
-      const newTokenAmount = truncate(rawTokenAmount, token.decimals);
+    // Only update token if fiat was the input source
+    if (price && val !== undefined && inputSource === 'fiat') {
+      // Keep full precision for token amount
+      const newTokenAmount = val / price;
       setTokenAmount(newTokenAmount);
+    } else if (val === undefined) {
+      setTokenAmount(undefined);
     }
-    // console.groupEnd();
   }
 
-  useEffect(() => {
-    // console.group('Order State Update');
-    // console.log('Updating order with new amounts:', {
-    //   fiatAmount,
-    //   tokenAmount,
-    //   price,
-    //   tokenDecimals: token?.decimals
-    // });
+  // Memoize the order update callback
+  const handleOrderUpdate = useCallback(() => {
     updateOrder({
       ...order,
       ...{ fiatAmount, tokenAmount },
     });
-    // console.groupEnd();
-  }, [tokenAmount, fiatAmount]);
+  }, [order, fiatAmount, tokenAmount, updateOrder]);
+
+  useEffect(() => {
+    handleOrderUpdate();
+  }, [handleOrderUpdate]);
 
   useEffect(() => {
     if (!address) return;
@@ -411,7 +415,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
                 value={tokenAmount}
                 onChangeNumber={(t) => onChangeToken(t)}
                 type="decimal"
-                decimalScale={token.decimals}
+                decimalScale={18}
                 error={errors.tokenAmount}
               />
               <Input
@@ -428,6 +432,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
                 value={fiatAmount}
                 onChangeNumber={(f) => onChangeFiat(f)}
                 type="decimal"
+                decimalScale={18}
                 error={errors.fiatAmount}
               />
             </>
