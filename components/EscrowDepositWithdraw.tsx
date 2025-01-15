@@ -1,27 +1,21 @@
+// components/EscrowDepositWithdraw.tsx
 
 import React, { useEffect, useState } from 'react';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { Token } from 'models/types';
 import { useQRCode } from 'next-qrcode';
-//import { OpenPeerEscrow } from 'abis';//todo here we will import idl file
-import { Connection, PublicKey } from '@solana/web3.js';
-
-import { formatUnits } from 'viem';
-//import ClipboardText from './Buy/ClipboardText';
+import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useContractRead } from '@/hooks/transactions/useContractRead';
 import HeaderH3 from './SectionHeading/h3';
 import Switcher from './Button/Switcher';
 import Input from './Input/Input';
 import TokenImage from './Token/Token';
-//import DepositFunds from './DepositButton';
-//import ExplainerNotification from './Notifications/ExplainerNotification';
 import Button from './Button/Button';
-//import WithdrawFundsButton from './WithdrawButton/WithdrawFundsButton';
 import Loading from './Loading/Loading';
 import { CURRENT_NETWORK } from '@/utils';
 import ClipboardText from './Buy/ClipboardText';
 import DepositFunds from './DepositButton';
 import WithdrawFundsButton from './WithdrawButton/WithdrawFundsButton';
-
 
 interface EscrowDepositWithdrawProps {
 	token: Token;
@@ -41,30 +35,32 @@ const EscrowDepositWithdraw = ({
 	canWithdraw
 }: EscrowDepositWithdrawProps) => {
 	const { SVG } = useQRCode();
-	// const { data } = useContractRead({
-	// 	address: contract,
-	// 	abi: OpenPeerEscrow,
-	// 	functionName: 'balances',
-	// 	args: [token.address],
-	// 	enabled: !wrongChain,
-	// 	chainId: token.chain_id,
-	// 	watch: true
-	// });
-    // const useSolanaProgramRead = ({ programId, accountAddress }) => {
-    //     const [data, setData] = useState(null);
-    //     const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-    //     useEffect(() => {
-    //         connection.getAccountInfo(new PublicKey(accountAddress)).then((accountInfo) => {
-    //             setData(accountInfo);
-    //         });
-    //     }, [programId, accountAddress]);
+	const { data, loading, error, tokenBalances, solBalance } = useContractRead(contract, "escrowState", true);
 	const [type, setType] = useState<'Deposit' | 'Withdraw'>(action);
 	const [depositAmount, setDepositAmount] = useState<number>();
 
-	//const chain = allChains.find((c) => c.id === token.chain_id);
-
 	const deposit = type === 'Deposit';
-	//const balance =  0; //data ? Number(formatUnits(data as bigint, token.decimals)) :
+	
+	// Calculate balance based on token type (SOL or SPL)
+	const balance = React.useMemo(() => {
+		if (!token) return 0;
+		
+		try {
+			if (token.address === PublicKey.default.toBase58()) {
+				// For SOL, convert lamports to SOL
+				return solBalance / LAMPORTS_PER_SOL;
+			} else {
+				// For SPL tokens
+				const rawBalance = tokenBalances?.[token.address];
+				if (!rawBalance) return 0;
+				
+				return parseFloat(rawBalance) / Math.pow(10, token.decimals || 6);
+			}
+		} catch (err) {
+			console.error("[EscrowDepositWithdraw] Error calculating balance:", err);
+			return 0;
+		}
+	}, [token, solBalance, tokenBalances]);
 
 	useEffect(() => {
 		if (canDeposit && !canWithdraw) {
@@ -74,10 +70,27 @@ const EscrowDepositWithdraw = ({
 		}
 	}, [canDeposit, canWithdraw]);
 
+	if (loading) {
+		return <Loading />;
+	}
+
+	if (error) {
+		return (
+			<div className="px-6 w-full flex flex-col items-center mt-4 pt-4 md:pt-6 text-red-600">
+				Error loading escrow state: {error}
+			</div>
+		);
+	}
+
 	if (!canDeposit && !canWithdraw) {
 		return <Loading />;
 	}
 
+	const isValidAmount = (amount: number | undefined): boolean => {
+		if (amount === undefined || amount <= 0) return false;
+		if (type === 'Withdraw' && amount > balance) return false;
+		return true;
+	};
 
 	return (
 		<div className="px-6 w-full flex flex-col items-center mt-4 pt-4 md:pt-6 text-gray-700 relative">
@@ -118,7 +131,7 @@ const EscrowDepositWithdraw = ({
 								acknowledge receipt of funds before escrowed crypto is released on any trade.
 							</span>
 						) : (
-							<span>You can withdraw all your avaiable funds at any time.</span>
+							<span>You can withdraw all your available funds at any time.</span>
 						)}
 					</div>
 				
@@ -129,16 +142,14 @@ const EscrowDepositWithdraw = ({
 							<span>{token.symbol}</span>
 						</div>
 					</div>
-					{/* {data !== undefined && (
-						<div className="flex flex-row justify-between text-sm py-4 border-b border-gray-200">
-							<span>Balance</span>
-							<div className="flex flex-row items-center space-x-1">
-								<span className="font-bold">
-									{balance} {token.symbol}
-								</span>
-							</div>
+					<div className="flex flex-row justify-between text-sm py-4 border-b border-gray-200">
+						<span>Available Balance</span>
+						<div className="flex flex-row items-center space-x-1">
+							<span className="font-bold">
+								{balance.toFixed(token.decimals || 6)} {token.symbol}
+							</span>
 						</div>
-					)} */}
+					</div>
 					<div className="flex flex-col space-y-2 justify-center items-center mt-2">
 						<div className="w-full">
 							<Input
@@ -151,11 +162,12 @@ const EscrowDepositWithdraw = ({
 								onChangeNumber={setDepositAmount}
 								containerExtraStyle="mt-0 mb-2"
 							/>
-								{deposit ? (<DepositFunds
+							{deposit ? (
+								<DepositFunds
 									contract={contract}
 									token={token}
 									tokenAmount={depositAmount!}
-									disabled={(depositAmount || 0) <= 0}
+									disabled={!isValidAmount(depositAmount)}
 									onFundsDeposited={onBack}
 								/>
 							) : (
@@ -163,19 +175,23 @@ const EscrowDepositWithdraw = ({
 									contract={contract}
 									token={token}
 									tokenAmount={depositAmount!}
-									disabled={(depositAmount || 0) <= 0}
+									disabled={!isValidAmount(depositAmount)}
 									onFundsDWithdrawn={onBack}
 								/>
-							) }
+							)}
 						</div>
-						<span className="text-sm text-gray-500">Available funds can be withdrawn at any time</span>
+						<span className="text-sm text-gray-500">
+							{type === 'Withdraw' && balance > 0 
+								? `Maximum withdrawal amount: ${balance.toFixed(token.decimals || 6)} ${token.symbol}`
+								: 'Available funds can be withdrawn at any time'}
+						</span>
 					</div>
 					{deposit && (
 						<div className="mt-8">
 							<h2 className="block text-xl font-medium mb-1 font-bold my-8">
 								{`or send ${token.symbol} from your exchange`}
 							</h2>
-							<div className="mt-2 mb-4 border border-gray-200 rounded-lg py-8 px-4 md:px-8  flex flex-col xl:flex-row items-center">
+							<div className="mt-2 mb-4 border border-gray-200 rounded-lg py-8 px-4 md:px-8 flex flex-col xl:flex-row items-center">
 								<SVG
 									text={contract}
 									options={{
@@ -189,18 +205,6 @@ const EscrowDepositWithdraw = ({
 									<div className="mb-4">
 										<span className="font-bold">Send to Address</span>
 										<ClipboardText itemValue={contract} extraStyle="break-all" />
-									</div>
-									<div className="text-sm font-bold">
-										{/* <ExplainerNotification
-											title={
-												<div className="flex flex-row space-x-2">
-													<Network id={token.chain_id} size={20} />
-													<span className="text-sm">{chain?.name}</span>
-												</div>
-											}
-											content={`Only send on the ${chain?.name} network otherwise funds will be lost`}
-											disclaimer
-										/> */}
 									</div>
 								</div>
 							</div>
