@@ -298,43 +298,46 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   function onChangeToken(val: number | undefined) {
     clearErrors(["tokenAmount"]);
     setInputSource('token');
-    
     setTokenAmount(val);
-    if (price && val !== undefined) {
-      // Round to 2 decimal places for fiat
-      const newFiatAmount = Math.round((val * price) * 100) / 100;
-      setFiatAmount(newFiatAmount);
-    } else {
-      setFiatAmount(undefined);
+    
+    const newFiatAmount = val !== undefined && price ? Math.round((val * price) * 100) / 100 : undefined;
+    setFiatAmount(newFiatAmount);
+
+    // Update order here directly with proper type handling
+    const orderUpdate = {
+      ...order
+    };
+    if (val !== undefined) {
+      orderUpdate.token_amount = val;
+      orderUpdate.fiat_amount = newFiatAmount ?? 0;
     }
+    updateOrder(orderUpdate);
   }
 
   function onChangeFiat(val: number | undefined) {
     clearErrors(["fiatAmount"]);
     setInputSource('fiat');
-    
     setFiatAmount(val);
-    // Only update token if fiat was the input source
+    
     if (price && val !== undefined && inputSource === 'fiat') {
-      // Keep full precision for token amount
       const newTokenAmount = val / price;
       setTokenAmount(newTokenAmount);
-    } else if (val === undefined) {
+      
+      // Update order here directly with proper type handling
+      updateOrder({
+        ...order,
+        fiat_amount: val,
+        token_amount: newTokenAmount
+      });
+    } else {
       setTokenAmount(undefined);
+      updateOrder({
+        ...order,
+        fiat_amount: 0,
+        token_amount: 0
+      });
     }
   }
-
-  // Memoize the order update callback
-  const handleOrderUpdate = useCallback(() => {
-    updateOrder({
-      ...order,
-      ...{ fiatAmount, tokenAmount },
-    });
-  }, [order, fiatAmount, tokenAmount, updateOrder]);
-
-  useEffect(() => {
-    handleOrderUpdate();
-  }, [handleOrderUpdate]);
 
   useEffect(() => {
     if (!address) return;
