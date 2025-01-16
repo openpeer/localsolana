@@ -27,6 +27,8 @@ import { getAuthToken } from '@dynamic-labs/sdk-react-core';
  * @param {number} id - The listing ID to buy from
  */
 const BuyPage = ({ id }: { id: number }) => {
+	console.log('[BuyPage] Initializing with id:', id);
+	
 	/**
 	 * Component State:
 	 * @property {UIOrder} order - Current order state including list and payment details
@@ -40,17 +42,21 @@ const BuyPage = ({ id }: { id: number }) => {
 	const [showFilters, setShowFilters] = useState(false);
 	
 	const { list } = order;
-	const { price } = useListPrice(list);
+	const { price, error: priceError } = useListPrice(list);
 	const { address } = useAccount();
 
-	// console.log('BuyPage render:', {
-	// 	order,
-	// 	isLoading,
-	// 	error,
-	// 	hasPrice: !!price,
-	// 	hasList: !!list,
-	// 	hasAddress: !!address
-	// });
+	console.log('[BuyPage] Current state:', {
+		order,
+		isLoading,
+		error,
+		price,
+		priceError,
+		list,
+		address,
+		hasPrice: !!price,
+		hasList: !!list,
+		hasAddress: !!address
+	});
 
 	/**
 	 * Fetches list details and initializes order state
@@ -61,6 +67,7 @@ const BuyPage = ({ id }: { id: number }) => {
 	 * - Authorization errors
 	 */
 	useEffect(() => {
+		console.log('[BuyPage] Starting list fetch for id:', id);
 		setIsLoading(true);
 		setError(undefined);
 
@@ -70,10 +77,14 @@ const BuyPage = ({ id }: { id: number }) => {
 			}
 		})
 			.then(async (res) => {
+				console.log('[BuyPage] Received API response:', {
+					status: res.status,
+					ok: res.ok
+				});
 				const data = await res.json();
 				
 				if (!res.ok) {
-					console.error('API Error:', {
+					console.error('[BuyPage] API Error:', {
 						status: res.status,
 						data
 					});
@@ -82,6 +93,7 @@ const BuyPage = ({ id }: { id: number }) => {
 				return data;
 			})
 			.then((res) => {
+				console.log('[BuyPage] Processing successful response:', res);
 				const data = res.data;
 				setOrder({
 					...order,
@@ -91,15 +103,17 @@ const BuyPage = ({ id }: { id: number }) => {
 				});
 			})
 			.catch((err) => {
-				console.error('List fetch error details:', err);
+				console.error('[BuyPage] List fetch error:', err);
 				setError(err.message || 'Failed to load list details');
 			})
 			.finally(() => {
 				setIsLoading(false);
+				console.log('[BuyPage] Fetch completed, isLoading set to false');
 			});
 	}, [id]);
 
 	useEffect(() => {
+		console.log('[BuyPage] Price changed, updating order:', price);
 		setOrder({ ...order, ...{ price } });
 	}, [price]);
 
@@ -116,6 +130,20 @@ const BuyPage = ({ id }: { id: number }) => {
 		</div>
 	);
 	if (!order.list) return <Loading />;
+	if (priceError) return (
+		<div className="p-4 text-center max-w-lg mx-auto">
+			<div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-4">
+				<div className="text-amber-800 font-semibold text-lg mb-2">Price Temporarily Unavailable</div>
+				<div className="text-amber-700">{priceError}</div>
+			</div>
+			<button 
+				onClick={() => window.location.reload()}
+				className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+			>
+				Try Again
+			</button>
+		</div>
+	);
 
 	const seller = order.seller || order.list?.seller;
 	const canBuy = seller && seller.address !== address;
