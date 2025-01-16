@@ -44,22 +44,22 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	} = order;
 
 	// Add logging for payment method data
-	console.log('Payment Component - Full Order:', order);
-	console.log('Payment Component - Payment Method:', paymentMethod);
+	// console.log('Payment Component - Full Order:', order);
+	// console.log('Payment Component - Payment Method:', paymentMethod);
 
 	const { token, fiat_currency: currency, escrow_type: escrowType } = list!;
 	const { bank, values = {} } = paymentMethod;
 
 	// Add logging for bank and values
-	console.log('Payment Component - Bank Details:', bank);
-	console.log('Payment Component - Payment Values:', values);
+	// console.log('Payment Component - Bank Details:', bank);
+	// console.log('Payment Component - Payment Values:', values);
 
 	const { address } = useAccount();
 	const selling = seller.address === address;
 
 	// Log role and status
-	console.log('Payment Component - User Role:', selling ? 'Seller' : 'Buyer');
-	console.log('Payment Component - Order Status:', status);
+	// console.log('Payment Component - User Role:', selling ? 'Seller' : 'Buyer');
+	// console.log('Payment Component - Order Status:', status);
 
 	const { data: escrowData, loading } = useContractRead(
 		tradeId,
@@ -112,19 +112,19 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 	  }
 
 	// Add logging before escrow creation
-	useEffect(() => {
-		if (escrowData) {
-			console.log("Escrow Creation Context:", {
-				tradeId,
-				seller: seller.address,
-				buyer: buyer.address,
-				tokenAmount,
-				token: token.address,
-				escrowType,
-				paymentMethod
-			});
-		}
-	}, [escrowData, tradeId, seller, buyer, tokenAmount, token, escrowType, paymentMethod]);
+	// useEffect(() => {
+	// 	if (escrowData) {
+	// 		console.log("Escrow Creation Context:", {
+	// 			tradeId,
+	// 			seller: seller.address,
+	// 			buyer: buyer.address,
+	// 			tokenAmount,
+	// 			token: token.address,
+	// 			escrowType,
+	// 			paymentMethod
+	// 		});
+	// 	}
+	// }, [escrowData, tradeId, seller, buyer, tokenAmount, token, escrowType, paymentMethod]);
 
 	// Add validation before allowing escrow creation
 	const canCreateEscrow = useMemo(() => {
@@ -137,7 +137,7 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 			hasValidPaymentMethod: !!paymentMethod?.id
 		};
 		
-		console.log("Escrow Creation Validation:", validationResult);
+		// console.log("Escrow Creation Validation:", validationResult);
 		
 		return Object.values(validationResult).every(v => v === true);
 	}, [seller, buyer, tokenAmount, token, tradeId, paymentMethod]);
