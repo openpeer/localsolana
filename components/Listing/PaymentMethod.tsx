@@ -267,11 +267,13 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			id: paymentMethodCreation.id || Number(paymentMethodCreation.bank?.id),
 			bank: {
 				...paymentMethodCreation.bank!,
+				id: Number(paymentMethodCreation.bank?.id),
 				imageUrl: paymentMethodCreation.bank?.icon || 
 						 (paymentMethodCreation.bank?.image 
 							? `https://bankimg.localsolana.com/${paymentMethodCreation.bank.image}`
 							: ''),
 			},
+			bank_id: paymentMethodCreation.bank?.id?.toString(),
 			values: paymentMethodCreation.values || {}
 		};
 
@@ -284,10 +286,10 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 			setPaymentMethodCreation(null);
 		} else {
 			const payload = type === 'BuyList' ? {
-				bank_id: paymentMethodCreation.bank?.id
+				bank_id: paymentMethodCreation.bank?.id?.toString()
 			} : {
 				bank: {
-					id: paymentMethodCreation.bank?.id,
+					id: Number(paymentMethodCreation.bank?.id),
 					name: paymentMethodCreation.bank?.name || '',
 					color: paymentMethodCreation.bank?.color || '',
 					account_info_schema: paymentMethodCreation.bank?.account_info_schema || [],

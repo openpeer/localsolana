@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-curly-newline */
 import React, { useEffect, useState } from 'react';
-import { Bank, PaymentMethodForm as PaymentMethodFormType, AccountSchema } from 'models/types';
+import type { Bank, PaymentMethodForm, AccountSchema } from 'models/types';
 import Input from 'components/Input/Input';
 import BankSelect from 'components/Select/BankSelect';
 import { UIPaymentMethod } from './Listing.types';
@@ -11,8 +11,8 @@ import Image from 'next/image';
 interface PaymentMethodFormProps {
 	currencyId: number;
 	type: string;
-	paymentMethod: PaymentMethodFormType;
-	updatePaymentMethod: (pm: PaymentMethodFormType) => void;
+	paymentMethod: UIPaymentMethod;
+	updatePaymentMethod: (pm: UIPaymentMethod) => void;
 	onFinish: () => void;
 	bankIds?: number[];
 }
