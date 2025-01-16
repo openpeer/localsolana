@@ -16,7 +16,7 @@ const useListPrice = (list: List | undefined) => {
 		// Handle N/A or invalid price values
 		const calculatedPrice = String(list.calculatedPrice);
 		if (calculatedPrice === 'N/A') {
-			setError('The price is currently being calculated. This may take a few moments.');
+			setError('The price is currently being calculated. This may take a few moments. Or we may be unable to source a sufficiently reliable price source for this pair at this time.');
 			setPrice(undefined);
 			return;
 		}
