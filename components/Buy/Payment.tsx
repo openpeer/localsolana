@@ -42,12 +42,26 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 		payment_time_limit: paymentTimeLimit,
 		trade_id: tradeId
 	} = order;
+
+	// Add logging for payment method data
+	console.log('Payment Component - Full Order:', order);
+	console.log('Payment Component - Payment Method:', paymentMethod);
+
 	const { token, fiat_currency: currency, escrow_type: escrowType } = list!;
 	const { bank, values = {} } = paymentMethod;
+
+	// Add logging for bank and values
+	console.log('Payment Component - Bank Details:', bank);
+	console.log('Payment Component - Payment Values:', values);
+
 	const { address } = useAccount();
 	const selling = seller.address === address;
 
-	const { data: escrowData,loadingContract } = useContractRead(
+	// Log role and status
+	console.log('Payment Component - User Role:', selling ? 'Seller' : 'Buyer');
+	console.log('Payment Component - Order Status:', status);
+
+	const { data: escrowData, loading } = useContractRead(
 		tradeId,
 		"escrow",
 		true
