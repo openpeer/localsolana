@@ -45,6 +45,10 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	// Destructure required properties from the list
 	const { currency, paymentMethods = [], type, banks = [] } = list;
 	
+	// Add debug logging
+	// console.log('List Type:', type);
+	// console.log('List Data:', list);
+	
 	/**
 	 * State Management:
 	 * - paymentMethodCreation: Tracks the currently edited/created payment method
@@ -346,7 +350,7 @@ const PaymentMethod = ({ list, updateList }: ListStepProps) => {
 	return (
 		<StepLayout onProceed={paymentMethodCreation ? undefined : (canProceed ? onProceed : undefined)}>
 			<h2 className="text-xl mt-8 mb-2">Payment Methods</h2>
-			<p>{type === 'SellList' ? 'Choose how you want to pay' : 'Choose how you want to receive your money'}</p>
+			<p>{type === 'SellList' ? 'Choose how you want to receive your money' : 'Choose how you want to pay'}</p>
 			{isDataReady && listPaymentMethods.map((pm) => (
 				<div
 					key={`payment-method-${pm.id}`}
