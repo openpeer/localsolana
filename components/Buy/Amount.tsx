@@ -89,10 +89,15 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   );
 
   // Memoize balance hook parameters
-  const balanceAddress = useMemo(() => 
-    list.type === "SellList" ? sellerContract || "" : address || "",
-    [list.type, sellerContract, address]
-  );
+  const balanceAddress = useMemo(() => {
+    if (list.type === "SellList") {
+      // For sell lists, use the seller's escrow state address if available
+      return typeof sellerContract === 'string' ? sellerContract : 
+             order.list.seller.address || "";
+    }
+    // For buy lists, use the current user's address
+    return address || "";
+  }, [list.type, sellerContract, order.list.seller?.address, address]);
   
   const balanceToken = useMemo(() => 
     token?.address || PublicKey.default.toBase58(),
