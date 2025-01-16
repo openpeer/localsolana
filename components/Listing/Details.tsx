@@ -47,7 +47,7 @@ const Details = ({ list, updateList }: ListStepProps) => {
   );
 
   const { balance: balance, error: balanceError } = useBalance(
-    sellerContract || "",
+    typeof sellerContract === 'string' ? sellerContract : sellerContract?.seller || "",
     token?.address || PublicKey.default.toBase58(),
     true
   );
