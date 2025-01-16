@@ -305,7 +305,9 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     setInputSource('token');
     setTokenAmount(val);
     
-    const newFiatAmount = val !== undefined && price ? Math.round((val * price) * 100) / 100 : undefined;
+    const newFiatAmount = val !== undefined && price 
+      ? Math.round((val * price) * 100) / 100 
+      : undefined;
     setFiatAmount(newFiatAmount);
 
     // Update order here directly with proper type handling
@@ -324,8 +326,8 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     setInputSource('fiat');
     setFiatAmount(val);
     
-    if (price && val !== undefined && inputSource === 'fiat') {
-      const newTokenAmount = val / price;
+    if (price && val !== undefined) {
+      const newTokenAmount = Math.round((val / price) * 1e8) / 1e8;
       setTokenAmount(newTokenAmount);
       
       // Update order here directly with proper type handling
