@@ -55,7 +55,45 @@ const Details = ({ list, updateList }: ListStepProps) => {
   const contracts = (user?.contract_address);
   const router = useRouter();
 
-  // @ts-ignore
+  const needToDeploy = !sellerContract;
+  var   needToFund =
+    (balance ?? 0) == 0 ||
+    (balance || 0) < (list.totalAvailableAmount || 0);
+
+  // Add debug logging
+  console.log('Details.tsx - Debug State:', {
+    needToDeploy,
+    balance,
+    contractError,
+    user,
+    address,
+    isAuthenticated,
+    sellerContract,
+    balanceError,
+    type: list.type
+  });
+
+  const needToDeployOrFund =
+    escrowType === "instant"&&(needToDeploy || needToFund);
+
+  const { signMessage } = useConfirmationSignMessage({
+    onSuccess: async (data) => {
+      createList();
+    },
+  });
+
+  const onTermsChange = (value: string) => {
+    updateList({ ...list, ...{ terms: value } });
+  };
+
+  const onProceed = () => {
+    if (!needToDeployOrFund) {
+      const message = listToMessage(list);
+      //signMessage({ message });
+      createList();
+    }
+  };
+
   const createList = async () => {
     try {
         console.log("Details.tsx - Creating list");
@@ -131,33 +169,6 @@ const Details = ({ list, updateList }: ListStepProps) => {
     }
   };
 
-  const { signMessage } = useConfirmationSignMessage({
-    onSuccess: async (data) => {
-      createList();
-    },
-  });
-
-  const onTermsChange = (value: string) => {
-    updateList({ ...list, ...{ terms: value } });
-  };
-
-
-  const needToDeploy = !sellerContract
-  var   needToFund =
-    (balance ?? 0) == 0 ||
-    (balance || 0) < (list.totalAvailableAmount || 0);
-
-
-  const needToDeployOrFund =
-  escrowType === "instant"&&(needToDeploy || needToFund);
-
-  const onProceed = () => {
-    if (!needToDeployOrFund) {
-      const message = listToMessage(list);
-      //signMessage({ message });
-      createList();
-    }
-  };
   useEffect(() => {
 		if (sellerContract) {
 			const deployed = user?.contract_address;
@@ -177,7 +188,19 @@ const Details = ({ list, updateList }: ListStepProps) => {
     }
   }, [contractError, balanceError]);
 
-  if ((!needToDeploy && balance == null && !contractError) || user === undefined) {
+  if (
+    (type === 'SellList' && !needToDeploy && balance == null && !contractError) || 
+    user === undefined
+  ) {
+    console.log('Details.tsx - Returning Loading due to:', {
+      isSellList: type === 'SellList',
+      condition1: type === 'SellList' && !needToDeploy && balance == null && !contractError,
+      condition2: user === undefined,
+      needToDeploy,
+      balance,
+      contractError,
+      user
+    });
     return <Loading />;
   }
 
