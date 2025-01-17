@@ -302,46 +302,36 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 
   function onChangeToken(val: number | undefined) {
     clearErrors(["tokenAmount"]);
-    setInputSource('token');
     setTokenAmount(val);
-    
-    const newFiatAmount = val !== undefined && price 
-      ? Math.round((val * price) * 100) / 100 
-      : undefined;
-    setFiatAmount(newFiatAmount);
-
-    // Update order here directly with proper type handling
-    const orderUpdate = {
-      ...order
-    };
-    if (val !== undefined) {
-      orderUpdate.token_amount = val;
-      orderUpdate.fiat_amount = newFiatAmount ?? 0;
-    }
-    updateOrder(orderUpdate);
   }
 
   function onChangeFiat(val: number | undefined) {
     clearErrors(["fiatAmount"]);
-    setInputSource('fiat');
     setFiatAmount(val);
-    
-    if (price && val !== undefined) {
-      const newTokenAmount = Math.round((val / price) * 1e8) / 1e8;
-      setTokenAmount(newTokenAmount);
-      
-      // Update order here directly with proper type handling
+  }
+
+  function onTokenBlur() {
+    console.log('Token field blur - calculating fiat amount');
+    if (tokenAmount !== undefined && price) {
+      const newFiatAmount = Number((tokenAmount * price).toFixed(2));
+      setFiatAmount(newFiatAmount);
       updateOrder({
         ...order,
-        fiat_amount: val,
-        token_amount: newTokenAmount
+        token_amount: tokenAmount,
+        fiat_amount: newFiatAmount
       });
-    } else {
-      setTokenAmount(undefined);
+    }
+  }
+
+  function onFiatBlur() {
+    console.log('Fiat field blur - calculating token amount');
+    if (fiatAmount !== undefined && price) {
+      const newTokenAmount = Number((fiatAmount / price).toFixed(token.decimals));
+      setTokenAmount(newTokenAmount);
       updateOrder({
         ...order,
-        fiat_amount: 0,
-        token_amount: 0
+        fiat_amount: fiatAmount,
+        token_amount: newTokenAmount
       });
     }
   }
@@ -423,7 +413,8 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
                 }
                 id="amountToReceive"
                 value={tokenAmount}
-                onChangeNumber={(t) => onChangeToken(t)}
+                onChangeNumber={onChangeToken}
+                onBlur={onTokenBlur}
                 type="decimal"
                 decimalScale={18}
                 error={errors.tokenAmount}
@@ -440,7 +431,8 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
                 }
                 id="amountBuy"
                 value={fiatAmount}
-                onChangeNumber={(f) => onChangeFiat(f)}
+                onChangeNumber={onChangeFiat}
+                onBlur={onFiatBlur}
                 type="decimal"
                 decimalScale={18}
                 error={errors.fiatAmount}
