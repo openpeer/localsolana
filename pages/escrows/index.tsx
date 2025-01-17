@@ -215,7 +215,7 @@ const MyEscrows = () => {
 
   // Read contract data using a custom hook
   const { data: escrowData, loading: loadingContract, error: contractError, tokenBalances, solBalance } = useContractRead(
-    address || "",
+    user?.contract_address || "",
     "escrowState",
     true
   );
