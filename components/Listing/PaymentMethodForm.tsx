@@ -50,13 +50,15 @@ const PaymentMethodForm = ({
 			return false;
 		}
 
-		// Validate required fields
-		paymentMethod.bank.account_info_schema.forEach(field => {
-			const error = validateField(field.id, formValues[field.id] || '', field.required);
-			if (error) {
-				errors[field.id] = error;
-			}
-		});
+		// Only validate required fields for sellers
+		if (type === 'SellList') {
+			paymentMethod.bank.account_info_schema.forEach(field => {
+				const error = validateField(field.id, formValues[field.id] || '', field.required);
+				if (error) {
+					errors[field.id] = error;
+				}
+			});
+		}
 
 		setFormErrors(errors);
 		return Object.keys(errors).length === 0;
