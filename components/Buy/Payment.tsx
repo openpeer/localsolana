@@ -335,29 +335,31 @@ const Payment = ({ order,updateOrder }: BuyStepProps) => {
 					</p>
 				</div>
 				<div className="flex flex-col-reverse md:flex-row items-center justify-between mt-0">
-					<span className="w-full md:w-1/2 md:pr-8">
+					<span className="w-full md:w-1/3 md:pr-8">
 						<CancelOrderButton order={order} />
 					</span>
-					{status === 'created' && (selling || instantEscrow) && (
-						escrowState?
-						<EscrowButton
-							buyer={buyer.address}
-							token={token}
-							tokenAmount={tokenAmount || 0}
-							uuid={order.id.toString()}
-							tradeID= {order.trade_id}
-							instantEscrow={true}
-							seller={seller.address}
-							sellerWaitingTime={Number(paymentTimeLimit) * 60}
-							fromWallet={buyer.address!=address || !instantEscrow}
-						/>:<DeploySellerContract setContractAddress={handleContractUpdate}/>
-					)}
-					{status === 'escrowed' &&
-						(selling ? (
-							<ReleaseFundsButton order={order} dispute={false} />
-						) : (
-							<MarkAsPaidButton order={order} updateOrder={updateOrder} />
-						))}
+					<span className="w-full md:w-2/3 relative">
+						{status === 'created' && (selling || instantEscrow) && (
+							escrowState?
+							<EscrowButton
+								buyer={buyer.address}
+								token={token}
+								tokenAmount={tokenAmount || 0}
+								uuid={order.id.toString()}
+								tradeID= {order.trade_id}
+								instantEscrow={true}
+								seller={seller.address}
+								sellerWaitingTime={Number(paymentTimeLimit) * 60}
+								fromWallet={buyer.address!=address || !instantEscrow}
+							/>:<DeploySellerContract setContractAddress={handleContractUpdate}/>
+						)}
+						{status === 'escrowed' &&
+							(selling ? (
+								<ReleaseFundsButton order={order} dispute={false} />
+							) : (
+								<MarkAsPaidButton order={order} updateOrder={updateOrder} />
+							))}
+					</span>
 				</div>
 			</div>
 		</StepLayout>
