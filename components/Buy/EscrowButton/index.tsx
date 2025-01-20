@@ -23,9 +23,9 @@ const EscrowButton = ({
   const { address } = useAccount();
 
   const { data: sellerContract } = useContractRead(tradeID, "escrow", true);
-  const { data: fee, loadingContract } = useContractRead(tradeID, "fee", true);
+  const { data: fee, loading } = useContractRead(tradeID, "fee", true);
 
-  if (loadingContract || fee === undefined) return <></>;
+  if (loading || fee === undefined) return <></>;
 
   const needsToDeploy = !instantEscrow || !sellerContract;
 
