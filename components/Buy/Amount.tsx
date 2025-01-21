@@ -214,10 +214,12 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
         return;
     }
 
+    // console.log('Creating order - payment method values:', newOrder.payment_method?.values);
+
     // Format the request payload according to API expectations
     const orderPayload = {
         list_id: newOrder.list.id,
-        buyer_id: address, // Add the missing buyer_id
+        buyer_id: address,
         fiat_amount: newOrder.fiat_amount,
         token_amount: truncate(newOrder.token_amount, token.decimals),
         price: newOrder.price,
@@ -230,6 +232,8 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
             values: newOrder.payment_method.values || {}
         }
     };
+
+    // console.log('Order payload - payment method values:', orderPayload.payment_method.values);
 
     try {
         const result = await fetch("/api/createOrder/", {
@@ -363,7 +367,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
   }, [banks]);
 
   const handlePaymentMethodUpdate = useCallback((newOrder: UIOrder) => {
-    console.log('Payment method update:', newOrder);
+    // console.log('Payment method update - values:', newOrder.payment_method?.values);
     updateOrder(newOrder);
   }, [updateOrder]);
 
