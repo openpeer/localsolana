@@ -214,7 +214,8 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
         return;
     }
 
-    // console.log('Creating order - payment method values:', newOrder.payment_method?.values);
+    console.log('Creating order - input payment method:', newOrder.payment_method);
+    console.log('Creating order - input values:', newOrder.payment_method?.values);
 
     // Format the request payload according to API expectations
     const orderPayload = {
@@ -233,7 +234,8 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
         }
     };
 
-    // console.log('Order payload - payment method values:', orderPayload.payment_method.values);
+    console.log('Order payload before API call:', JSON.stringify(orderPayload, null, 2));
+    console.log('Payment method values in payload:', orderPayload.payment_method.values);
 
     try {
         const result = await fetch("/api/createOrder/", {
@@ -247,10 +249,12 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
 
         if (!result.ok) {
             const errorData = await result.json();
+            console.error('API Error Response:', errorData);
             throw new Error(errorData.error || 'Failed to create order');
         }
 
         const { data } = await result.json();
+        console.log('API Response data:', data);
    
         if (data.id) {
             let orderId = data.id;
