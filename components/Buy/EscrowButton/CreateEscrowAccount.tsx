@@ -48,7 +48,7 @@ const CreateEscrowAccount = ({
 
     const updateTrade = async () => {
         try {
-            const result = await fetch(`/api/updateOrder/?id=${orderId}`, {
+            const result = await fetch(`/api/updateOrder?id=${orderId}`, {
                 method: 'POST',
                 body: JSON.stringify({ status: 1 }),
                 headers: {

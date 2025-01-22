@@ -62,7 +62,7 @@ const EscrowFundsButton = ({
 	}, [escrowConfirmed]);
 
 	const updateTrade = async () => {
-		const result = await fetch(`/api/updateOrder/?id=${uuid}`, {
+		const result = await fetch(`/api/updateOrder?id=${uuid}`, {
 			method: 'POST',
 			body: JSON.stringify({status: 1}),
 			headers: {

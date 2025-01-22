@@ -105,7 +105,7 @@ const OpenDisputeButton = ({
   const updateOrderStatus = async () => {
     try {
       setIsUpdatingStatus(true);
-      const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
+      const result = await fetch(`/api/updateOrder?id=${order.id}`, {
         method: 'POST',
         body: JSON.stringify({ status: 4 }),
         headers: {

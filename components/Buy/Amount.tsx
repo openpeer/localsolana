@@ -196,7 +196,7 @@ const Amount = ({ order, updateOrder, price }: BuyAmountStepProps) => {
     }
   }, [isSuccess, data, orderID, router]);
   const updateTrade = async () => {
-		const result = await fetch(`/api/updateOrder/?id=${orderID}`, {
+		const result = await fetch(`/api/updateOrder?id=${orderID}`, {
 			method: 'POST',
 			body: JSON.stringify({status:1}),
 			headers: {

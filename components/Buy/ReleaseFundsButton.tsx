@@ -68,7 +68,7 @@ const ReleaseFundsButton = ({
 	const updateTrade = async () => {
 		try {
 			console.debug('[ReleaseFundsButton] Updating order status to completed');
-			const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
+			const result = await fetch(`/api/updateOrder?id=${order.id}`, {
 				method: 'POST',
 				body: JSON.stringify({ status: 5 }), // 5 = completed
 				headers: {

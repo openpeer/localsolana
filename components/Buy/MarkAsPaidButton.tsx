@@ -48,7 +48,7 @@ const MarkAsPaidButton = ({ order,updateOrder }: MarkAsPaidButtonParams) => {
 		}
 	},[ isSuccess,data]);
     const updateTrade = async () => {
-		const result = await fetch(`/api/updateOrder/?id=${order.id}`, {
+		const result = await fetch(`/api/updateOrder?id=${order.id}`, {
 			method: 'POST',
 			body: JSON.stringify({status:2}),
 			headers: {
