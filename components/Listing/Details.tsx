@@ -61,17 +61,17 @@ const Details = ({ list, updateList }: ListStepProps) => {
     (balance || 0) < (list.totalAvailableAmount || 0);
 
   // Add debug logging
-  console.log('Details.tsx - Debug State:', {
-    needToDeploy,
-    balance,
-    contractError,
-    user,
-    address,
-    isAuthenticated,
-    sellerContract,
-    balanceError,
-    type: list.type
-  });
+  // console.log('Details.tsx - Debug State:', {
+  //   needToDeploy,
+  //   balance,
+  //   contractError,
+  //   user,
+  //   address,
+  //   isAuthenticated,
+  //   sellerContract,
+  //   balanceError,
+  //   type: list.type
+  // });
 
   const needToDeployOrFund =
     escrowType === "instant"&&(needToDeploy || needToFund);
