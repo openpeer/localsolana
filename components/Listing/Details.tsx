@@ -1,7 +1,7 @@
 import { getAuthToken } from "@dynamic-labs/sdk-react-core";
 import { useConfirmationSignMessage, useAccount, useUserProfile } from "hooks";
 import { useRouter } from "next/router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import snakecaseKeys from "snakecase-keys";
 
 import { FiatCurrency, Token, User } from "models/types";
@@ -46,8 +46,11 @@ const Details = ({ list, updateList }: ListStepProps) => {
     true
   );
 
-  const { balance: balance, error: balanceError } = useBalance(
-    typeof sellerContract === 'string' ? sellerContract : sellerContract?.seller || "",
+  // Only fetch balance if we have a valid seller contract
+  const { balance, error: balanceError, loadingBalance } = useBalance(
+    sellerContract ? (
+      typeof sellerContract === 'string' ? sellerContract : sellerContract?.seller || ""
+    ) : "",
     token?.address || PublicKey.default.toBase58(),
     true
   );
@@ -56,25 +59,59 @@ const Details = ({ list, updateList }: ListStepProps) => {
   const router = useRouter();
 
   const needToDeploy = !sellerContract;
-  var   needToFund =
-    (balance ?? 0) == 0 ||
-    (balance || 0) < (list.totalAvailableAmount || 0);
 
-  // Add debug logging
-  // console.log('Details.tsx - Debug State:', {
-  //   needToDeploy,
-  //   balance,
-  //   contractError,
-  //   user,
-  //   address,
-  //   isAuthenticated,
-  //   sellerContract,
-  //   balanceError,
-  //   type: list.type
-  // });
+  // Only check balance if we have a valid seller contract
+  const needToFund = sellerContract ? (
+    (balance ?? 0) == 0 ||
+    (balance || 0) < (list.totalAvailableAmount || 0)
+  ) : false;
+
+  const lastStateRef = useRef<any>(null);
+  const lastLoadingReasonRef = useRef<string | null>(null);
+
+  // Debounced state logging
+  useEffect(() => {
+    const debounceTimeout = setTimeout(() => {
+      const stateSnapshot = {
+        needToDeploy,
+        balance,
+        hasContractError: !!contractError,
+        hasUser: !!user,
+        address,
+        isAuthenticated,
+        hasContract: !!sellerContract,
+        hasBalanceError: !!balanceError,
+        type: list.type,
+        loadingBalance
+      };
+
+      const hasChanged = JSON.stringify(stateSnapshot) !== JSON.stringify(lastStateRef.current);
+      if (hasChanged) {
+        console.log('Details.tsx - State Update:', stateSnapshot);
+        lastStateRef.current = stateSnapshot;
+      }
+    }, 1000);
+
+    return () => clearTimeout(debounceTimeout);
+  }, [needToDeploy, balance, contractError, user, sellerContract, balanceError, loadingBalance, address, isAuthenticated, list.type]);
+
+  // Loading state logging
+  const loadingReason = type === 'SellList' && (
+    user === undefined ? 'user loading' :
+    (!sellerContract && !contractError) ? 'contract loading' :
+    (sellerContract && balance === null && !balanceError && loadingBalance) ? 'balance loading' :
+    null
+  );
+
+  useEffect(() => {
+    if (loadingReason && lastLoadingReasonRef.current !== loadingReason) {
+      console.log('Details.tsx - Loading:', loadingReason);
+      lastLoadingReasonRef.current = loadingReason;
+    }
+  }, [loadingReason]);
 
   const needToDeployOrFund =
-    escrowType === "instant"&&(needToDeploy || needToFund);
+    escrowType === "instant" && (needToDeploy || needToFund);
 
   const { signMessage } = useConfirmationSignMessage({
     onSuccess: async (data) => {
@@ -179,28 +216,23 @@ const Details = ({ list, updateList }: ListStepProps) => {
 		}
 	}, [contracts, sellerContract]);
 
+  // Modified error handling
   useEffect(() => {
     if (contractError && !contractError.toString().includes("Unable to find LocalSolana account")) {
       console.error('Contract read error:', contractError);
     }
-    if (balanceError) {
+    if (balanceError && !balanceError.includes("Invalid parameters")) {
       console.error('Balance read error:', balanceError);
     }
   }, [contractError, balanceError]);
 
   if (
-    (type === 'SellList' && !needToDeploy && balance == null && !contractError) || 
-    user === undefined
+    type === 'SellList' && (
+      user === undefined ||
+      (address && !sellerContract && !contractError) ||
+      (sellerContract && balance === null && !balanceError && loadingBalance)
+    )
   ) {
-    console.log('Details.tsx - Returning Loading due to:', {
-      isSellList: type === 'SellList',
-      condition1: type === 'SellList' && !needToDeploy && balance == null && !contractError,
-      condition2: user === undefined,
-      needToDeploy,
-      balance,
-      contractError,
-      user
-    });
     return <Loading />;
   }
 

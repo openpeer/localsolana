@@ -61,22 +61,20 @@ export const useBalance = (
 
   // Extract address using type guards
   const extractedAddress = typeof addressInput === 'string' 
-    ? addressInput 
+    ? addressInput.trim() 
     : isAddressObject(addressInput)
-      ? addressInput.address
+      ? addressInput.address.trim()
       : isPublicKeyObject(addressInput)
-        ? addressInput.publicKey
+        ? addressInput.publicKey.trim()
         : null;
 
   // Enhanced address validation with specific error messages
   const isValidAddress = useCallback((addr: string | null): boolean => {
     if (!addr) {
-      console.debug("[useBalance] Empty or null address provided");
       return false;
     }
     
     if (addr.trim() === '') {
-      console.debug("[useBalance] Empty string address provided");
       return false;
     }
 
@@ -84,11 +82,6 @@ export const useBalance = (
       new PublicKey(addr);
       return true;
     } catch (err) {
-      if (err instanceof Error) {
-        console.debug("[useBalance] Invalid address format:", addr, err.message);
-      } else {
-        console.debug("[useBalance] Unknown error validating address:", addr);
-      }
       return false;
     }
   }, []);
@@ -101,7 +94,6 @@ export const useBalance = (
       new PublicKey(addr);
       return true;
     } catch (err) {
-      console.debug("[useBalance] Invalid token address format:", addr, err);
       return false;
     }
   }, []);
@@ -112,38 +104,31 @@ export const useBalance = (
 
   // Memoized fetch function
   const fetchBalance = useCallback(async () => {
-    // Skip if we're already loading or have an error
-    if (loadingBalance || error) return;
+    // Skip if we have an error that needs to be handled
+    if (error) return;
 
     // Early return if missing required params or invalid addresses
     if (!address || !tokenAddress || !isValidTokenAddress(tokenAddress)) {
-      console.debug("[useBalance] Missing or invalid parameters:", { 
-        address: address || extractedAddress, 
-        tokenAddress,
-        isValidAddress: address ? true : false,
-        isValidTokenAddress: isValidTokenAddress(tokenAddress)
-      });
-      
-      let errorMessage = "Invalid parameters: ";
-      if (!address) errorMessage += "invalid wallet address";
-      if (!tokenAddress) errorMessage += (errorMessage.length > 20 ? ", " : "") + "missing token address";
-      if (tokenAddress && !isValidTokenAddress(tokenAddress)) errorMessage += (errorMessage.length > 20 ? ", " : "") + "invalid token address";
-      
-      setError(errorMessage);
+      // Only set error if we have an actual address that's invalid
+      if (extractedAddress && extractedAddress.trim() !== '') {
+        setError("Invalid parameters: invalid wallet address");
+      } else {
+        // Just set balance to null and loading to false if no address provided
+        setBalance(null);
+        setError(null);
+      }
       setLoading(false);
       return;
     }
 
     // Early return if Shyft not ready
     if (!shyft) {
-      console.debug("[useBalance] Waiting for Shyft...");
       setLoading(true);
       return;
     }
 
     // Prevent concurrent requests
     if (fetchInProgress.current) {
-      console.debug("[useBalance] Already fetching balance, skipping");
       return;
     }
 
@@ -151,13 +136,9 @@ export const useBalance = (
       fetchInProgress.current = true;
       setLoading(true);
       setError(null);
-
-      console.debug("[useBalance] Fetching balance for address:", address, "token:", tokenAddress);
       
       if (tokenAddress === PublicKey.default.toBase58()) {
-        console.debug("[useBalance] Fetching SOL balance");
         const solBalance = await getWalletBalance(address);
-        console.debug("[useBalance] Raw SOL balance:", solBalance);
         
         if (solBalance === null) {
           throw new Error("Failed to fetch SOL balance");
@@ -180,9 +161,7 @@ export const useBalance = (
         }
         setError(null);
       } else {
-        console.debug("[useBalance] Fetching token balance");
         const tokenBalance = await getTokenBalance(address, tokenAddress);
-        console.debug("[useBalance] Token balance result:", tokenBalance);
         
         if (tokenBalance === null) {
           throw new Error("Failed to fetch token balance");
@@ -199,7 +178,7 @@ export const useBalance = (
       setLoading(false);
       fetchInProgress.current = false;
     }
-  }, [address, tokenAddress, getTokenBalance, getWalletBalance, shyft, connection, loadingBalance, error]);
+  }, [address, tokenAddress, getTokenBalance, getWalletBalance, shyft, connection, error]);
 
   // Effect for initial fetch and polling
   useEffect(() => {
