@@ -459,67 +459,90 @@ const useLocalSolana = () => {
     buyer: PublicKey,
     token: PublicKey
   ) => {
-    console.debug("[useLocalSolana:releaseFunds] Starting release funds", {
+    console.debug("[useLocalSolana:releaseFunds] Configuration:", {
+      programId: program?.programId.toString(),
       orderId,
       seller: seller.toString(),
       buyer: buyer.toString(),
-      token: token.toString()
+      token: token.toString(),
+      feeRecepient,
+      feePayer
     });
 
     if (!program || !provider || !feeRecepient || !feePayer) {
       console.error("[useLocalSolana:releaseFunds] Missing required dependencies", {
         program: !!program,
         provider: !!provider,
-        feeRecepient: feeRecepient,
-        feePayer: feePayer
+        feeRecepient,
+        feePayer
       });
       throw new Error("Program or provider is not initialized");
     }
 
     console.debug("[useLocalSolana:releaseFunds] Getting escrow PDA");
     let escrowPDA = await getEscrowPDA(orderId);
-    console.debug("[useLocalSolana:releaseFunds] Escrow PDA:", escrowPDA?.toString());
+    console.debug("[useLocalSolana:releaseFunds] PDA:", {
+      escrowPDA: escrowPDA?.toString()
+    });
+
+    if (!escrowPDA) {
+      throw new Error("Failed to derive PDA");
+    }
 
     console.debug("[useLocalSolana:releaseFunds] Setting up token accounts");
-    let escrowTokenAccount =
-      token == PublicKey.default
-        ? null
-        : await getAssociatedTokenAddress(token, escrowPDA!, true);
-    console.debug("[useLocalSolana:releaseFunds] Escrow token account:", escrowTokenAccount?.toString());
-
-    let feeTokenAccount =
-      token == PublicKey.default
-        ? null
-        : await getAssociatedTokenAddress(
-            token,
-            new PublicKey(feeRecepient),
-            true
-          );
-    console.debug("[useLocalSolana:releaseFunds] Fee token account:", feeTokenAccount?.toString());
-
-    let buyerTokenAccount =
-      token == PublicKey.default
-        ? null
-        : await getAssociatedTokenAddress(token, new PublicKey(buyer), true);
-    console.debug("[useLocalSolana:releaseFunds] Buyer token account:", buyerTokenAccount?.toString());
-
-    console.debug("[useLocalSolana:releaseFunds] Creating transaction");
-    const tx = await program.methods
-      .releaseFunds(orderId)
-      .accounts({
-        seller: seller,
-        buyer: buyer,
-        feeRecipient: new PublicKey(feeRecepient),
-        mintAccount: token,
-        feePayer: new PublicKey(feePayer),
-        feeRecipientTokenAccount: feeTokenAccount,
-        escrowTokenAccount: escrowTokenAccount,
-        buyerTokenAccount: buyerTokenAccount,
-      })
-      .transaction();
+    const isNativeSol = token.toString() === PublicKey.default.toString() || 
+                       token.toString() === "11111111111111111111111111111111";
     
-    console.debug("[useLocalSolana:releaseFunds] Transaction created:", tx);
-    return tx;
+    let escrowTokenAccount = isNativeSol
+      ? null
+      : await getAssociatedTokenAddress(token, escrowPDA, true);
+    let feeTokenAccount = isNativeSol
+      ? null
+      : await getAssociatedTokenAddress(token, new PublicKey(feeRecepient), true);
+    let buyerTokenAccount = isNativeSol
+      ? null
+      : await getAssociatedTokenAddress(token, buyer, true);
+
+    console.debug("[useLocalSolana:releaseFunds] Token accounts:", {
+      isNativeSol,
+      escrowTokenAccount: escrowTokenAccount?.toString(),
+      feeTokenAccount: feeTokenAccount?.toString(),
+      buyerTokenAccount: buyerTokenAccount?.toString()
+    });
+
+    try {
+      const tx = await program.methods
+        .releaseFunds(orderId)
+        .accounts({
+          seller,
+          buyer,
+          feeRecipient: new PublicKey(feeRecepient),
+          mintAccount: isNativeSol ? PublicKey.default : token,
+          feePayer: new PublicKey(feePayer),
+          feeRecipientTokenAccount: feeTokenAccount,
+          escrowTokenAccount,
+          buyerTokenAccount
+        })
+        .transaction();
+      
+      console.debug("[useLocalSolana:releaseFunds] Transaction created:", {
+        programId: program.programId.toString(),
+        instructions: tx.instructions.map(ix => ({
+          programId: ix.programId.toString(),
+          keys: ix.keys.map(k => ({
+            pubkey: k.pubkey.toString(),
+            isSigner: k.isSigner,
+            isWritable: k.isWritable
+          })),
+          data: Buffer.from(ix.data).toString('hex')
+        }))
+      });
+
+      return tx;
+    } catch (error) {
+      console.error("[useLocalSolana:releaseFunds] Error creating transaction:", error);
+      throw error;
+    }
   };
 
   const cancelOrderOnChain = async (
