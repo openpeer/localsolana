@@ -84,6 +84,51 @@ const paymentTimeLeft = timeLimitForPayment > 0 ? timeLimitForPayment - new Date
 
 The core blockchain cancellation logic is implemented in `hooks/transactions/useLocalSolana.ts`. This hook provides the interface between our frontend and the Solana program.
 
+### Seller Address Flow
+
+The seller's address, which determines where escrowed funds are returned, flows through several components:
+
+1. **Origin in BlockchainCancelButton**:
+   ```typescript
+   const { escrow, buyer, seller, trade_id: tradeId } = order;
+   // seller.address comes from the order object
+   ```
+
+2. **Passed to Hook**:
+   ```typescript
+   const { cancelOrder } = useGaslessEscrowCancel({
+     isBuyer: isBuyer,
+     orderID: order.id.toString(),
+     seller: seller.address,  // Passed from order object
+     token: token,
+     // ... other props
+   });
+   ```
+
+3. **Converted to PublicKey**:
+   ```typescript
+   // In useGaslessEscrowCancel.ts
+   const tx = await cancelOrderOnChain(
+     orderID,
+     new PublicKey(address||''),
+     new PublicKey(seller),  // Converted to PublicKey
+     new PublicKey(token.address)
+   );
+   ```
+
+4. **Used in Transaction**:
+   ```typescript
+   // In useLocalSolana.ts
+   const tx = await program.methods
+     .buyerCancel(orderId)
+     .accounts({
+       seller: seller, // Final use in transaction
+       // ... other accounts
+     })
+   ```
+
+This flow ensures that regardless of who initiates the cancellation, the funds always return to the original seller's address as recorded in the order.
+
 ### Key Implementation Details
 
 ```typescript
