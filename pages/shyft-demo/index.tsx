@@ -5,7 +5,7 @@ import useShyft from '@/hooks/transactions/useShyft';
 import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 import { toast } from 'react-toastify';
 
-export default function ShyftRPCDemo() {
+export default function SolanaRPCDemo() {
   const [walletAddress, setWalletAddress] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
   const [tokenAddress, setTokenAddress] = useState('');
@@ -14,13 +14,13 @@ export default function ShyftRPCDemo() {
   const [loading, setLoading] = useState(false);
 
   const {
-    shyft,
     connection,
     sendTransactionWithShyft,
     getWalletBalance,
     getTokenBalance,
     getAllTokenBalance,
-    getAccountInfo  } = useShyft();
+    getAccountInfo
+  } = useShyft();
 
   const isValidPublicKey = (address: string) => {
     try {
@@ -121,23 +121,9 @@ export default function ShyftRPCDemo() {
         })
       );
 
-      // Try both Shyft methods to demonstrate the difference
-      let txResult;
-      let method;
-
-      try {
-        if (!shyft) {
-          throw new Error('Shyft not initialized');
-        }
-
-        // Fallback to API if relay fails
-        txResult = await sendTransactionWithShyft(transaction, true);
-        method = 'shyft-api';
-
-      } catch (error) {
-        console.log('Relay failed, falling back to Shyft API...', error);
-
-      }
+      // Send transaction via RPC
+      const txResult = await sendTransactionWithShyft(transaction, true);
+      const method = 'solana-rpc';
 
       if (txResult) {
         // Convert signature if it's in character array format
@@ -156,7 +142,7 @@ export default function ShyftRPCDemo() {
           status: 'Success',
           details: {
             signature,
-            method, // Shows which Shyft method was used
+            method,
             transaction: {
               from: walletAddress,
               to: recipientAddress,
@@ -237,8 +223,7 @@ export default function ShyftRPCDemo() {
 
   return (
     <div className="max-w-6xl mx-auto p-8">
-
-      <h1 className="text-3xl font-bold mb-8">Shyft RPC Demo</h1>
+      <h1 className="text-3xl font-bold mb-8">Solana RPC Demo</h1>
 
       <div className="space-y-8">
         {/* Wallet Information Section */}
@@ -330,36 +315,44 @@ export default function ShyftRPCDemo() {
 
         {/* Results Section */}
         <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Results</h2>
-        {loading ? (
-          <div className="flex justify-center">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : results ? (
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium mb-2">Transaction Details</h3>
-              <div className="space-y-2">
-                <p><span className="font-medium">Status:</span> {results.status}</p>
-                <p><span className="font-medium">Method:</span> {results.details.method}</p>
-                <p><span className="font-medium">From:</span> {results.details.transaction.from}</p>
-                <p><span className="font-medium">To:</span> {results.details.transaction.to}</p>
-                <p><span className="font-medium">Amount:</span> {results.details.transaction.amount}</p>
-                <p className="font-medium">Signature:</p>
-                <p className="break-all text-sm font-mono bg-gray-100 p-2 rounded">
-                  {results.details.signature}
-                </p>
-                {results.details.explorerLinks && renderExplorerLinks(results.details.explorerLinks)}
-              </div>
+          <h2 className="text-xl font-semibold mb-4">Results</h2>
+          {loading ? (
+            <div className="flex justify-center">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <pre className="bg-gray-50 p-4 rounded overflow-auto max-h-96 text-sm font-mono">
-              {JSON.stringify(results, null, 2)}
-            </pre>
-          </div>
-        ) : (
-          <p className="text-gray-500">No results to display</p>
-        )}
-      </div>
+          ) : results ? (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-2">Transaction Details</h3>
+                <div className="space-y-2">
+                  <p><span className="font-medium">Status:</span> {results.status}</p>
+                  <p><span className="font-medium">Method:</span> {results.details?.method}</p>
+                  {results.details?.transaction && (
+                    <>
+                      <p><span className="font-medium">From:</span> {results.details.transaction.from}</p>
+                      <p><span className="font-medium">To:</span> {results.details.transaction.to}</p>
+                      <p><span className="font-medium">Amount:</span> {results.details.transaction.amount}</p>
+                    </>
+                  )}
+                  {results.details?.signature && (
+                    <>
+                      <p className="font-medium">Signature:</p>
+                      <p className="break-all text-sm font-mono bg-gray-100 p-2 rounded">
+                        {results.details.signature}
+                      </p>
+                    </>
+                  )}
+                  {results.details?.explorerLinks && renderExplorerLinks(results.details.explorerLinks)}
+                </div>
+              </div>
+              <pre className="bg-gray-50 p-4 rounded overflow-auto max-h-96 text-sm font-mono">
+                {JSON.stringify(results, null, 2)}
+              </pre>
+            </div>
+          ) : (
+            <p className="text-gray-500">No results to display</p>
+          )}
+        </div>
       </div>
     </div>
   );
