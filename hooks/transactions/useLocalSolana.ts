@@ -554,6 +554,7 @@ const useLocalSolana = () => {
     if (!program || !provider || !feeRecepient || !feePayer || !arbitrator) {
       throw new Error("Program or provider is not initialized");
     }
+    
     let escrowPDA = await getEscrowPDA(orderId);
     let escrowStatePDA = await getEscrowStatePDA(seller.toBase58());
 
@@ -566,10 +567,12 @@ const useLocalSolana = () => {
         ? null
         : await getAssociatedTokenAddress(token, escrowStatePDA!, true);
 
+    // The program only has a buyer_cancel instruction
+    // We must ensure the seller parameter is the actual seller's address
     const tx = await program.methods
       .buyerCancel(orderId)
       .accounts({
-        seller: cancelledBy,
+        seller: seller, // Always use the actual seller address for correct fund routing
         feePayer: feePayer,
         escrowStateTokenAccount: escrowStateTokenAccount,
         escrowTokenAccount: escrowTokenAccount,
