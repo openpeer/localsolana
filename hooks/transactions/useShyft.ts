@@ -17,10 +17,14 @@ import idl from '@/idl/local_solana_migrate.json';
 import { logShyftOperation } from "@/utils/shyftLogger";
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
 
 // Cache implementation
 const CACHE_DURATION = 10000; // 10 seconds
+const DEBOUNCE_DURATION = 2000; // 2 seconds
 const balanceCache = new Map<string, { balance: number; timestamp: number }>();
+const pendingRequests = new Map<string, Promise<number>>();
 
 const getCachedBalance = async (
   connection: Connection,
@@ -30,34 +34,56 @@ const getCachedBalance = async (
   const key = `${address}-${tokenAddress || 'SOL'}`;
   const cached = balanceCache.get(key);
   
+  // Return cached value if still valid
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.balance;
   }
 
-  let balance: number;
-  
-  if (!tokenAddress || tokenAddress === PublicKey.default.toBase58()) {
-    // Get SOL balance using RPC
-    balance = await connection.getBalance(new PublicKey(address));
-    balance = balance / 1e9; // Convert lamports to SOL
-  } else {
-    try {
-      // Get token account
-      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-        new PublicKey(address),
-        { mint: new PublicKey(tokenAddress) }
-      );
-      
-      // Get balance from the first account that matches the token
-      balance = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
-    } catch (error) {
-      console.error("[useShyft] Error fetching token balance:", error);
-      balance = 0;
-    }
+  // Check if there's already a pending request for this key
+  const pendingRequest = pendingRequests.get(key);
+  if (pendingRequest) {
+    return pendingRequest;
   }
 
-  balanceCache.set(key, { balance, timestamp: Date.now() });
-  return balance;
+  // Create new request
+  const fetchPromise = (async () => {
+    let balance: number;
+    
+    if (!tokenAddress || tokenAddress === PublicKey.default.toBase58()) {
+      // Get SOL balance using RPC
+      balance = await connection.getBalance(new PublicKey(address));
+      balance = balance / 1e9; // Convert lamports to SOL
+    } else {
+      try {
+        // Get token account
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+          new PublicKey(address),
+          { mint: new PublicKey(tokenAddress) }
+        );
+        
+        // Get balance from the first account that matches the token
+        balance = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      } catch (error) {
+        console.error("[useShyft] Error fetching token balance:", error);
+        balance = 0;
+      }
+    }
+
+    // Cache the result
+    balanceCache.set(key, { balance, timestamp: Date.now() });
+    
+    // Remove from pending requests after a debounce period
+    setTimeout(() => {
+      pendingRequests.delete(key);
+    }, DEBOUNCE_DURATION);
+
+    return balance;
+  })();
+
+  // Store the pending request
+  pendingRequests.set(key, fetchPromise);
+  
+  return fetchPromise;
 };
 
 // Helper function to convert string network to ShyftSdk Network enum
@@ -78,12 +104,58 @@ const getCachedBalance = async (
 const useShyft = () => {
   // const [shyft, setShyft] = useState<ShyftSdk | null>(null);
   const { primaryWallet } = useDynamicContext();
-  const { provider, program, idl, connection } = useLocalSolana();
+  const { provider, program, idl, connection: localSolanaConnection } = useLocalSolana();
+  const [connection, setConnection] = useState<Connection | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   // 1) Grab environment variables directly
   // const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
   // Provide a default fallback for safety
   const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta";
+
+  // Initialize connection with retry logic
+  useEffect(() => {
+    let mounted = true;
+    let retryTimeout: NodeJS.Timeout;
+
+    const initConnection = async () => {
+      try {
+        console.debug("[useShyft] Initializing connection to:", SOLANA_RPC_URL);
+        const conn = new Connection(SOLANA_RPC_URL, {
+          commitment: 'confirmed',
+          confirmTransactionInitialTimeout: 60000
+        });
+
+        // Test connection
+        await conn.getVersion();
+        
+        if (mounted) {
+          console.debug("[useShyft] Connection established successfully");
+          setConnection(conn);
+          setIsInitializing(false);
+        }
+      } catch (err) {
+        console.error("[useShyft] Failed to initialize connection:", err);
+        
+        if (mounted) {
+          console.error("[useShyft] Using fallback connection.");
+          setConnection(localSolanaConnection);
+          setIsInitializing(false);
+        }
+      }
+    };
+
+    if (!connection) {
+      initConnection();
+    }
+
+    return () => {
+      mounted = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [connection, localSolanaConnection]);
 
   // useEffect(() => {
   //   console.debug("[useShyft] Running effect to initialize Shyft. SOLANA_NETWORK:", SOLANA_NETWORK);
@@ -328,6 +400,7 @@ const useShyft = () => {
   return {
     // shyft,
     connection,
+    isInitializing,
     sendTransactionWithShyft,
     getWalletBalance,
     getTokenBalance,
