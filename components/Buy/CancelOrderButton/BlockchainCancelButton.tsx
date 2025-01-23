@@ -30,11 +30,11 @@ const BlockchainCancelButton = ({ order, outlined, title = 'Cancel Order' }: Blo
 	const [modalOpen, setModalOpen] = useState(false);
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);
 
-	const { data: escrowData, loadingContract } = useContractRead(
+	const { data: escrowData, loading: loadingContract } = useContractRead(
 		tradeId,
 		"escrow",
 		true
-	  );
+	);
 	const { isLoading, isSuccess, cancelOrder, data, isFetching } = useGaslessEscrowCancel({
 		isBuyer:isBuyer,
 		orderID:order.id.toString(),
