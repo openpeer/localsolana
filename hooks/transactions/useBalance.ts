@@ -16,14 +16,18 @@ const isPublicKeyObject = (input: AddressInput): input is { publicKey: string } 
   return typeof input === 'object' && 'publicKey' in input;
 };
 
+const POLL_INTERVAL = 15000; // 15 seconds
+
+interface AddressObject {
+  address?: string;
+  publicKey?: string;
+}
+
 /**
  * Custom hook to fetch and monitor SOL or token balances for a Solana address.
- * @param addressInput - The Solana wallet address to check the balance for. Can be:
- *                    - A string containing the address
- *                    - An object with an `address` property
- *                    - An object with a `publicKey` property
+ * @param addressInput - The Solana wallet address to check the balance for
  * @param tokenAddress - The token's mint address. Use PublicKey.default.toBase58() for SOL balance
- * @param watch - If true, polls for balance updates every 8 seconds
+ * @param watch - If true, polls for balance updates every 15 seconds
  * @param refreshTrigger - Increment this value to force a balance refresh
  * @returns {Object} Returns an object containing:
  *                   - balance: number | null - The current balance
@@ -46,7 +50,7 @@ const isPublicKeyObject = (input: AddressInput): input is { publicKey: string } 
  * const { balance } = useBalance("ADDRESS", "TOKEN_ADDRESS", true);
  */
 export const useBalance = (
-  addressInput: AddressInput,
+  addressInput: string | AddressObject | undefined,
   tokenAddress: string,
   watch = false,
   refreshTrigger = 0
@@ -57,16 +61,12 @@ export const useBalance = (
   const fetchInProgress = useRef(false);
   
   const {connection} = useLocalSolana();
-  const {shyft, getTokenBalance, getWalletBalance} = useShyft();
+  const {getTokenBalance, getWalletBalance} = useShyft();
 
-  // Extract address using type guards
-  const extractedAddress = typeof addressInput === 'string' 
-    ? addressInput.trim() 
-    : isAddressObject(addressInput)
-      ? addressInput.address.trim()
-      : isPublicKeyObject(addressInput)
-        ? addressInput.publicKey.trim()
-        : null;
+  // Extract address from input
+  const address = typeof addressInput === 'string'
+    ? addressInput
+    : addressInput?.address || addressInput?.publicKey;
 
   // Enhanced address validation with specific error messages
   const isValidAddress = useCallback((addr: string | null): boolean => {
@@ -98,9 +98,7 @@ export const useBalance = (
     }
   }, []);
 
-  const address = extractedAddress && isValidAddress(extractedAddress) 
-    ? extractedAddress 
-    : null;
+  const isValid = address && isValidAddress(address) && isValidTokenAddress(tokenAddress);
 
   // Memoized fetch function
   const fetchBalance = useCallback(async () => {
@@ -108,9 +106,9 @@ export const useBalance = (
     if (error) return;
 
     // Early return if missing required params or invalid addresses
-    if (!address || !tokenAddress || !isValidTokenAddress(tokenAddress)) {
+    if (!address || !tokenAddress || !isValid) {
       // Only set error if we have an actual address that's invalid
-      if (extractedAddress && extractedAddress.trim() !== '') {
+      if (address && address.trim() !== '') {
         setError("Invalid parameters: invalid wallet address");
       } else {
         // Just set balance to null and loading to false if no address provided
@@ -121,8 +119,8 @@ export const useBalance = (
       return;
     }
 
-    // Early return if Shyft not ready
-    if (!shyft) {
+    // Early return if connection not ready
+    if (!connection) {
       setLoading(true);
       return;
     }
@@ -178,26 +176,18 @@ export const useBalance = (
       setLoading(false);
       fetchInProgress.current = false;
     }
-  }, [address, tokenAddress, getTokenBalance, getWalletBalance, shyft, connection, error]);
+  }, [address, tokenAddress, getTokenBalance, getWalletBalance, connection, error, isValid]);
 
   // Effect for initial fetch and polling
   useEffect(() => {
-    let pollInterval: NodeJS.Timeout;
     let mounted = true;
-    let lastFetchTime = 0;
-    const MIN_FETCH_INTERVAL = 5000; // Minimum 5 seconds between fetches
+    let pollInterval: NodeJS.Timeout | null = null;
 
     const runFetch = async () => {
       if (!mounted || fetchInProgress.current) return;
       
-      const now = Date.now();
-      if (now - lastFetchTime < MIN_FETCH_INTERVAL) {
-        return;
-      }
-
       try {
         await fetchBalance();
-        lastFetchTime = now;
       } catch (err) {
         console.error("[useBalance] Error in polling fetch:", err);
       }
@@ -208,7 +198,7 @@ export const useBalance = (
 
     // Setup polling if watch is true
     if (watch) {
-      pollInterval = setInterval(runFetch, 8000);
+      pollInterval = setInterval(runFetch, POLL_INTERVAL);
     }
 
     return () => {

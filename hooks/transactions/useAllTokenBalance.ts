@@ -1,103 +1,75 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Connection, PublicKey } from '@solana/web3.js';
-import useLocalSolana from './useLocalSolana';
+import { useEffect, useState } from 'react';
 import useShyft from './useShyft';
-import { TokenBalance } from '@shyft-to/js';
+
+interface TokenBalanceInfo {
+  address: string;
+  balance: number;
+  mint: string;
+  decimals: number;
+}
+
+const POLL_INTERVAL = 15000; // 15 seconds
 
 /**
  * Custom hook to fetch and monitor all token balances for a Solana address
  * @param address - The Solana wallet address to check balances for
- * @param watch - If true, polls for balance updates every 8 seconds
+ * @param watch - If true, polls for balance updates every 15 seconds
  * @param refreshTrigger - Increment this value to force a balance refresh
  */
 export const useAllTokenBalance = (
-  address: string, 
+  address: string | undefined,
   watch = false,
   refreshTrigger = 0
 ) => {
-  const [balances, setBalances] = useState<TokenBalance[] | null>(null);
-  const [loadingBalance, setLoading] = useState<boolean>(true);
+  const [balances, setBalances] = useState<TokenBalanceInfo[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const fetchInProgress = useRef(false);
-  
-  const {connection} = useLocalSolana();
-  const {shyft, getAllTokenBalance} = useShyft();
+  const { getAllTokenBalance } = useShyft();
 
-  // Memoized fetch function
-  const fetchBalance = useCallback(async () => {
-    // Early return if missing required params
-    if (!address) {
-      console.debug("[useAllTokenBalance] Missing address");
-      setError("Missing address");
-      setLoading(false);
-      return;
-    }
-
-    // Early return if Shyft not ready
-    if (!shyft) {
-      console.debug("[useAllTokenBalance] Waiting for Shyft...");
-      setLoading(true);
-      return;
-    }
-
-    // Prevent concurrent requests
-    if (fetchInProgress.current) {
-      console.debug("[useAllTokenBalance] Already fetching balances, skipping");
-      return;
-    }
-
-    try {
-      fetchInProgress.current = true;
-      setLoading(true);
-      setError(null);
-
-      console.debug("[useAllTokenBalance] Fetching balances for address:", address);
-      const balance = await getAllTokenBalance(address);
-      console.debug("[useAllTokenBalance] Token balances:", balance);
-      
-      // Only update state if we got valid balances
-      if (balance) {
-        setBalances(balance);
-        setError(null);
-      } else {
-        setError("No balance data received");
-        setBalances(null);
-      }
-    } catch (err: any) {
-      console.error("[useAllTokenBalance] Error fetching balances:", err);
-      setError(err.message);
-      setBalances(null);
-    } finally {
-      setLoading(false);
-      fetchInProgress.current = false;
-    }
-  }, [address, getAllTokenBalance, shyft]);
-
-  // Effect for initial fetch and polling
   useEffect(() => {
-    let pollInterval: NodeJS.Timeout;
+    let mounted = true;
+    let pollInterval: NodeJS.Timeout | null = null;
 
-    // Initial fetch
-    if (!fetchInProgress.current) {
-      fetchBalance();
-    }
+    const fetchBalances = async () => {
+      if (!address) {
+        setBalances([]);
+        setLoading(false);
+        return;
+      }
 
-    // Setup polling if watch is true
-    if (watch) {
-      pollInterval = setInterval(() => {
-        if (!fetchInProgress.current) {
-          fetchBalance();
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await getAllTokenBalance(address);
+        
+        if (mounted) {
+          setBalances(result);
+          setLoading(false);
         }
-      }, 8000);
+      } catch (err) {
+        console.error('[useAllTokenBalance] Error fetching balances:', err);
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch token balances');
+          setBalances([]);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchBalances();
+
+    if (watch) {
+      pollInterval = setInterval(fetchBalances, POLL_INTERVAL);
     }
 
     return () => {
+      mounted = false;
       if (pollInterval) {
         clearInterval(pollInterval);
       }
     };
-  }, [watch, refreshTrigger, fetchBalance]);
+  }, [address, watch, refreshTrigger, getAllTokenBalance]);
 
-  return { balances, loadingBalance, error };
+  return { balances, loading, error };
 };
