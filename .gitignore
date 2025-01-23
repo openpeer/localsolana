@@ -46,3 +46,4 @@ package-lock.json
 auth_token.txt
 .cursorrules
 /pages/auth-token.tsx
+logs/
