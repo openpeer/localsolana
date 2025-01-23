@@ -1,6 +1,6 @@
 import { getAuthToken, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isSolanaWallet } from "@dynamic-labs/solana-core";
-import { Network, ShyftSdk } from "@shyft-to/js";
+// import { Network, ShyftSdk } from "@shyft-to/js";
 import {
   Connection,
   PublicKey,
@@ -13,65 +13,115 @@ import { BLOCK_EXPLORER } from "utils";
 import useLocalSolana from "./useLocalSolana";
 import { feePayer } from "@/utils/constants";
 import snakecaseKeys from "snakecase-keys";
+import idl from '@/idl/local_solana_migrate.json';
+import { logShyftOperation } from "@/utils/shyftLogger";
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
 
-// Helper function to convert string network to ShyftSdk Network enum
-const getShyftNetwork = (network: string): Network => {
-  switch (network.toLowerCase()) {
-    case "mainnet-beta":
-    case "mainnet":
-      return Network.Mainnet;
-    case "devnet":
-      return Network.Devnet;
-    case "testnet":
-      return Network.Testnet;
-    default:
-      return Network.Devnet; // Default to devnet if unknown
+// Cache implementation
+const CACHE_DURATION = 10000; // 10 seconds
+const balanceCache = new Map<string, { balance: number; timestamp: number }>();
+
+const getCachedBalance = async (
+  connection: Connection,
+  address: string,
+  tokenAddress?: string
+): Promise<number> => {
+  const key = `${address}-${tokenAddress || 'SOL'}`;
+  const cached = balanceCache.get(key);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.balance;
   }
+
+  let balance: number;
+  
+  if (!tokenAddress || tokenAddress === PublicKey.default.toBase58()) {
+    // Get SOL balance using RPC
+    balance = await connection.getBalance(new PublicKey(address));
+    balance = balance / 1e9; // Convert lamports to SOL
+  } else {
+    try {
+      // Get token account
+      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+        new PublicKey(address),
+        { mint: new PublicKey(tokenAddress) }
+      );
+      
+      // Get balance from the first account that matches the token
+      balance = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+    } catch (error) {
+      console.error("[useShyft] Error fetching token balance:", error);
+      balance = 0;
+    }
+  }
+
+  balanceCache.set(key, { balance, timestamp: Date.now() });
+  return balance;
 };
 
+// Helper function to convert string network to ShyftSdk Network enum
+// const getShyftNetwork = (network: string): Network => {
+//   switch (network.toLowerCase()) {
+//     case "mainnet-beta":
+//     case "mainnet":
+//       return Network.Mainnet;
+//     case "devnet":
+//       return Network.Devnet;
+//     case "testnet":
+//       return Network.Testnet;
+//     default:
+//       return Network.Devnet; // Default to devnet if unknown
+//   }
+// };
+
 const useShyft = () => {
-  const [shyft, setShyft] = useState<ShyftSdk | null>(null);
+  // const [shyft, setShyft] = useState<ShyftSdk | null>(null);
   const { primaryWallet } = useDynamicContext();
   const { provider, program, idl, connection } = useLocalSolana();
   
   // 1) Grab environment variables directly
-  const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
+  // const SHYFT_API_KEY = process.env.NEXT_PUBLIC_SHYFT_API_KEY;
   // Provide a default fallback for safety
   const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta";
 
-  useEffect(() => {
-    console.debug("[useShyft] Running effect to initialize Shyft. SOLANA_NETWORK:", SOLANA_NETWORK);
-    const initializeShyft = async () => {
-      try {
-        if(!SHYFT_API_KEY){
-          throw new Error("Error Initializing signer: No SHYFT_API_KEY found");
-        }
+  // useEffect(() => {
+  //   console.debug("[useShyft] Running effect to initialize Shyft. SOLANA_NETWORK:", SOLANA_NETWORK);
+  //   const initializeShyft = async () => {
+  //     try {
+  //       if(!SHYFT_API_KEY){
+  //         throw new Error("Error Initializing signer: No SHYFT_API_KEY found");
+  //       }
 
-        const shyftInstance = new ShyftSdk({
-          apiKey: SHYFT_API_KEY,
-          network: getShyftNetwork(SOLANA_NETWORK),
-        });
-        setShyft(shyftInstance);
-      } catch (err) {
-        console.error("[useShyft] Error in initializeShyft:", err);
-      }
-    };
+  //       const shyftInstance = new ShyftSdk({
+  //         apiKey: SHYFT_API_KEY,
+  //         network: getShyftNetwork(SOLANA_NETWORK),
+  //       });
+  //       setShyft(shyftInstance);
+  //     } catch (err) {
+  //       console.error("[useShyft] Error in initializeShyft:", err);
+  //     }
+  //   };
 
-    initializeShyft();
-  }, [SHYFT_API_KEY, SOLANA_NETWORK]);
+  //   initializeShyft();
+  // }, [SHYFT_API_KEY, SOLANA_NETWORK]);
 
   const sendTransactionWithShyft = async (
     transaction: Transaction,
     localSignRequired: boolean,
     orderId?: string
   ) => {
-    console.debug("[useShyft] sendTransactionWithShyft called. shyft:", shyft);
-    if(!shyft){
-      console.error("[useShyft] Shyft is null or undefined. Throwing error now...");
-      throw new Error("Shyft not initialized");
-    }
+    logShyftOperation('sendTransaction', {
+      orderId,
+      localSignRequired,
+      network: SOLANA_NETWORK
+    });
+
+    // console.debug("[useShyft] sendTransactionWithShyft called. shyft:", shyft);
+    // if(!shyft){
+    //   console.error("[useShyft] Shyft is null or undefined. Throwing error now...");
+    //   throw new Error("Shyft not initialized");
+    // }
     if (!feePayer) {
       throw new Error("Fee payer is not set in env");
     }
@@ -205,47 +255,68 @@ const useShyft = () => {
     }
   };
 
-  const getWalletBalance = async (address: string) => {
+  const getWalletBalance = async (address: string): Promise<number> => {
+    logShyftOperation('getWalletBalance', { address });
+
     if (!connection) {
       console.error("[useShyft:getWalletBalance] No Solana connection is available");
-      return null;
+      return 0;
     }
-    const lamports = await connection.getBalance(new PublicKey(address));
-    const sol = lamports / 1e9;
-    return sol;
+
+    try {
+      return await getCachedBalance(connection, address);
+    } catch (error) {
+      console.error("[useShyft] Error fetching SOL balance:", error);
+      return 0;
+    }
   };
 
-  const getTokenBalance = async (address: string, tokenAddress: string) => {
-    if (!shyft) return null;
-    
+  const getTokenBalance = async (address: string, tokenAddress: string): Promise<number> => {
+    logShyftOperation('getTokenBalance', { address, tokenAddress });
+
+    if (!connection) {
+      console.error("[useShyft:getTokenBalance] No Solana connection is available");
+      return 0;
+    }
+
     try {
-      const response = await shyft.wallet.getTokenBalance({
-        token: tokenAddress,
-        wallet: address,
-      });
-      
-      if (!response || typeof response.balance === 'undefined') {
-        throw new Error('Invalid response from Shyft API');
-      }
-      
-      return response.balance;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        console.debug("[useShyft] Token account does not exist:", error);
-        return null;
-      }
+      return await getCachedBalance(connection, address, tokenAddress);
+    } catch (error) {
       console.error("[useShyft] Error fetching token balance:", error);
-      throw error;
+      return 0;
     }
   };
 
   const getAllTokenBalance = async (address: string) => {
-    if (!shyft) return null;
-    const balance = await shyft.wallet.getAllTokenBalance({ wallet: address });
-    return balance;
+    logShyftOperation('getAllTokenBalance', { address });
+
+    if (!connection) {
+      console.error("[useShyft:getAllTokenBalance] No Solana connection is available");
+      return [];
+    }
+
+    try {
+      // Get all token accounts
+      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+        new PublicKey(address),
+        { programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') }
+      );
+
+      return tokenAccounts.value.map(account => ({
+        address: account.pubkey.toBase58(),
+        balance: account.account.data.parsed.info.tokenAmount.uiAmount,
+        mint: account.account.data.parsed.info.mint,
+        decimals: account.account.data.parsed.info.tokenAmount.decimals
+      }));
+    } catch (error) {
+      console.error("[useShyft] Error fetching all token balances:", error);
+      return [];
+    }
   };
 
   const getAccountInfo = async (address: string) => {
+    logShyftOperation('getAccountInfo', { address });
+
     if (!connection) return null;
     
     const accountInfo = await connection.getAccountInfo(
@@ -255,7 +326,7 @@ const useShyft = () => {
   };
 
   return {
-    shyft,
+    // shyft,
     connection,
     sendTransactionWithShyft,
     getWalletBalance,
