@@ -16,6 +16,8 @@ const PAYMENT_METHOD_STEP = 2;
 const RELEASE_STEP = 3;
 const COMPLETED_STEP = 4;
 const CANCELLED_STEP = 5;
+const POLL_INTERVAL = 30000; // 30 seconds between order status checks
+const FINAL_STATUSES = [3, 5]; // Status codes that indicate order completion
 
 const steps: { [key: string]: number } = {
     created: PAYMENT_METHOD_STEP,
@@ -35,6 +37,7 @@ const OrderPage = ({ id }: { id: string }) => {
 
     useEffect(() => {
         console.debug("[OrderPage] Effect starting new render cycle");
+
         const fetchOrder = async () => {
             try {
                 console.debug("[OrderPage] Fetching order data...");
@@ -46,8 +49,11 @@ const OrderPage = ({ id }: { id: string }) => {
                 const result = await response.json();
                 const data = result.data;
                 
-                console.debug("[OrderPage] Order status:", data.status);
-                console.debug("[OrderPage] Full order data:", data);
+                // Only log status changes
+                if (!order || order.status !== data.status) {
+                    console.debug("[OrderPage] Order status:", data.status);
+                    console.debug("[OrderPage] Full order data:", data);
+                }
 
                 setOrder(snakecaseKeys({ 
                     ...data, 
@@ -55,7 +61,7 @@ const OrderPage = ({ id }: { id: string }) => {
                     step: steps[getStatusString(data.status) || 'error'] 
                 }, {deep: true}));
 
-                return ![3, 5].includes(data.status);
+                return !FINAL_STATUSES.includes(data.status);
             } catch (error) {
                 console.error('[OrderPage] Error fetching order:', error);
                 return true;
@@ -77,7 +83,7 @@ const OrderPage = ({ id }: { id: string }) => {
                             pollInterval = null;
                         }
                     }
-                }, 10000);
+                }, POLL_INTERVAL);
             } else {
                 console.debug("[OrderPage] Order is already closed, not starting polling");
             }

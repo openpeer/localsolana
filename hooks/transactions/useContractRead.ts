@@ -6,7 +6,6 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import useLocalSolana from "./useLocalSolana";
 import { BN } from "@coral-xyz/anchor";
 import useAccount from "../useAccount";
-import useShyft from "./useShyft";
 
 // Debug logging utility that only logs in development
 const debugLog = (...args: any[]) => {
@@ -37,6 +36,11 @@ interface TokenAccount {
   };
 }
 
+// Add at the top with other constants
+const POLL_INTERVAL = 30000; // Increase to 30 seconds
+const TOKEN_BALANCE_CACHE_DURATION = 20000; // 20 seconds cache for token balances
+const tokenBalanceCache = new Map<string, { balances: { [key: string]: string }; timestamp: number }>();
+
 export const useContractRead = (contractAddress: string | EscrowStateData, method: string, watch?: boolean) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -45,11 +49,10 @@ export const useContractRead = (contractAddress: string | EscrowStateData, metho
   const [solBalance, setSolBalance] = useState<number>(0);
 
   const { connection } = useLocalSolana();
-  const { shyft } = useShyft();
 
   const contractAddressStr = typeof contractAddress === 'string' ? contractAddress : contractAddress.seller;
 
-  const processTokenAccounts = useCallback((accounts: TokenAccount[]) => {
+  const processTokenAccounts = useCallback((accounts: TokenAccount[], contractKey: string) => {
     const newTokenBalances: { [key: string]: string } = {};
     const balanceLog: { mint: string; uiAmount: number; raw: string }[] = [];
 
@@ -64,6 +67,12 @@ export const useContractRead = (contractAddress: string | EscrowStateData, metho
       } catch (err) {
         console.error("[useContractRead] Error parsing token account:", err);
       }
+    });
+
+    // Cache the token balances
+    tokenBalanceCache.set(contractKey, {
+      balances: newTokenBalances,
+      timestamp: Date.now()
     });
 
     // Single consolidated log for all token balances
@@ -112,20 +121,26 @@ export const useContractRead = (contractAddress: string | EscrowStateData, metho
               setSolBalance(newSolBalance);
             }
 
-            const escrowStateTokenAccounts = await connection.getParsedTokenAccountsByOwner(
-              publicKey,
-              { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
-            );
-
-            if (!escrowStateTokenAccounts?.value?.length) {
-              debugLog("[useContractRead] No token accounts found");
-              setTokenBalances({});
+            // Check cache for token balances
+            const cachedTokenBalances = tokenBalanceCache.get(contractAddressStr);
+            if (cachedTokenBalances && (Date.now() - cachedTokenBalances.timestamp) < TOKEN_BALANCE_CACHE_DURATION) {
+              setTokenBalances(cachedTokenBalances.balances);
             } else {
-              const newTokenBalances = processTokenAccounts(escrowStateTokenAccounts.value);
-              
-              // Only update if balances have changed
-              if (JSON.stringify(newTokenBalances) !== JSON.stringify(tokenBalances)) {
-                setTokenBalances(newTokenBalances);
+              const escrowStateTokenAccounts = await connection.getParsedTokenAccountsByOwner(
+                publicKey,
+                { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
+              );
+
+              if (!escrowStateTokenAccounts?.value?.length) {
+                debugLog("[useContractRead] No token accounts found");
+                setTokenBalances({});
+              } else {
+                const newTokenBalances = processTokenAccounts(escrowStateTokenAccounts.value, contractAddressStr);
+                
+                // Only update if balances have changed
+                if (JSON.stringify(newTokenBalances) !== JSON.stringify(tokenBalances)) {
+                  setTokenBalances(newTokenBalances);
+                }
               }
             }
 
@@ -164,7 +179,7 @@ export const useContractRead = (contractAddress: string | EscrowStateData, metho
     fetchData();
 
     if (watch) {
-      pollInterval = setInterval(fetchData, 8000);
+      pollInterval = setInterval(fetchData, POLL_INTERVAL);
     }
 
     return () => {

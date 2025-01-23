@@ -16,7 +16,9 @@ const isPublicKeyObject = (input: AddressInput): input is { publicKey: string } 
   return typeof input === 'object' && 'publicKey' in input;
 };
 
-const POLL_INTERVAL = 15000; // 15 seconds
+// Update the polling interval
+const POLL_INTERVAL = 30000; // Increase to 30 seconds
+const MIN_FETCH_INTERVAL = 20000; // Minimum 20 seconds between fetches
 
 interface AddressObject {
   address?: string;
@@ -59,6 +61,8 @@ export const useBalance = (
   const [loadingBalance, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const fetchInProgress = useRef(false);
+  const lastFetchTime = useRef<number>(0);
+  const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {connection} = useLocalSolana();
   const {getTokenBalance, getWalletBalance} = useShyft();
@@ -125,8 +129,9 @@ export const useBalance = (
       return;
     }
 
-    // Prevent concurrent requests
-    if (fetchInProgress.current) {
+    // Prevent concurrent requests and respect minimum interval
+    const now = Date.now();
+    if (fetchInProgress.current || (now - lastFetchTime.current < MIN_FETCH_INTERVAL)) {
       return;
     }
 
@@ -135,10 +140,12 @@ export const useBalance = (
       setLoading(true);
       setError(null);
       
+      let newBalance: number | null = null;
+      
       if (tokenAddress === PublicKey.default.toBase58()) {
-        const solBalance = await getWalletBalance(address);
+        newBalance = await getWalletBalance(address);
         
-        if (solBalance === null) {
+        if (newBalance === null) {
           throw new Error("Failed to fetch SOL balance");
         }
 
@@ -149,25 +156,24 @@ export const useBalance = (
             const rentExemptAmount = await connection.getMinimumBalanceForRentExemption(
               accountInfo.data.length
             );
-            const usableBalance = (solBalance - rentExemptAmount/1e9);
-            setBalance(usableBalance < 0 ? 0 : usableBalance);
-          } else {
-            setBalance(solBalance);
+            const usableBalance = (newBalance - rentExemptAmount/1e9);
+            newBalance = usableBalance < 0 ? 0 : usableBalance;
           }
-        } else {
-          setBalance(solBalance);
         }
-        setError(null);
       } else {
-        const tokenBalance = await getTokenBalance(address, tokenAddress);
+        newBalance = await getTokenBalance(address, tokenAddress);
         
-        if (tokenBalance === null) {
+        if (newBalance === null) {
           throw new Error("Failed to fetch token balance");
         }
-        
-        setBalance(tokenBalance);
-        setError(null);
       }
+
+      // Only update state if value has changed
+      if (newBalance !== balance) {
+        setBalance(newBalance);
+      }
+      setError(null);
+      lastFetchTime.current = now;
     } catch (err: any) {
       console.error("[useBalance] Error fetching balance:", err);
       setError(err.message);
@@ -176,35 +182,37 @@ export const useBalance = (
       setLoading(false);
       fetchInProgress.current = false;
     }
-  }, [address, tokenAddress, getTokenBalance, getWalletBalance, connection, error, isValid]);
+  }, [address, tokenAddress, connection, isValid, error, balance, getWalletBalance, getTokenBalance]);
 
   // Effect for initial fetch and polling
   useEffect(() => {
     let mounted = true;
-    let pollInterval: NodeJS.Timeout | null = null;
 
     const runFetch = async () => {
       if (!mounted || fetchInProgress.current) return;
-      
-      try {
-        await fetchBalance();
-      } catch (err) {
-        console.error("[useBalance] Error in polling fetch:", err);
-      }
+      await fetchBalance();
     };
 
-    // Initial fetch
-    runFetch();
+    // Initial fetch with a small delay to prevent race conditions
+    const initialFetchTimeout = setTimeout(runFetch, 100);
 
     // Setup polling if watch is true
     if (watch) {
-      pollInterval = setInterval(runFetch, POLL_INTERVAL);
+      // Clear existing timeout if any
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+      }
+      
+      // Setup new polling
+      pollTimeoutRef.current = setInterval(runFetch, POLL_INTERVAL);
     }
 
     return () => {
       mounted = false;
-      if (pollInterval) {
-        clearInterval(pollInterval);
+      clearTimeout(initialFetchTimeout);
+      if (pollTimeoutRef.current) {
+        clearInterval(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
       }
     };
   }, [watch, refreshTrigger, fetchBalance]);
