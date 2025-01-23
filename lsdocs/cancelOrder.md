@@ -32,6 +32,183 @@ Required when:
 - Requires on-chain transaction
 - Different rules apply for buyers and sellers
 
+## Seller Cancellation Rules
+
+Sellers face specific restrictions on when they can cancel orders. These rules are implemented across multiple components:
+
+### 1. Time-based Restrictions
+
+Located in `components/Buy/CancelOrderButton/BlockchainCancelButton.tsx`:
+```typescript
+const sellerCanCancelAfter = ((escrowData?.sellerCanCancelAfter ?? new BN(0)) as BN).toNumber();
+const sellerCanCancelAfterSeconds = parseInt(sellerCanCancelAfter.toString(), 10);
+const now = Date.now() / 1000;
+const sellerCantCancel = isSeller && (sellerCanCancelAfterSeconds <= 1 || sellerCanCancelAfterSeconds > now);
+```
+
+### 2. Payment Status Restrictions
+
+Located in `components/Buy/Payment.tsx`:
+```typescript
+const timeLimitForPayment =
+  status === 'escrowed' && order.escrow && sellerCanCancelAfter && sellerCanCancelAfterSeconds > 0
+    ? sellerCanCancelAfterSeconds * 1000
+    : 0;
+const paymentTimeLeft = timeLimitForPayment > 0 ? timeLimitForPayment - new Date().getTime() : 0;
+```
+
+### 3. Cancellation Rules Summary
+
+1. **Time Window Restrictions**:
+   - Sellers cannot cancel immediately after escrow
+   - Must wait for `sellerCanCancelAfter` seconds to pass
+   - Time window starts when order is marked as paid
+
+2. **Payment Status Restrictions**:
+   - Cannot cancel if order is marked as paid AND within payment time limit
+   - Payment time limit is set during escrow creation
+   - Displayed to users in UI via countdown timer
+
+3. **Implementation Details**:
+   - Time checks are done both client-side and on-chain
+   - Uses blockchain timestamp for validation
+   - Enforced in `BlockchainCancelButton` component
+   - Additional validation in `useLocalSolana.ts`
+
+4. **UI Feedback**:
+   - Button is disabled when seller cannot cancel
+   - Shows remaining time before cancellation is possible
+   - Displays "You cannot cancel" message during restricted period
+
+## Blockchain Implementation
+
+The core blockchain cancellation logic is implemented in `hooks/transactions/useLocalSolana.ts`. This hook provides the interface between our frontend and the Solana program.
+
+### Key Implementation Details
+
+```typescript
+const cancelOrderOnChain = async (
+  orderId: string,
+  cancelledBy: PublicKey,
+  seller: PublicKey,
+  token: PublicKey
+) => {
+  // ... initialization checks ...
+  
+  let escrowPDA = await getEscrowPDA(orderId);
+  let escrowStatePDA = await getEscrowStatePDA(seller.toBase58());
+
+  // Set up token accounts if needed
+  let escrowTokenAccount =
+    token == PublicKey.default
+      ? null
+      : await getAssociatedTokenAddress(token, escrowPDA!, true);
+  let escrowStateTokenAccount =
+    token == PublicKey.default
+      ? null
+      : await getAssociatedTokenAddress(token, escrowStatePDA!, true);
+
+  // Create the cancellation transaction
+  const tx = await program.methods
+    .buyerCancel(orderId)
+    .accounts({
+      seller: seller, // Always use actual seller address for correct fund routing
+      feePayer: feePayer,
+      escrowStateTokenAccount: escrowStateTokenAccount,
+      escrowTokenAccount: escrowTokenAccount,
+    })
+    .transaction();
+  return tx;
+};
+```
+
+### Program Derived Addresses (PDAs)
+
+1. **Escrow PDA**:
+   ```typescript
+   const getEscrowPDA = (orderId: string) => {
+     const [escrowPda_, _escrowStateBump] = PublicKey.findProgramAddressSync(
+       [Buffer.from("escrow"), Buffer.from(orderId)],
+       program.programId
+     );
+     return escrowPda_;
+   };
+   ```
+   - Unique address for each order's escrow account
+   - Derived from order ID and program ID
+   - Holds escrowed funds and order state
+
+2. **Escrow State PDA**:
+   ```typescript
+   const getEscrowStatePDA = (address: string) => {
+     const [escrowStatePda_, _escrowStateBump] = PublicKey.findProgramAddressSync(
+       [Buffer.from("escrow_state"), new PublicKey(address).toBuffer()],
+       program.programId
+     );
+     return escrowStatePda_;
+   };
+   ```
+   - Tracks seller's escrow state
+   - Derived from seller's address
+   - Used for token account management
+
+### Error Handling
+
+1. **Initialization Checks**:
+   ```typescript
+   if (!program || !provider || !feeRecepient || !feePayer || !arbitrator) {
+     throw new Error("Program or provider is not initialized");
+   }
+   ```
+
+2. **Transaction Validation** (in `useGaslessEscrowCancel.ts`):
+   ```typescript
+   const cancelOrder = async () => {
+     try {
+       setIsLoading(true);
+       const tx = await cancelOrderOnChain(/*...*/);
+       const finalTx = await sendTransactionWithShyft(tx, true, orderID);
+       // ... success handling
+     } catch (error) {
+       console.error('error', error);
+       setIsLoading(false);
+       setIsSuccess(false);
+       return false;
+     }
+   };
+   ```
+
+3. **UI Error Feedback**:
+   ```typescript
+   toast.error('Error cancelling the order', {
+     theme: 'dark',
+     position: 'top-right',
+     autoClose: 5000,
+     hideProgressBar: false,
+     closeOnClick: true,
+     pauseOnHover: true,
+     draggable: false,
+     progress: undefined
+   });
+   ```
+
+### Important Notes
+
+1. **Program Constraints**:
+   - The Solana program only provides a `buyer_cancel` instruction
+   - No separate `seller_cancel` instruction exists
+   - The transaction always requires the correct seller address for proper fund routing
+
+2. **Fund Routing**:
+   - The `seller` parameter in the transaction determines where funds are returned
+   - Must always be the original seller's address, regardless of who initiates cancellation
+   - This ensures escrowed funds return to their rightful owner
+
+3. **Token Handling**:
+   - Supports both native SOL and SPL tokens
+   - For SPL tokens, additional token accounts are set up
+   - Uses PDAs (Program Derived Addresses) for escrow accounts
+
 ## Handling of Escrowed Funds
 
 When an order with escrowed funds is cancelled, the following process occurs:
