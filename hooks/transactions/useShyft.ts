@@ -120,7 +120,7 @@ const useShyft = () => {
 
     const initConnection = async () => {
       try {
-        console.debug("[useShyft] Initializing connection to:", SOLANA_RPC_URL);
+        console.debug("[useShyft] Initializing connection to:  SOLANA_RPC_URL");
         const conn = new Connection(SOLANA_RPC_URL, {
           commitment: 'confirmed',
           confirmTransactionInitialTimeout: 60000
@@ -186,17 +186,13 @@ const useShyft = () => {
     logShyftOperation('sendTransaction', {
       orderId,
       localSignRequired,
-      network: SOLANA_NETWORK
     });
 
-    // console.debug("[useShyft] sendTransactionWithShyft called. shyft:", shyft);
-    // if(!shyft){
-    //   console.error("[useShyft] Shyft is null or undefined. Throwing error now...");
-    //   throw new Error("Shyft not initialized");
-    // }
     if (!feePayer) {
       throw new Error("Fee payer is not set in env");
     }
+
+    // Create a temporary connection just for simulation
     const connection = new Connection(SOLANA_RPC_URL);
     const recentBlockhash = await connection.getLatestBlockhash('confirmed');
     transaction.recentBlockhash = recentBlockhash.blockhash;
@@ -241,7 +237,7 @@ const useShyft = () => {
     });
     const base64Transaction = serializedTransaction.toString("base64");
 
-    // here use fetch to hit an api to send orderid and base64Transaction in port request
+    // Send to backend for processing
     const result = await fetch("/api/processTransaction/", {
       method: "POST",
       body: JSON.stringify(
@@ -258,70 +254,50 @@ const useShyft = () => {
         "Content-Type": "application/json",
       },
     });
-    const { data,status,message } = await result.json();
-    console.log('Response of Signing',data, 'status is ',status,message);
-    if(status !== 200){
+
+    const { data, status, message } = await result.json();
+    console.log('Response of Signing', data, 'status is ', status, message);
+
+    if (status !== 200) {
       try {
-            const errorMessage = message.message || message.toString();
-            const parsedError = JSON.parse(errorMessage.match(/{.*}/)[0]);
-            let finalMessage;
-            if (
-              parsedError.InstructionError &&
-              Array.isArray(parsedError.InstructionError)
-            ) {
-              const [index, instructionError] = parsedError.InstructionError;
-              if (instructionError.Custom !== undefined) {
-               finalMessage= idl.errors.find(error => error.code == instructionError.Custom)?.msg || "Unable to process transaction";
-              }else{
-                finalMessage = instructionError;
-              }
-              toast.error(`${finalMessage}`, {
-                theme: "dark",
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: false,
-                progress: undefined,
-              });
-              return null;
-            }else{
-              toast.error(`${parsedError || errorMessage}`, {
-                theme: "dark",
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: false,
-                progress: undefined,
-              });
-              return null;
-            }
-          } catch (parsingError) {
-            toast.error(`${parsingError}`, {
-              theme: "dark",
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: false,
-              progress: undefined,
-            });
+        const errorMessage = message.message || message.toString();
+        const parsedError = JSON.parse(errorMessage.match(/{.*}/)[0]);
+        let finalMessage;
+
+        if (parsedError.InstructionError && Array.isArray(parsedError.InstructionError)) {
+          const [index, instructionError] = parsedError.InstructionError;
+          if (instructionError.Custom !== undefined) {
+            finalMessage = idl.errors.find(error => error.code == instructionError.Custom)?.msg || "Unable to process transaction";
+          } else {
+            finalMessage = instructionError;
           }
+          toast.error(`${finalMessage}`, {
+            theme: "dark",
+            position: "top-right",
+            autoClose: 5000,
+          });
           return null;
-    }else{
+        } else {
+          toast.error(`${parsedError || errorMessage}`, {
+            theme: "dark",
+            position: "top-right",
+            autoClose: 5000,
+          });
+          return null;
+        }
+      } catch (parsingError) {
+        toast.error(`${parsingError}`, {
+          theme: "dark",
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+      return null;
+    } else {
       toast.success(`Transaction Successful.`, {
         theme: "dark",
         position: "top-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: false,
-        progress: undefined,
       });
       return data;
     }

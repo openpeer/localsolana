@@ -215,27 +215,48 @@ const useLocalSolana = () => {
     partner: string,
     automaticEscrow: boolean
   ) => {
+    console.debug("[createEscrowSol] Starting escrow creation with params:", {
+      orderId,
+      time,
+      amount,
+      buyer,
+      seller,
+      partner,
+      automaticEscrow
+    });
+
     if (!program || !provider || !feePayer) {
+      console.error("[createEscrowSol] Missing dependencies:", {
+        program: !!program,
+        provider: !!provider,
+        feePayer
+      });
       throw new Error("Program or provider is not initialized");
     }
-    //console.log("Here buyer", buyer, "seller", seller);
-    const tx = new Transaction().add(
-      await program.methods
-        .createEscrowSol(
-          orderId,
-          new anchor.BN(amount),
-          new anchor.BN(time),
-          automaticEscrow
-        )
-        .accounts({
-          buyer: new PublicKey(buyer),
-          seller: new PublicKey(seller),
-          partner: new PublicKey(partner),
-          feePayer: new PublicKey(feePayer),
-        })
-        .instruction()
-    );
-    return tx;
+
+    try {
+      const tx = new Transaction().add(
+        await program.methods
+          .createEscrowSol(
+            orderId,
+            new anchor.BN(amount),
+            new anchor.BN(time),  // Pass time directly without conversion
+            automaticEscrow
+          )
+          .accounts({
+            buyer: new PublicKey(buyer),
+            seller: new PublicKey(seller),
+            partner: new PublicKey(partner),
+            feePayer: new PublicKey(feePayer),
+          })
+          .instruction()
+      );
+      console.debug("[createEscrowSol] Transaction created successfully");
+      return tx;
+    } catch (error) {
+      console.error("[createEscrowSol] Error creating escrow:", error);
+      throw error;
+    }
   };
 
   const createEscrowSolBuyer = async (
@@ -247,27 +268,48 @@ const useLocalSolana = () => {
     partner: string,
     automaticEscrow: boolean
   ) => {
+    console.debug("[createEscrowSolBuyer] Starting escrow creation with params:", {
+      orderId,
+      time,
+      amount,
+      buyer,
+      seller,
+      partner,
+      automaticEscrow
+    });
+
     if (!program || !provider || !feePayer) {
+      console.error("[createEscrowSolBuyer] Missing dependencies:", {
+        program: !!program,
+        provider: !!provider,
+        feePayer
+      });
       throw new Error("Program or provider is not initialized");
     }
-    //console.log("Here buyer", buyer, "seller", seller);
-    const tx = new Transaction().add(
-      await program.methods
-        .createEscrowSolBuyer(
-          orderId,
-          new anchor.BN(amount),
-          new anchor.BN(time),
-          automaticEscrow
-        )
-        .accounts({
-          buyer: new PublicKey(buyer),
-          seller: seller,
-          partner: partner,
-          feePayer: new PublicKey(feePayer),
-        })
-        .instruction()
-    );
-    return tx;
+
+    try {
+      const tx = new Transaction().add(
+        await program.methods
+          .createEscrowSolBuyer(
+            orderId,
+            new anchor.BN(amount),
+            new anchor.BN(time),  // Pass time directly without conversion
+            automaticEscrow
+          )
+          .accounts({
+            buyer: new PublicKey(buyer),
+            seller: seller,
+            partner: partner,
+            feePayer: new PublicKey(feePayer),
+          })
+          .instruction()
+      );
+      console.debug("[createEscrowSolBuyer] Transaction created successfully");
+      return tx;
+    } catch (error) {
+      console.error("[createEscrowSolBuyer] Error creating escrow:", error);
+      throw error;
+    }
   };
 
   const createEscrowToken = async (
@@ -281,9 +323,27 @@ const useLocalSolana = () => {
     instantEscrow: boolean,
     fromWallet: boolean
   ) => {
+    console.debug("[createEscrowToken] Starting escrow creation with params:", {
+      orderId,
+      time,
+      amount,
+      buyer,
+      seller,
+      partner,
+      token,
+      instantEscrow,
+      fromWallet
+    });
+
     if (!program || !provider || !feePayer) {
+      console.error("[createEscrowToken] Missing dependencies:", {
+        program: !!program,
+        provider: !!provider,
+        feePayer
+      });
       throw new Error("Program or provider is not initialized");
     }
+
     var escrow = await getEscrowPDA(orderId);
     var escrowState = await getEscrowStatePDA(seller);
     if (!escrow || !escrowState) {
@@ -300,26 +360,32 @@ const useLocalSolana = () => {
       true
     );
 
-    const tx = await program.methods
-      .createEscrowToken(
-        orderId,
-        new anchor.BN(amount),
-        new anchor.BN(time),
-        instantEscrow,
-        new PublicKey(token),
-        fromWallet
-      )
-      .accounts({
-        buyer: buyer,
-        seller: new PublicKey(seller),
-        partner: partner,
-        feePayer: new PublicKey(feePayer),
-        escrowTokenAccount: new PublicKey(escrowTokenAccount),
-        escrowStateTokenAccount: escrowStateTokenAccount,
-        mintAccount: new PublicKey(token),
-      })
-      .transaction();
-    return tx;
+    try {
+      const tx = await program.methods
+        .createEscrowToken(
+          orderId,
+          new anchor.BN(amount),
+          new anchor.BN(time),  // Pass time directly without conversion
+          instantEscrow,
+          new PublicKey(token),
+          fromWallet
+        )
+        .accounts({
+          buyer: buyer,
+          seller: new PublicKey(seller),
+          partner: partner,
+          feePayer: new PublicKey(feePayer),
+          escrowTokenAccount: new PublicKey(escrowTokenAccount),
+          escrowStateTokenAccount: escrowStateTokenAccount,
+          mintAccount: new PublicKey(token),
+        })
+        .transaction();
+      console.debug("[createEscrowToken] Transaction created successfully");
+      return tx;
+    } catch (error) {
+      console.error("[createEscrowToken] Error creating escrow:", error);
+      throw error;
+    }
   };
 
   const createEscrowTokenBuyer = async (
@@ -333,9 +399,27 @@ const useLocalSolana = () => {
     instantEscrow: boolean,
     fromWallet: boolean
   ) => {
+    console.debug("[createEscrowTokenBuyer] Starting escrow creation with params:", {
+      orderId,
+      time,
+      amount,
+      buyer,
+      seller,
+      partner,
+      token,
+      instantEscrow,
+      fromWallet
+    });
+
     if (!program || !provider || !feePayer) {
+      console.error("[createEscrowTokenBuyer] Missing dependencies:", {
+        program: !!program,
+        provider: !!provider,
+        feePayer
+      });
       throw new Error("Program or provider is not initialized");
     }
+
     var escrow = await getEscrowPDA(orderId);
     var escrowState = await getEscrowStatePDA(seller);
     if (!escrow || !escrowState) {
@@ -352,25 +436,31 @@ const useLocalSolana = () => {
       true
     );
 
-    const tx = await program.methods
-      .createEscrowTokenBuyer(
-        orderId,
-        new anchor.BN(amount),
-        new anchor.BN(time),
-        instantEscrow,
-        new PublicKey(token)
-      )
-      .accounts({
-        buyer: new PublicKey(buyer),
-        seller: seller,
-        partner: partner,
-        feePayer: new PublicKey(feePayer),
-        escrowTokenAccount: new PublicKey(escrowTokenAccount),
-        escrowStateTokenAccount: escrowStateTokenAccount,
-        mintAccount: new PublicKey(token),
-      })
-      .transaction();
-    return tx;
+    try {
+      const tx = await program.methods
+        .createEscrowTokenBuyer(
+          orderId,
+          new anchor.BN(amount),
+          new anchor.BN(time),  // Pass time directly without conversion
+          instantEscrow,
+          new PublicKey(token)
+        )
+        .accounts({
+          buyer: new PublicKey(buyer),
+          seller: seller,
+          partner: partner,
+          feePayer: new PublicKey(feePayer),
+          escrowTokenAccount: new PublicKey(escrowTokenAccount),
+          escrowStateTokenAccount: escrowStateTokenAccount,
+          mintAccount: new PublicKey(token),
+        })
+        .transaction();
+      console.debug("[createEscrowTokenBuyer] Transaction created successfully");
+      return tx;
+    } catch (error) {
+      console.error("[createEscrowTokenBuyer] Error creating escrow:", error);
+      throw error;
+    }
   };
   const depositFundsToLocalSolana = async (
     amount: number,
@@ -567,12 +657,10 @@ const useLocalSolana = () => {
         ? null
         : await getAssociatedTokenAddress(token, escrowStatePDA!, true);
 
-    // The program only has a buyer_cancel instruction
-    // We must ensure the seller parameter is the actual seller's address
     const tx = await program.methods
       .buyerCancel(orderId)
       .accounts({
-        seller: seller, // Always use the actual seller address for correct fund routing
+        seller: cancelledBy,  // Use the cancelling party's address
         feePayer: feePayer,
         escrowStateTokenAccount: escrowStateTokenAccount,
         escrowTokenAccount: escrowTokenAccount,
