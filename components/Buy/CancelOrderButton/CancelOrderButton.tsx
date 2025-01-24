@@ -29,11 +29,11 @@ const CancelOrderButton = ({ order, outlined = true, title = 'Cancel Order' }: C
 
 	const [modalOpen, setModalOpen] = useState(false);
 	const [cancelConfirmed, setCancelConfirmed] = useState(false);
-	const { data: escrowData, loadingContract } = useContractRead(
+	const { data: escrowData, loading } = useContractRead(
 		order.trade_id,
 		"escrow",
 		true
-	  );
+	);
 
 	const cancelOrder = async () => {
 
