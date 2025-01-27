@@ -45,45 +45,85 @@ const OpenDisputeButton = ({
   const [disputeConfirmed, setDisputeConfirmed] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Use Shyft for balance checks
-  const { shyft, getTokenBalance, getAccountInfo } = useShyft();
+  // Use RPC connection for balance checks
+  const { connection, getTokenBalance, getAccountInfo } = useShyft();
   const [balance, setBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [canOpenDispute, setCanOpenDispute] = useState(false);
   const [paidForDispute, setPaidForDispute] = useState(false);
 
-  // Fetch balance and account info using Shyft
+  // Fetch balance and account info using RPC connection
   useEffect(() => {
+    let mounted = true;
+    
     const fetchData = async () => {
-      if (!shyft || !connectedAddress) return;
+      console.log("[OpenDisputeButton] Init state:", { 
+        hasConnection: !!connection, 
+        connectedAddress,
+        loadingBalance,
+        balance 
+      });
+
+      if (!connection || !connectedAddress) {
+        console.log("[OpenDisputeButton] Missing requirements:", { 
+          hasConnection: !!connection, 
+          hasAddress: !!connectedAddress 
+        });
+        return;
+      }
 
       try {
         setLoadingBalance(true);
         const address = isBuyer ? buyer.address : seller.address;
+        console.log("[OpenDisputeButton] Fetching balance for:", address);
         
         // Get SOL balance for dispute fee
         const bal = await getTokenBalance(address, token.address);
-        setBalance(bal);
+        console.log("[OpenDisputeButton] Balance result:", bal);
+        
+        // Only update state if component is still mounted
+        if (mounted) {
+          setBalance(bal);
+        }
 
         // Get account info to check if dispute is possible
         const accountInfo = await getAccountInfo(tradeId);
-        if (accountInfo) {
-          setCanOpenDispute(true); // You can add more specific checks here based on account data
-          setPaidForDispute(false); // You can add more specific checks here based on account data
-        }
+        console.log("[OpenDisputeButton] Account info:", accountInfo);
         
-        setError(null);
+        // Only update state if component is still mounted
+        if (mounted) {
+          setCanOpenDispute(!!accountInfo);
+          setPaidForDispute(false);
+          setError(null);
+          setLoadingBalance(false);
+        }
       } catch (err) {
         console.error("[OpenDisputeButton] Error fetching data:", err);
-        setError(err instanceof Error ? err.message : "Error fetching data");
-      } finally {
-        setLoadingBalance(false);
+        if (mounted) {
+          setError(err instanceof Error ? err.message : "Error fetching data");
+          setLoadingBalance(false);
+        }
       }
     };
 
     fetchData();
-  }, [shyft, isBuyer, buyer.address, seller.address, token.address, tradeId, connectedAddress]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [connection, isBuyer, buyer.address, seller.address, token.address, tradeId, connectedAddress]);
+
+  // Add an additional effect to log state changes
+  useEffect(() => {
+    console.log("[OpenDisputeButton] State updated:", {
+      balance,
+      canOpenDispute,
+      loadingBalance,
+      error,
+      paidForDispute
+    });
+  }, [balance, canOpenDispute, loadingBalance, error, paidForDispute]);
 
   const { isLoading, isSuccess, opensDispute, data } = useOpenDispute({
     orderID: order.id.toString(),
@@ -133,8 +173,13 @@ const OpenDisputeButton = ({
 
   const disputeFee = 5_000_000 / 1e9;
 
-  // Show loading state
-  if (!shyft || (loadingBalance && balance === null)) {
+  // Check if we can show the button
+  if (!connection || (loadingBalance && balance === null)) {
+    console.log("[OpenDisputeButton] Showing loading state:", {
+      hasConnection: !!connection,
+      loadingBalance,
+      balance
+    });
     return (
       <button
         className="px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed"
