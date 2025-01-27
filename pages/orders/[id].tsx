@@ -144,12 +144,19 @@ const OrderPage = ({ id }: { id: string }) => {
     const seller = order.seller || list.seller;
     const selling = seller.address === address;
     const chatAddress = selling ? order.buyer.address : seller.address;
-    if(seller.address !== address && order.buyer.address !== address){
+
+    // Check if user has access to view the order
+    const hasAccess = 
+        seller.address === address || 
+        order.buyer.address === address ||
+        address === process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS;
+
+    if (!hasAccess) {
         return (
             <>
                <div className="flex items-center justify-center h-screen bg-white">
-					Only Seller or buyer of this order is allowed to see the details
-				</div>
+                    Only the seller, buyer, or arbitrator can view order details
+                </div>
             </>
         );
     }
