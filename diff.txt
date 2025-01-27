@@ -1,0 +1,229 @@
+diff --git a/components/Dispute/Dispute.tsx b/components/Dispute/Dispute.tsx
+index de4fc55..feaa964 100644
+--- a/components/Dispute/Dispute.tsx
++++ b/components/Dispute/Dispute.tsx
+@@ -14,22 +14,24 @@ interface DisputeParams {
+ }
+ 
+ const Dispute = ({ order }: DisputeParams) => {
+-
+ 	const { address } = useAccount();
+ 	const escrowAddress = order?.trade_id;
+ 	const { token_amount: tokenAmount, list, buyer, dispute, seller } = order;
+ 	const { token } = list;
+ 	const isSeller = address === seller.address;
+ 	const isBuyer = address === buyer.address;
+-	const { data: escrowData, loadingContract } = useContractRead(
++	const { data: escrowData, loading: loadingContract } = useContractRead(
+ 		escrowAddress,
+ 		"escrow",
+ 		true
+-	  );
++	);
+ 
+ 	const paidForDispute = escrowData?.dispute == true && (isBuyer?escrowData?.buyerPaidDispute:escrowData?.sellerPaidDispute);
+ 	// @ts-ignore
+ 	const { user_dispute: userDispute, resolved } = dispute[0] || {};
++	
++	// Check if there's an active dispute from either party
++	const hasActiveDispute = Array.isArray(dispute) && dispute.some((d: any) => d.user_dispute && !d.resolved);
+ 
+ 	return (
+ 		<div className="p-4 md:p-6 w-full m-auto mb-16">
+@@ -42,8 +44,7 @@ const Dispute = ({ order }: DisputeParams) => {
+ 						</div>
+ 					</div>
+ 					<span>
+-						{/* {resolved || (!!userDispute && paidForDispute) ? ( */}
+-						{resolved || (!!userDispute) || (address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS) ? (
++						{resolved || hasActiveDispute || (address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS) ? (
+ 							// @ts-ignore
+ 							<DisputeStatus address={address} order={order} />
+ 						) : (
+@@ -52,7 +53,7 @@ const Dispute = ({ order }: DisputeParams) => {
+ 						)}
+ 					</span>
+ 				</div>
+-				 {/* @ts-ignore */}
++				{/* @ts-ignore */}
+ 				<DisputeNotes fee={0.005} address={address} order={order}/>
+ 			</div>
+ 		</div>
+diff --git a/components/DisputeTrade/DisputeForm.tsx b/components/DisputeTrade/DisputeForm.tsx
+index 97b485f..fad3d3f 100644
+--- a/components/DisputeTrade/DisputeForm.tsx
++++ b/components/DisputeTrade/DisputeForm.tsx
+@@ -81,34 +81,55 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
+ 	};
+ 
+ 	const onContinue = async (statusUpdated:boolean=false) => {
+-		console.log("Inside Called continue. 1",validate(resolver),paidForDispute);
++		console.log("[DisputeForm] Starting form submission:", {
++			hasValidation: validate(resolver),
++			paidForDispute,
++			statusUpdated,
++			uploads: uploads.length,
++			comments: !!comments
++		});
++
+ 		if (validate(resolver) && (paidForDispute||statusUpdated)) {
+-		console.log("Inside Called continue. 2",validate(resolver),paidForDispute);
++			console.log("[DisputeForm] Validation passed, submitting dispute");
+ 
+-			// console.log(uploads);
+-		// include not before paidForDispute
+-		// if (validate(resolver) && paidForDispute) {
+-			const result = await fetch(`/api/orders/${order.id}/disputes`, {
+-				method: 'POST',
+-				headers: {
+-					'Content-Type': 'application/json',
+-					Authorization: `Bearer ${getAuthToken()}`
+-				},
+-				body: JSON.stringify(
+-					snakecaseKeys(
+-						{
+-							comments,
+-							winner_id: null,
+-   							resolved: false,
+-							files: uploads.map(({ key }) => key.replace(`disputes/${order.id}/`,''))
+-						},
+-						{ deep: true }
+-					)
+-				)
++			try {
++				const payload = snakecaseKeys(
++					{
++						comments,
++						winner_id: null,
++						resolved: false,
++						files: uploads.map(({ key }) => key.replace(`disputes/${order.id}/`,''))
++					},
++					{ deep: true }
++				);
++
++				console.log("[DisputeForm] Sending dispute data:", {
++					orderId: order.id,
++					payload
++				});
++
++				const result = await fetch(`/api/orders/${order.id}/disputes`, {
++					method: 'POST',
++					headers: {
++						'Content-Type': 'application/json',
++						Authorization: `Bearer ${getAuthToken()}`
++					},
++					body: JSON.stringify(payload)
++				});
++
++				const response = await result.json();
++				console.log("[DisputeForm] Dispute submission response:", response);
++
++				router.reload();
++			} catch (error) {
++				console.error("[DisputeForm] Error submitting dispute:", error);
++			}
++		} else {
++			console.log("[DisputeForm] Form validation failed:", {
++				errors: resolver(),
++				paidForDispute,
++				statusUpdated
+ 			});
+-			await result.json();
+-			// window.location.reload();
+-			router.reload();
+ 		}
+ 	};
+ 
+diff --git a/hooks/transactions/useOpenDispute.ts b/hooks/transactions/useOpenDispute.ts
+index 3b9a667..8b5c771 100644
+--- a/hooks/transactions/useOpenDispute.ts
++++ b/hooks/transactions/useOpenDispute.ts
+@@ -18,54 +18,73 @@ const useOpenDispute = ({ orderID }: {orderID:string}) => {
+ 	const [isLoading, setIsLoading] = useState(false);
+ 
+ 	const { address } = useAccount();
+-	const { shyft,sendTransactionWithShyft } = useShyft();
+-	const {openDispute} = useLocalSolana();
+-	const { getAccountInfo } = useShyft();
++	const { sendTransactionWithShyft, getAccountInfo } = useShyft();
++	const { openDispute } = useLocalSolana();
+ 
+   if (!address) {
+-    console.error("Address not available. Cannot open dispute.");
++    console.error("[useOpenDispute] Address not available. Cannot open dispute.");
+     return { isFetching: false, isSuccess, isLoading, data };
+   }
+ 
+ 	const opensDispute = async () => {
++		console.log("[useOpenDispute] Starting dispute process:", {
++			orderID,
++			userAddress: address
++		});
++
+ 		setIsLoading(true);
+ 		try {
+-			// Check shyft here, so we only fail if the user actually tries to open a dispute
+-			if (!shyft) {
+-				console.error("Shyft not initialized. Cannot proceed with transaction relaying (opensDispute).");
+-				setIsSuccess(false);
+-				return false;
+-			}
+-
++			// Check account info
++			console.log("[useOpenDispute] Checking sender account:", address);
+ 			const senderAccountInfo = await getAccountInfo(address);
+ 			if (!senderAccountInfo) {
+-				console.error("Sender account not found");
++				console.error("[useOpenDispute] Sender account not found:", {
++					address,
++					accountInfo: senderAccountInfo
++				});
+ 				setIsSuccess(false);
+ 				return false;
+ 			}
+ 
++			console.log("[useOpenDispute] Creating dispute transaction");
+ 			const tx = await openDispute(orderID, new PublicKey(address));
+ 			if (!tx) {
+-				console.error("Failed to create dispute transaction.");
++				console.error("[useOpenDispute] Failed to create dispute transaction");
+ 				setIsSuccess(false);
+ 				return false;
+ 			}
+ 
++			console.log("[useOpenDispute] Sending transaction for processing");
+ 			const finalTx = await sendTransactionWithShyft(tx, true, orderID);
+ 			if (finalTx) {
++				console.log("[useOpenDispute] Transaction successful:", {
++					hash: finalTx,
++					orderID
++				});
+ 				updateData({hash: finalTx});
+ 				setIsSuccess(true);
+ 				return true;
+ 			} else {
+-				console.error("Transaction relaying failed.", finalTx);
++				console.error("[useOpenDispute] Transaction relaying failed:", {
++					tx: finalTx,
++					orderID
++				});
+ 				setIsSuccess(false);
+ 				return false;
+ 			}
+ 		} catch (error) {
+-			console.error("Error during dispute process:", error);
++			console.error("[useOpenDispute] Error during dispute process:", {
++				error,
++				orderID,
++				address
++			});
+ 			setIsSuccess(false);
+ 			return false;
+ 		} finally {
++			console.log("[useOpenDispute] Dispute process completed:", {
++				success: isSuccess,
++				hash: data.hash
++			});
+ 			setIsLoading(false);
+ 		}
+ 	};

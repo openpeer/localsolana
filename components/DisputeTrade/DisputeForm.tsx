@@ -81,34 +81,55 @@ const DisputeForm = ({ order, address, paidForDispute, fee }: DisputeFormParams)
 	};
 
 	const onContinue = async (statusUpdated:boolean=false) => {
-		console.log("Inside Called continue. 1",validate(resolver),paidForDispute);
-		if (validate(resolver) && (paidForDispute||statusUpdated)) {
-		console.log("Inside Called continue. 2",validate(resolver),paidForDispute);
+		console.log("[DisputeForm] Starting form submission:", {
+			hasValidation: validate(resolver),
+			paidForDispute,
+			statusUpdated,
+			uploads: uploads.length,
+			comments: !!comments
+		});
 
-			// console.log(uploads);
-		// include not before paidForDispute
-		// if (validate(resolver) && paidForDispute) {
-			const result = await fetch(`/api/orders/${order.id}/disputes`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${getAuthToken()}`
-				},
-				body: JSON.stringify(
-					snakecaseKeys(
-						{
-							comments,
-							winner_id: null,
-   							resolved: false,
-							files: uploads.map(({ key }) => key.replace(`disputes/${order.id}/`,''))
-						},
-						{ deep: true }
-					)
-				)
+		if (validate(resolver) && (paidForDispute||statusUpdated)) {
+			console.log("[DisputeForm] Validation passed, submitting dispute");
+
+			try {
+				const payload = snakecaseKeys(
+					{
+						comments,
+						winner_id: null,
+						resolved: false,
+						files: uploads.map(({ key }) => key.replace(`disputes/${order.id}/`,''))
+					},
+					{ deep: true }
+				);
+
+				console.log("[DisputeForm] Sending dispute data:", {
+					orderId: order.id,
+					payload
+				});
+
+				const result = await fetch(`/api/orders/${order.id}/disputes`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${getAuthToken()}`
+					},
+					body: JSON.stringify(payload)
+				});
+
+				const response = await result.json();
+				console.log("[DisputeForm] Dispute submission response:", response);
+
+				router.reload();
+			} catch (error) {
+				console.error("[DisputeForm] Error submitting dispute:", error);
+			}
+		} else {
+			console.log("[DisputeForm] Form validation failed:", {
+				errors: resolver(),
+				paidForDispute,
+				statusUpdated
 			});
-			await result.json();
-			// window.location.reload();
-			router.reload();
 		}
 	};
 

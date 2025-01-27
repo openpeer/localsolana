@@ -14,22 +14,24 @@ interface DisputeParams {
 }
 
 const Dispute = ({ order }: DisputeParams) => {
-
 	const { address } = useAccount();
 	const escrowAddress = order?.trade_id;
 	const { token_amount: tokenAmount, list, buyer, dispute, seller } = order;
 	const { token } = list;
 	const isSeller = address === seller.address;
 	const isBuyer = address === buyer.address;
-	const { data: escrowData, loadingContract } = useContractRead(
+	const { data: escrowData, loading: loadingContract } = useContractRead(
 		escrowAddress,
 		"escrow",
 		true
-	  );
+	);
 
 	const paidForDispute = escrowData?.dispute == true && (isBuyer?escrowData?.buyerPaidDispute:escrowData?.sellerPaidDispute);
 	// @ts-ignore
 	const { user_dispute: userDispute, resolved } = dispute[0] || {};
+	
+	// Check if there's an active dispute from either party
+	const hasActiveDispute = Array.isArray(dispute) && dispute.some((d: any) => d.user_dispute && !d.resolved);
 
 	return (
 		<div className="p-4 md:p-6 w-full m-auto mb-16">
@@ -42,8 +44,7 @@ const Dispute = ({ order }: DisputeParams) => {
 						</div>
 					</div>
 					<span>
-						{/* {resolved || (!!userDispute && paidForDispute) ? ( */}
-						{resolved || (!!userDispute) || (address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS) ? (
+						{resolved || hasActiveDispute || (address===process.env.NEXT_PUBLIC_ARBITRATOR_ADDRESS) ? (
 							// @ts-ignore
 							<DisputeStatus address={address} order={order} />
 						) : (
@@ -52,7 +53,7 @@ const Dispute = ({ order }: DisputeParams) => {
 						)}
 					</span>
 				</div>
-				 {/* @ts-ignore */}
+				{/* @ts-ignore */}
 				<DisputeNotes fee={0.005} address={address} order={order}/>
 			</div>
 		</div>
