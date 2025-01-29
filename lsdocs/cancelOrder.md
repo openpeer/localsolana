@@ -36,47 +36,49 @@ Required when:
 
 ### Buyer Cancellation Rules
 
-Located in `components/Buy/CancelOrderButton/index.tsx`:
+Located in `components/Buy/CancelOrderButton/index.tsx` and `BlockchainCancelButton.tsx`:
 ```typescript
+// Primary restriction
 const buyerCannotCancel = isBuyer && order.payment_sent;
+
+// Blockchain cancellation check
+const canBuyerCancel = isBuyer && !order.payment_sent;
 ```
 
 1. **Pre-Payment Stage**:
    - Can cancel anytime before marking payment as sent
+   - Can cancel even if funds are in escrow, as long as payment isn't marked sent
    - No time restrictions apply
-   - Simple cancellation if no escrow, blockchain cancellation if escrowed
 
 2. **Post-Payment Stage**:
-   - Cannot cancel after marking payment as sent
+   - Cannot cancel after marking payment as sent (`order.payment_sent === true`)
+   - This restriction applies regardless of escrow status
    - Button disabled with message "You cannot cancel after marking payment as sent"
-   - Must wait for seller action or dispute resolution
+
+3. **Implementation Details**:
+   - Simple cancellation used if no escrow exists
+   - Blockchain cancellation used if funds are in escrow
+   - Cancellation ability determined solely by payment status
+   - No time-window restrictions (unlike sellers)
 
 ### Seller Cancellation Rules
 
 Located in `components/Buy/CancelOrderButton/BlockchainCancelButton.tsx`:
 ```typescript
+const now = Math.floor(Date.now() / 1000);
 const sellerCanCancelAfter = ((escrowData?.sellerCanCancelAfter ?? new BN(0)) as BN).toNumber();
-const sellerCanCancelAfterSeconds = parseInt(sellerCanCancelAfter.toString(), 10);
-const now = Date.now() / 1000;
-const sellerCantCancel = isSeller && (sellerCanCancelAfterSeconds <= 1 || sellerCanCancelAfterSeconds > now);
+const sellerCantCancel = isSeller && sellerCanCancelAfter > now;
 ```
 
 1. **Time Window Restrictions**:
-   - Cannot cancel immediately after escrow creation
-   - Must wait for `sellerCanCancelAfter` time window
+   - Cannot cancel until `sellerCanCancelAfter` time has passed
    - Time window starts when escrow is created
+   - Button is disabled with remaining time shown: `Cannot cancel (${formattedTimeLeft}m)`
 
-2. **Payment Status Restrictions**:
-   - Cannot cancel if payment marked as sent within time limit
-   - Can cancel if buyer hasn't paid after time window expires
-   - Time limit tracked in `components/Buy/Payment.tsx`:
-   ```typescript
-   const timeLimitForPayment = status === 'escrowed' && 
-     order.escrow && sellerCanCancelAfter && 
-     sellerCanCancelAfterSeconds > 0
-       ? sellerCanCancelAfterSeconds * 1000
-       : 0;
-   ```
+2. **Implementation Details**:
+   - Uses blockchain timestamp for time comparison
+   - Enforced through `cantCancel` flag
+   - Shows countdown timer in minutes
 
 ## Step-by-Step Order Flow
 
