@@ -32,11 +32,26 @@ Required when:
 - Requires on-chain transaction
 - Different rules apply for buyers and sellers
 
-## Seller Cancellation Rules
+## Cancellation Rules
 
-Sellers face specific restrictions on when they can cancel orders. These rules are implemented across multiple components:
+### Buyer Cancellation Rules
 
-### 1. Time-based Restrictions
+Located in `components/Buy/CancelOrderButton/index.tsx`:
+```typescript
+const buyerCannotCancel = isBuyer && order.payment_sent;
+```
+
+1. **Pre-Payment Stage**:
+   - Can cancel anytime before marking payment as sent
+   - No time restrictions apply
+   - Simple cancellation if no escrow, blockchain cancellation if escrowed
+
+2. **Post-Payment Stage**:
+   - Cannot cancel after marking payment as sent
+   - Button disabled with message "You cannot cancel after marking payment as sent"
+   - Must wait for seller action or dispute resolution
+
+### Seller Cancellation Rules
 
 Located in `components/Buy/CancelOrderButton/BlockchainCancelButton.tsx`:
 ```typescript
@@ -46,39 +61,85 @@ const now = Date.now() / 1000;
 const sellerCantCancel = isSeller && (sellerCanCancelAfterSeconds <= 1 || sellerCanCancelAfterSeconds > now);
 ```
 
-### 2. Payment Status Restrictions
-
-Located in `components/Buy/Payment.tsx`:
-```typescript
-const timeLimitForPayment =
-  status === 'escrowed' && order.escrow && sellerCanCancelAfter && sellerCanCancelAfterSeconds > 0
-    ? sellerCanCancelAfterSeconds * 1000
-    : 0;
-const paymentTimeLeft = timeLimitForPayment > 0 ? timeLimitForPayment - new Date().getTime() : 0;
-```
-
-### 3. Cancellation Rules Summary
-
 1. **Time Window Restrictions**:
-   - Sellers cannot cancel immediately after escrow
-   - Must wait for `sellerCanCancelAfter` seconds to pass
-   - Time window starts when order is marked as paid
+   - Cannot cancel immediately after escrow creation
+   - Must wait for `sellerCanCancelAfter` time window
+   - Time window starts when escrow is created
 
 2. **Payment Status Restrictions**:
-   - Cannot cancel if order is marked as paid AND within payment time limit
-   - Payment time limit is set during escrow creation
-   - Displayed to users in UI via countdown timer
+   - Cannot cancel if payment marked as sent within time limit
+   - Can cancel if buyer hasn't paid after time window expires
+   - Time limit tracked in `components/Buy/Payment.tsx`:
+   ```typescript
+   const timeLimitForPayment = status === 'escrowed' && 
+     order.escrow && sellerCanCancelAfter && 
+     sellerCanCancelAfterSeconds > 0
+       ? sellerCanCancelAfterSeconds * 1000
+       : 0;
+   ```
 
-3. **Implementation Details**:
-   - Time checks are done both client-side and on-chain
-   - Uses blockchain timestamp for validation
-   - Enforced in `BlockchainCancelButton` component
-   - Additional validation in `useLocalSolana.ts`
+## Step-by-Step Order Flow
 
-4. **UI Feedback**:
-   - Button is disabled when seller cannot cancel
-   - Shows remaining time before cancellation is possible
-   - Displays "You cannot cancel" message during restricted period
+1. **Order Creation** (`components/Buy/CreateOrder.tsx`):
+   - Order created with status 'created'
+   - No escrow data yet
+   - Both parties can cancel (simple cancellation)
+
+2. **Escrow Creation** (`hooks/transactions/useLocalSolana.ts`):
+   ```typescript
+   const createEscrow = async (amount: number, orderId: string) => {
+     // Sets up escrow account
+     // Initializes sellerCanCancelAfter timestamp
+   };
+   ```
+   - Funds moved to escrow
+   - `sellerCanCancelAfter` time window starts
+   - Blockchain cancellation now required
+
+3. **Payment Window** (`components/Buy/Payment.tsx`):
+   - Buyer marks payment as sent
+   - Seller's cancellation ability locked if within time window
+   - Buyer cannot cancel after marking payment
+
+4. **Time Window Expiry**:
+   - If buyer hasn't paid: Seller can cancel
+   - If payment marked: Must proceed with trade or dispute
+
+## Cancellation Implementation
+
+### Main Components
+
+1. **CancelOrderButton** (`components/Buy/CancelOrderButton/index.tsx`):
+   - Entry point for cancellation
+   - Handles simple vs blockchain routing
+   - Manages cancellation modal
+
+2. **BlockchainCancelButton** (`components/Buy/CancelOrderButton/BlockchainCancelButton.tsx`):
+   - Handles on-chain cancellation
+   - Manages seller time restrictions
+   - Processes transaction creation
+
+3. **useLocalSolana Hook** (`hooks/transactions/useLocalSolana.ts`):
+   - Interfaces with Solana program
+   - Manages PDAs and token accounts
+   - Processes transactions
+
+### Key Files and Their Roles
+
+1. **Order Management**:
+   - `components/Buy/OrderDetails.tsx` - Order status display
+   - `components/Buy/Payment.tsx` - Payment status and timing
+   - `components/Buy/TradeStatus.tsx` - Overall trade flow
+
+2. **Cancellation Logic**:
+   - `hooks/useOrder.ts` - Order data management
+   - `hooks/useOrderCancellation.ts` - Cancellation state
+   - `hooks/transactions/useGaslessEscrowCancel.ts` - Transaction handling
+
+3. **UI Components**:
+   - `components/Buy/CancelReasons.tsx` - Cancellation reason collection
+   - `components/Buy/Cancelled.tsx` - Post-cancellation display
+   - `components/Buy/StatusMessages.tsx` - User feedback
 
 ## Blockchain Implementation
 
