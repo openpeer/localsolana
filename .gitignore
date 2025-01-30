@@ -48,3 +48,4 @@ auth_token.txt
 /pages/auth-token.tsx
 logs/
 .aider*
+test.pdf
