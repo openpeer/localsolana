@@ -36,30 +36,15 @@ Required when:
 
 ### Buyer Cancellation Rules
 
-Located in `components/Buy/CancelOrderButton/index.tsx` and `BlockchainCancelButton.tsx`:
-```typescript
-// Primary restriction
-const buyerCannotCancel = isBuyer && order.payment_sent;
+1. **Core Rule**:
+   - Can cancel anytime, period
+   - Will get a confirmation prompt if they've marked payment as sent
 
-// Blockchain cancellation check
-const canBuyerCancel = isBuyer && !order.payment_sent;
-```
-
-1. **Pre-Payment Stage**:
-   - Can cancel anytime before marking payment as sent
-   - Can cancel even if funds are in escrow, as long as payment isn't marked sent
-   - No time restrictions apply
-
-2. **Post-Payment Stage**:
-   - Cannot cancel after marking payment as sent (`order.payment_sent === true`)
-   - This restriction applies regardless of escrow status
-   - Button disabled with message "You cannot cancel after marking payment as sent"
-
-3. **Implementation Details**:
-   - Simple cancellation used if no escrow exists
-   - Blockchain cancellation used if funds are in escrow
-   - Cancellation ability determined solely by payment status
-   - No time-window restrictions (unlike sellers)
+2. **Implementation Details**:
+   - Simple cancellation if no escrow exists
+   - Blockchain cancellation if funds are in escrow
+   - No time-window restrictions
+   - No payment status restrictions (but requires confirmation if marked paid)
 
 ### Seller Cancellation Rules
 
@@ -71,14 +56,17 @@ const sellerCantCancel = isSeller && sellerCanCancelAfter > now;
 ```
 
 1. **Time Window Restrictions**:
-   - Cannot cancel until `sellerCanCancelAfter` time has passed
+   - Cannot cancel immediately after escrow creation
+   - Must wait for `sellerCanCancelAfter` time window
    - Time window starts when escrow is created
-   - Button is disabled with remaining time shown: `Cannot cancel (${formattedTimeLeft}m)`
 
-2. **Implementation Details**:
-   - Uses blockchain timestamp for time comparison
-   - Enforced through `cantCancel` flag
-   - Shows countdown timer in minutes
+2. **Payment Status Restrictions**:
+   - Cannot cancel if buyer has marked payment as sent (at any time)
+   - Can cancel if buyer hasn't marked payment as sent AND time window has expired
+
+3. **Fund Return Rules**:
+   - Manual Escrow Trade: Funds return to seller's wallet
+   - Automatic Escrow Trade: Funds return to seller's LocalSolana account
 
 ## Step-by-Step Order Flow
 
