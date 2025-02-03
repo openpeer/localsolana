@@ -738,11 +738,54 @@ const useLocalSolana = () => {
     seller: PublicKey,
     escrow: PublicKey,
     token: PublicKey,
-    decimals:number
+    decimals: number
   ) => {
     if (!program || !provider || !connection || !feePayer) {
       throw new Error("Program or provider is not initialized");
     }
+
+    // Check if escrow state exists
+    const escrowState = await getEscrowStatePDA(seller.toBase58());
+    if (!escrowState) {
+      throw new Error("Failed to derive escrow state PDA");
+    }
+
+    // Check if escrow state is initialized
+    const escrowStateInfo = await connection.getAccountInfo(escrowState);
+    if (!escrowStateInfo) {
+      // Initialize escrow state first
+      const initTx = await initialiseSolanaAccount(seller.toBase58());
+      const tx = new Transaction();
+      tx.add(initTx);
+      
+      // Add the withdrawal instruction after initialization
+      var escrowTokenAccount = await getAssociatedTokenAddress(
+        token,
+        escrow,
+        true
+      );
+      var sellerTokenAccount = await getAssociatedTokenAddress(
+        token,
+        seller,
+        true
+      );
+
+      tx.add(
+        await program.methods
+          .withdrawBalance(new BN(amount * 10 ** decimals), token)
+          .accounts({
+            escrowStateTokenAccount: escrowTokenAccount,
+            seller: seller,
+            feePayer: new PublicKey(feePayer),
+            sellerTokenAccount: sellerTokenAccount,
+            mintAccount: token,
+          })
+          .instruction()
+      );
+      return tx;
+    }
+
+    // If already initialized, just do the withdrawal
     var escrowTokenAccount = await getAssociatedTokenAddress(
       token,
       escrow,
