@@ -28,7 +28,7 @@ const useWithdrawFunds = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const { primaryWallet } = useDynamicContext();
-  const { sendTransactionWithShyft, shyft } = useShyft();
+  const { sendTransactionWithShyft } = useShyft();
   const { withdrawFundsFromLocalSolana } = useLocalSolana();
   const { getTokenBalance, getWalletBalance } = useShyft();
 
@@ -65,10 +65,14 @@ const checkBalance = async () => {
       }
 
       setIsLoading(true);
-      //console.log("In Withdraw funds");
+      console.debug("[useWithdrawFunds] Starting withdrawal:", {
+          amount,
+          token,
+          contract,
+          wallet: primaryWallet.address
+      });
 
       try {
-          // Verify balance before proceeding
           const hasBalance = await checkBalance();
           if (!hasBalance) {
               console.error("Insufficient balance");
@@ -77,76 +81,38 @@ const checkBalance = async () => {
               return;
           }
 
-          // if (token.address == PublicKey.default.toBase58()) {
-          //   const transaction = new web3.Transaction().add(
-          //     SystemProgram.transfer({
-          //       fromPubkey: new PublicKey(primaryWallet.address),
-          //       toPubkey: new PublicKey(contract),
-          //       lamports: amount* LAMPORTS_PER_SOL,
-          //     })
-          //   );
-          //   if (shyft == null) {
-          //     console.error("Shyft is not available");
-          //     setIsSuccess(false);
-          //     setIsLoading(false);
-          //     return;
-          //   } else {
-          //     try {
-          //       const finalTx = await sendTransactionWithShyft(transaction,true);
-          //       if (finalTx !== undefined) {
-          //         setIsLoading(false);
-          //         setIsSuccess(true);
-          //         updateData({ hash: finalTx });
-          //       } else {
-          //         console.error("error", finalTx);
-          //         setIsLoading(false);
-          //         setIsSuccess(false);
-          //       }
-          //     } catch (err) {
-          //       console.error("error", err);
-          //       setIsLoading(false);
-          //       setIsSuccess(false);
-          //     }
-          //   }
-          // } else {
-
-          //console.log('Withdraw funds from local solana', contract, token.name, token.decimals);
-
+          console.debug("[useWithdrawFunds] Balance check passed, constructing transaction");
+          
           const tx = await withdrawFundsFromLocalSolana(
               amount,
-              new PublicKey(primaryWallet?.address),
+              new PublicKey(primaryWallet.address),
               new PublicKey(contract),
               new PublicKey(token.address),
               token.decimals
           );
 
-          if (tx === undefined || shyft == null) {
-              console.error("Withdraw failed,", tx, shyft);
+          if (!tx) {
+              console.error("[useWithdrawFunds] Failed to construct transaction");
               setIsSuccess(false);
               setIsLoading(false);
               return;
           }
 
-          if (tx == null) {
-              console.error("error", tx);
-              setIsLoading(false);
-              setIsSuccess(false);
-              return;
-          }
-
+          console.debug("[useWithdrawFunds] Transaction constructed, sending to Shyft");
+          
           const finalTx = await sendTransactionWithShyft(tx, true);
-          if (finalTx !== undefined && finalTx !== null) {
+          if (finalTx) {
+              console.debug("[useWithdrawFunds] Transaction successful:", finalTx);
               setIsLoading(false);
               setIsSuccess(true);
-              updateData({ hash: finalTx || "" });
+              updateData({ hash: finalTx });
           } else {
-              console.error("error", finalTx);
+              console.error("[useWithdrawFunds] Transaction failed");
               setIsLoading(false);
               setIsSuccess(false);
           }
-          // }
       } catch (error) {
-          console.error("Withdraw failed", error);
+          console.error("[useWithdrawFunds] Withdrawal failed:", error);
           setIsSuccess(false);
           setIsLoading(false);
       } finally {

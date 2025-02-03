@@ -34,10 +34,29 @@ const EscrowDepositWithdraw = ({
 	canDeposit,
 	canWithdraw
 }: EscrowDepositWithdrawProps) => {
+	// Add debug logging for initial props
+	console.log('[EscrowDepositWithdraw] Initializing with:', {
+		token,
+		contract,
+		action,
+		canDeposit,
+		canWithdraw
+	});
+
 	const { SVG } = useQRCode();
 	const { data, loading, error, tokenBalances, solBalance } = useContractRead(contract, "escrowState", true);
 	const [type, setType] = useState<'Deposit' | 'Withdraw'>(action);
 	const [depositAmount, setDepositAmount] = useState<number>();
+
+	// Log when contract data loads
+	useEffect(() => {
+		console.log('[EscrowDepositWithdraw] Contract data loaded:', {
+			data,
+			tokenBalances,
+			solBalance,
+			error
+		});
+	}, [data, tokenBalances, solBalance, error]);
 
 	const deposit = type === 'Deposit';
 	
@@ -46,16 +65,23 @@ const EscrowDepositWithdraw = ({
 		if (!token) return 0;
 		
 		try {
+			let calculatedBalance = 0;
 			if (token.address === PublicKey.default.toBase58()) {
-				// For SOL, convert lamports to SOL
-				return solBalance / LAMPORTS_PER_SOL;
+				calculatedBalance = solBalance / LAMPORTS_PER_SOL;
 			} else {
-				// For SPL tokens
 				const rawBalance = tokenBalances?.[token.address];
 				if (!rawBalance) return 0;
-				
-				return parseFloat(rawBalance) / Math.pow(10, token.decimals || 6);
+				calculatedBalance = parseFloat(rawBalance) / Math.pow(10, token.decimals || 6);
 			}
+			
+			console.log('[EscrowDepositWithdraw] Calculated balance:', {
+				token: token.symbol,
+				calculatedBalance,
+				rawSolBalance: solBalance,
+				rawTokenBalance: tokenBalances?.[token.address]
+			});
+			
+			return calculatedBalance;
 		} catch (err) {
 			console.error("[EscrowDepositWithdraw] Error calculating balance:", err);
 			return 0;
@@ -68,13 +94,31 @@ const EscrowDepositWithdraw = ({
 		} else if (canWithdraw && !canDeposit) {
 			setType('Withdraw');
 		}
+		console.log('[EscrowDepositWithdraw] Type updated:', {
+			type,
+			canDeposit,
+			canWithdraw
+		});
 	}, [canDeposit, canWithdraw]);
 
+	const isValidAmount = (amount: number | undefined): boolean => {
+		const valid = amount !== undefined && amount > 0 && (type !== 'Withdraw' || amount <= balance);
+		console.log('[EscrowDepositWithdraw] Amount validation:', {
+			amount,
+			balance,
+			type,
+			isValid: valid
+		});
+		return valid;
+	};
+
 	if (loading) {
+		console.log('[EscrowDepositWithdraw] Loading state');
 		return <Loading />;
 	}
 
 	if (error) {
+		console.error('[EscrowDepositWithdraw] Error state:', error);
 		return (
 			<div className="px-6 w-full flex flex-col items-center mt-4 pt-4 md:pt-6 text-red-600">
 				Error loading escrow state: {error}
@@ -83,14 +127,9 @@ const EscrowDepositWithdraw = ({
 	}
 
 	if (!canDeposit && !canWithdraw) {
+		console.log('[EscrowDepositWithdraw] Neither deposit nor withdraw allowed');
 		return <Loading />;
 	}
-
-	const isValidAmount = (amount: number | undefined): boolean => {
-		if (amount === undefined || amount <= 0) return false;
-		if (type === 'Withdraw' && amount > balance) return false;
-		return true;
-	};
 
 	return (
 		<div className="px-6 w-full flex flex-col items-center mt-4 pt-4 md:pt-6 text-gray-700 relative">
